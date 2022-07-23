@@ -56,3 +56,7 @@ interface InterestsRepository {
     fun observePublicationSelected(): Flow<Set<String>>
 }
 
+class TopicSelection {
+
+}
+

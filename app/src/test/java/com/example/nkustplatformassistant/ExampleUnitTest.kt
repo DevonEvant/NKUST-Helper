@@ -1,6 +1,8 @@
 package com.example.nkustplatformassistant
 
+import android.graphics.BitmapFactory
 import org.junit.Test
+import android.content.res.Resources
 
 import org.junit.Assert.*
 
@@ -12,6 +14,8 @@ import org.junit.Assert.*
 class ExampleUnitTest {
     @Test
     fun addition_isCorrect() {
-        assertEquals(4, 2 + 2)
+        val bitmap = BitmapFactory.decodeResource(Resources, R.drawable.validate_code)
+
+        print(bitmap)
     }
 }
