@@ -43,6 +43,9 @@ android {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
     }
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
 }
 
 dependencies {
@@ -63,9 +66,13 @@ dependencies {
 
 
     implementation "com.soywiz.korlibs.korim:korim-android:$korimVersion"
+    implementation "io.ktor:ktor-client-core:2.0.3"
+    implementation "io.ktor:ktor-client-cio:2.0.3"
+    implementation "io.ktor:ktor-client-android:2.0.3"
+}
 
 
 
 //    implementation 'androidx.compose.material:material-*:1.2.0-rc03'
 
-}
+//}
