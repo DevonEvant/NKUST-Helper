@@ -5,7 +5,6 @@ import android.graphics.BitmapFactory
 import android.util.Log
 import com.example.nkustplatformassistant.data.NKUST_ROUTES
 import org.junit.Test
-import com.example.nkustplatformassistant.data.remote.login
 //import android.content.res.Resources
 
 
