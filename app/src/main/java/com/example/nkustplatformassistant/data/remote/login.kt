@@ -127,7 +127,7 @@ class NkustUser {
     /**
      * check login state
      */
-    fun checkLoginValid(): Boolean {
+    suspend fun checkLoginValid(): Boolean {
 //        val client = HttpClient(CIO) {
 //            install(HttpCookies) {
 //                val cookiesStorage = ConstantCookiesStorage()
