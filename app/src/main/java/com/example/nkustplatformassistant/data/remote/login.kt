@@ -2,6 +2,7 @@ package com.example.nkustplatformassistant.data.remote
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.sip.SipManager.newInstance
 import android.util.Log
 import com.example.nkustplatformassistant.data.NKUST_ROUTES
 import io.ktor.client.*
@@ -15,6 +16,7 @@ import io.ktor.http.*
 import io.ktor.util.*
 import io.ktor.util.cio.*
 import io.ktor.utils.io.*
+
 import java.io.File
 
 /**
@@ -46,7 +48,7 @@ class NkustUser {
 
     /**
      * reflash Session if session unavailable.
-     * if paremeter [mandatory] is true, the session will be forced to reflash
+     * if paremeter [forced] is true, the session will be forced to reflash
      */
     suspend fun reflashSession(forced: Boolean = false): Unit {
 
@@ -66,49 +68,55 @@ class NkustUser {
 
     /**
      * login to NKUST educational administration system(webap).
+     * if you need etxt image, pls call [getWebapEtxtImg] function
      */
-    @OptIn(InternalAPI::class)
     suspend fun loginWebap(
         uid: String,
         pwd: String,
-        etxtCode: String?,
-        etxtCodeCallBack: suspend ((String?, File) -> Unit) = { etxtCode: String?, imgFile: File -> }
-    ): List<Cookie> {
-        val client = HttpClient(CIO) {
-            install(HttpCookies) {
-                storage = AcceptAllCookiesStorage()
+        etxtCode: String,
+    ): Boolean {
+
+
+        val loginResponse = client.submitForm(
+            url = NKUST_ROUTES.WEDAP_LOGIN,
+            formParameters = Parameters.build {
+                append("uid", uid)
+                append("pwd", pwd)
+                append("etxt_code", etxtCode)
             }
-        }
+        )
+
+        if (!loginResponse.status.isSuccess())
+            throw Error("Fetch URL Error. HttpStateCode is ${loginResponse.status} ")
+
+        if ("驗證碼錯誤" in loginResponse.bodyAsText())
+            return false
+
+        return true
+    }
+
+    /**
+     * get etxt image on NKUST educational administration system(webap).
+     */
+    @OptIn(InternalAPI::class)
+    suspend fun getWebapEtxtImg(): File {
+//        println("1==============================")
 
         val etxtRes = client.get {
             url(NKUST_ROUTES.WEDAP_ETXT_WITH_SYMBOL)
         }
+        println("2==============================")
 
         if (!etxtRes.status.isSuccess())
             throw Error("Fetch URL Error. HttpStateCode is ${etxtRes.status} ")
+        println("3==============================")
 
         val imgFile: File = File("./etxt.jpg")
         etxtRes.content.copyAndClose(imgFile.writeChannel())
-//        val imgBitmap = BitmapFactory.decodeFile(imgFile.path)
+        // val imgBitmap = BitmapFactory.decodeFile(imgFile.path)
+        println("4==============================")
 
-        etxtCodeCallBack(etxtCode, imgFile)
-
-
-        etxtCode!!.let {
-            val loginResponse = client.submitForm(
-                url = NKUST_ROUTES.WEDAP_LOGIN,
-                formParameters = Parameters.build {
-                    append("uid", uid)
-                    append("pwd", pwd)
-                    append("etxt_code", etxtCode)
-                }
-            )
-        }
-
-        val session = etxtRes.setCookie()
-
-        client.close()
-        return session
+        return imgFile
     }
 
 
@@ -128,21 +136,6 @@ class NkustUser {
      * check login state
      */
     suspend fun checkLoginValid(): Boolean {
-//        val client = HttpClient(CIO) {
-//            install(HttpCookies) {
-//                val cookiesStorage = ConstantCookiesStorage()
-//                session.forEach {
-//                    suspend {
-//                        cookiesStorage.addCookie(
-//                            NKUST_ROUTES.WEDAP_BASE,
-//                            it
-//                        )
-//                    }
-//                }
-//                storage = cookiesStorage
-//            }
-//        }
-
         val res = client.get(NKUST_ROUTES.WEDAP_ENTRY_FRAME)
 
         val isValid = res.bodyAsText().contains("NKUST")
@@ -191,6 +184,7 @@ private fun etxtPaser(imgBitmap: Bitmap): IntArray {
             aWordSize.width,
             aWordSize.height
         )
+    }
 
 //            if (i == 3)
 //                return Bitmap.createBitmap(
@@ -202,8 +196,7 @@ private fun etxtPaser(imgBitmap: Bitmap): IntArray {
 
 //            imgBuffer  tensorflow ==> ans
 
-        Log.e("+>>", "${imgBuffer.size}")
-    }
+//        Log.e("+>>", "${imgBuffer.size}")
 
     return ans
 }

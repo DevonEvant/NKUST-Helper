@@ -4,6 +4,7 @@ package com.example.nkustplatformassistant
 import android.graphics.BitmapFactory
 import android.util.Log
 import com.example.nkustplatformassistant.data.NKUST_ROUTES
+import com.example.nkustplatformassistant.data.remote.NkustUser
 import org.junit.Test
 //import android.content.res.Resources
 
@@ -21,8 +22,17 @@ class ExampleUnitTest {
 
     @Test
     fun addition_isCorrect() {
+        val u = NkustUser()
+
         runBlocking {
+            u.getWebapEtxtImg()
+            println(">>>>>>>>>>>>>>>>>>Enter text: ")
+            val stringInput = "ABCD"
+
+            u.loginWebap("C110152351","c110ankust",stringInput)
+            println(u.checkLoginValid().toString())
         }
+
 
     }
 

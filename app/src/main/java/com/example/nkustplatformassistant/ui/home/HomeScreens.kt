@@ -110,10 +110,17 @@ fun NavigationDrawerExample() {
     }
 }
 
+@Preview(showBackground = true)
+@Composable
+fun etxtPreview() {
+
+}
+
+
 //@Preview(
 //    uiMode = Configuration.UI_MODE_NIGHT_YES,
 //    showBackground = true)
-@Preview(showBackground = true)
+//@Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
     Nkust_platform_assistantTheme {
