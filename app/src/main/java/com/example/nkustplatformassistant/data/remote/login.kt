@@ -2,8 +2,9 @@ package com.example.nkustplatformassistant.data.remote
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.net.sip.SipManager.newInstance
 import android.util.Log
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import com.example.nkustplatformassistant.data.NKUST_ROUTES
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -20,18 +21,16 @@ import io.ktor.utils.io.*
 import java.io.File
 
 /**
- * about login to NKUST system.
+ * About login to NKUST system.
  */
 class NkustUser {
-
-
-    private val client = HttpClient(CIO) {
+    var client = HttpClient(CIO) {
         install(HttpCookies) {
             storage = AcceptAllCookiesStorage()
         }
     }
 
-    val seesion = suspend { client.cookies(NKUST_ROUTES.WEDAP_BASE) }
+    val session = suspend { client.cookies(NKUST_ROUTES.WEDAP_BASE) }
 //    private val client = HttpClient(CIO) {
 //        engine {
 //            https {
@@ -47,28 +46,28 @@ class NkustUser {
 //    }
 
     /**
-     * reflash Session if session unavailable.
-     * if paremeter [forced] is true, the session will be forced to reflash
+     * Refresh Session if session unavailable.
+     * if parameter [forced] is true, the session will be forced to refresh
      */
-    suspend fun reflashSession(forced: Boolean = false): Unit {
+    suspend fun refreshSession(forced: Boolean = false): Unit {
 
-        val doReflashSession = suspend {
+        val doRefreshSession = suspend {
             client.get {
                 url(NKUST_ROUTES.WEDAP_HOME)
             }
         }
 
         if (forced)
-            doReflashSession()
+            doRefreshSession()
         else {
             if (!checkLoginValid())
-                doReflashSession()
+                doRefreshSession()
         }
     }
 
     /**
-     * login to NKUST educational administration system(webap).
-     * if you need etxt image, pls call [getWebapEtxtImg] function
+     * Login to NKUST educational administration system (webap).
+     * If you need etxt image, please call [getWebapEtxtImg] function
      */
     suspend fun loginWebap(
         uid: String,
@@ -96,7 +95,7 @@ class NkustUser {
     }
 
     /**
-     * get etxt image on NKUST educational administration system(webap).
+     * GET etxt image on NKUST educational administration system(webap).
      */
     @OptIn(InternalAPI::class)
     suspend fun getWebapEtxtImg(): File {
@@ -119,21 +118,46 @@ class NkustUser {
         return imgFile
     }
 
+    /**
+     * Get Image to ImageBitmap with same session
+     */
+    suspend fun getWebapEtxtBitmap(): ImageBitmap {
+        val etxtRes = client.get(url = Url(NKUST_ROUTES.WEDAP_ETXT_WITH_SYMBOL))
+        Log.v("getWebapEtxtBitmap", "Status: ${etxtRes.status}")
+
+        if (!etxtRes.status.isSuccess())
+            throw Error("Fetch URL Error. HttpStateCode is ${etxtRes.status} ")
+
+        val imgByte = etxtRes.body<ByteArray>()
+
+        val bitmapOption = BitmapFactory.Options().apply {
+            this.inPreferredConfig = Bitmap.Config.ARGB_8888
+        }
+        val imgBitmap = BitmapFactory
+            .decodeByteArray(imgByte, 0, imgByte.size, bitmapOption)
+            .asImageBitmap()
+
+        Log.v("getWebapEtxtBitmap",
+            "Width: ${imgBitmap.width}, Height: ${imgBitmap.height}")
+
+        return imgBitmap
+    }
+
 
     /**
-     * login to NKUST educational administration system (mobile version).
+     * Login to NKUST educational administration system (mobile version).
      */
     suspend fun loginMobile(
         uid: String,
         pwd: String,
-        etxtCode: String?
+        etxtCode: String?,
     ): Result<List<String>> {
         throw Error("Sorry! this function is not completed.")
     }
 
 
     /**
-     * check login state
+     * Check login state
      */
     suspend fun checkLoginValid(): Boolean {
         val res = client.get(NKUST_ROUTES.WEDAP_ENTRY_FRAME)
@@ -142,8 +166,13 @@ class NkustUser {
 
         return isValid
     }
+
+    suspend fun getEtxtText(): String {
+        return ""
+    }
 }
 
+const val ETXTTAG: String = "etxtPaser"
 private fun etxtPaser(imgBitmap: Bitmap): IntArray {
 //    val imgBitmap: Bitmap =
 //        BitmapFactory.decodeResource(
@@ -151,7 +180,7 @@ private fun etxtPaser(imgBitmap: Bitmap): IntArray {
 //            R.drawable.validate_code
 //        )
 
-    Log.e("=>>", "${imgBitmap.getHeight()} ${imgBitmap.getWidth()}")
+    Log.v(ETXTTAG, "=>> ${imgBitmap.getHeight()} ${imgBitmap.getWidth()}")
 
     val aWordSize = object {
         val height: Int = imgBitmap.getHeight()
@@ -200,3 +229,4 @@ private fun etxtPaser(imgBitmap: Bitmap): IntArray {
 
     return ans
 }
+
