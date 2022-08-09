@@ -55,7 +55,8 @@ dependencies {
     implementation "androidx.compose.ui:ui:$compose_version"
     implementation "androidx.compose.material3:material3:$material3_version"
     implementation "androidx.compose.ui:ui-tooling-preview:$compose_version"
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.1'
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
     implementation 'androidx.activity:activity-compose:1.5.1'
 
     // Material Icon
@@ -72,6 +73,9 @@ dependencies {
 
     // Korim: Kotlin cORoutines IMaging utilities for Multiplatform Kotlin
     implementation "com.soywiz.korlibs.korim:korim-android:$korimVersion"
+
+    // Kotlin Coroutines
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion"
 
     // Ktor
     implementation "io.ktor:ktor-client-core:2.0.3"
