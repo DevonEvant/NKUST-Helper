@@ -15,16 +15,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.nkustplatformassistant.data.remote.NkustUser
 import com.example.nkustplatformassistant.ui.theme.Nkust_platform_assistantTheme
 
-val user = NkustUser()
 
-
-/**
- * Interface to the Login data layer.
- */
-class MainActivity : ComponentActivity() {
+class HomeScreen : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     @SuppressLint("CoroutineCreationDuringComposition")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,19 +32,22 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    LoginForm()
                 }
             }
         }
     }
 }
 
+// TODO(1. On system navigate back: logoff
+//      2. A list for (1. class time table
+//                     2. school calender
+//                     3. specific function))
 
 @Preview(showBackground = true)
 @Composable
-fun MainActivityPreview() {
+fun HomeScreenPreview(
+) {
     Nkust_platform_assistantTheme {
-        LoginForm()
 //        Greeting("Android111111")
     }
 }
