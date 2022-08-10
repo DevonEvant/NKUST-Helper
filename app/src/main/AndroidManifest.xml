@@ -18,7 +18,7 @@
             android:label="@string/title_activity_web_view"
             android:theme="@style/Theme.Nkust_platform_assistant" />
         <activity
-            android:name=".MainActivity"
+            android:name=".HomeScreen"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.Nkust_platform_assistant">
