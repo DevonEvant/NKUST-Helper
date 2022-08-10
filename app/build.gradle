@@ -88,6 +88,9 @@ dependencies {
     // Accompanist WebView
     implementation "com.google.accompanist:accompanist-webview:$accompanist_version"
 
+    // Live Data
+    implementation "androidx.compose.runtime:runtime-livedata:$compose_version"
+
     // implementation 'org.tensorflow:tensorflow-lite-support:0.1.0'
     // implementation 'org.tensorflow:tensorflow-lite-metadata:0.1.0'
     // implementation 'org.tensorflow:tensorflow-lite-gpu:2.3.0'
