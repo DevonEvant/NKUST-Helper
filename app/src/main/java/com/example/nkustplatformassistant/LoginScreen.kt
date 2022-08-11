@@ -130,7 +130,9 @@ fun LoginForm(
 ) {
     val focusManager = LocalFocusManager.current
     val context = LocalContext.current
-    val etxtCodeViewModel = EtxtCodeViewModel()
+    val showDialog = remember { mutableStateOf(false) }
+
+    ShowDialogBase(showDialog)
 
     // user.loginWebap(uid, pwd, etxtCode)
     // navController.navigate(
@@ -220,7 +222,7 @@ fun LoginForm(
                             "ID or PW didn't input",
                             Toast.LENGTH_LONG).show()
                     } else {
-                        etxtCodeViewModel.reverseShowDialogState()
+                        showDialog.value = true
                     }
                 },
                 shape = RoundedCornerShape(50),
@@ -236,11 +238,9 @@ fun LoginForm(
 
 // EtxtCode State Hosting
 class EtxtCodeViewModel : ViewModel() {
-    private val _showDialog: MutableLiveData<Boolean> = MutableLiveData<Boolean>(false)
     private val _imageBitmap = MutableLiveData<ImageBitmap>()
     private val _etxtcode: MutableLiveData<String> = MutableLiveData("")
 
-    val showDialog: LiveData<Boolean> = _showDialog
     val etxtImageBitmap: LiveData<ImageBitmap> = _imageBitmap
     val etxtCode: LiveData<String> = _etxtcode
 
@@ -261,14 +261,11 @@ class EtxtCodeViewModel : ViewModel() {
     fun onEtxtCodeChange(newEtxtCode: String) {
         _etxtcode.value = newEtxtCode
     }
-
-    fun reverseShowDialogState() {
-        _showDialog.value = (_showDialog.value)!!.not()
-    }
 }
 
 @Composable
 fun ShowDialogBase(
+    showDialog: MutableState<Boolean>,
     context: Context = LocalContext.current,
     etxtCodeViewModel: EtxtCodeViewModel = viewModel(),
 ) {
@@ -276,18 +273,32 @@ fun ShowDialogBase(
     val etxtCode: String by etxtCodeViewModel.etxtCode.observeAsState("")
     val etxtImageBitmap: ImageBitmap by etxtCodeViewModel.etxtImageBitmap
         .observeAsState(ImageBitmap(width = 85, height = 40))
-    val showDialogState: Boolean by etxtCodeViewModel.showDialog.observeAsState(false)
 
     fun onPositiveCallback() {
-        etxtCodeViewModel.reverseShowDialogState()
+        // TODO: dismiss dialog and start new intent
+        when {
+            etxtCode.length < 4 -> {
+                Toast.makeText(context, "Check validate code and enter again!", Toast.LENGTH_LONG)
+                    .show()
+            }
+            etxtCode.isEmpty() -> {
+                Toast.makeText(context, "Enter validate code before login!", Toast.LENGTH_LONG)
+                    .show()
+            }
+            etxtCode.length == 4 -> {
+                Toast.makeText(context, "Checking...", Toast.LENGTH_LONG)
+                    .show()
+                showDialog.value = false
+            }
+        }
+
     }
 
     fun onNegativeCallback() {
-        etxtCodeViewModel.reverseShowDialogState()
-        Toast.makeText(context, "Enter validate code before login!", Toast.LENGTH_LONG)
-            .show()
+        // TODO: dismiss dialog
+        showDialog.value = false
     }
-    if (showDialogState)
+    if (showDialog.value)
         AlertDialogForEtxtCode(
             etxtCode = etxtCode,
             etxtImageBitmap = etxtImageBitmap,
