@@ -1,15 +1,12 @@
 package com.example.nkustplatformassistant
 
 
-import android.graphics.BitmapFactory
-import android.util.Log
 import com.example.nkustplatformassistant.data.NKUST_ROUTES
 import com.example.nkustplatformassistant.data.remote.NkustUser
 import org.junit.Test
 //import android.content.res.Resources
 
 
-import org.junit.Assert.*
 import kotlinx.coroutines.*
 
 
@@ -38,7 +35,7 @@ class ExampleUnitTest {
 
     @Test
     fun a() {
-        println(NKUST_ROUTES.WEDAP_ETXT_WITH_SYMBOL)
+        println(NKUST_ROUTES.WEBAP_ETXT_WITH_SYMBOL)
     }
 
 //    https://webap.nkust.edu.tw/nkust/validateCode.jsp/?it=1.3759458507944256
