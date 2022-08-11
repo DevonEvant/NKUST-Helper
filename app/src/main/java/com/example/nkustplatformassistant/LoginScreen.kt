@@ -9,6 +9,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -166,7 +167,7 @@ fun LoginForm(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(text = "Welcome!",
-            fontWeight = FontWeight.Bold)
+            style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.padding(bottom = 10.dp))
         OutlinedTextField(
             value = uid,
@@ -190,7 +191,8 @@ fun LoginForm(
         )
         Spacer(modifier = Modifier.padding(bottom = 10.dp))
         OutlinedTextField(
-            modifier = Modifier.fillMaxWidth(0.85F),
+            modifier = Modifier
+                .fillMaxWidth(0.85F),
             value = pwd,
             onValueChange = onPwdChanged,
             label = { Text(text = "Password") },
@@ -283,13 +285,19 @@ class EtxtCodeViewModel(
     fun onEtxtCodeChange(newEtxtCode: String) {
         _etxtcode.value = newEtxtCode
     }
-
+    // TODO: rewrite it to other method of Corouting scope
     fun loginForResult() {
         viewModelScope.launch {
             _stateOfLogin.value = user.loginWebap(
                 loginParmsViewModel.uid.value!!,
                 loginParmsViewModel.pwd.value!!,
                 etxtCode.value!!)
+
+            if (stateOfLogin.value!!) {
+                Log.v("Logon", "Success")
+            } else {
+                Log.v("Logon", "Fail")
+            }
         }
     }
 }
@@ -325,13 +333,8 @@ fun ShowDialogBase(
                 showDialog.value = false
 
                 // TODO: Login! and start new intent
-
                 etxtCodeViewModel.loginForResult()
-                if (etxtCodeViewModel.stateOfLogin.value!!) {
-                    Log.v("Logon", "Success")
-                } else {
-                    Log.v("Logon", "Fail")
-                }
+
             }
         }
 
@@ -371,8 +374,13 @@ fun AlertDialogForEtxtCode(
         {
             // 應該要交給observer處理
             if (etxtImageBitmap != ImageBitmap(width = 85, height = 40)) {
-                Column(modifier = Modifier.padding(8.dp)) {
-                    Text(text = "Please input validate code below:", fontSize = 20.sp)
+                Column(
+                    modifier = Modifier.padding(8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "Please input validate code below:",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
                     Spacer(modifier = Modifier.padding(10.dp))
 
                     Image(
@@ -385,7 +393,6 @@ fun AlertDialogForEtxtCode(
                     )
                     Spacer(modifier = Modifier.padding(5.dp))
                     OutlinedTextField(
-
                         value = etxtCode,
                         onValueChange = { onEtxtCodeChange(it) },
                         label = { Text(text = "Validate Code") },
@@ -399,12 +406,13 @@ fun AlertDialogForEtxtCode(
                             .focusTarget()
                             .fillMaxWidth(),
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-
-                        )
+                        keyboardActions = KeyboardActions { onPositiveClick.invoke() }
+                    )
                     Spacer(modifier = Modifier.padding(5.dp))
                     //button
                     Row(
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         OutlinedButton(onClick = {
                             onNegativeClick.invoke()
@@ -412,7 +420,7 @@ fun AlertDialogForEtxtCode(
                             Icon(imageVector = Icons.TwoTone.Cancel,
                                 modifier = Modifier.padding(end = 4.dp),
                                 contentDescription = null)
-                            Text(text = "Cancel login")
+                            Text(text = "Cancel")
                         }
                         Spacer(modifier = Modifier.width(4.dp))
                         OutlinedButton(
@@ -431,9 +439,9 @@ fun AlertDialogForEtxtCode(
                     Box(modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
+                        // TODO: 讓他有用
                     }
                 }
-
             }
         }
     }
