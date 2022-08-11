@@ -19,6 +19,16 @@ import io.ktor.util.cio.*
 import io.ktor.utils.io.*
 
 import java.io.File
+import java.lang.Exception
+
+/**
+ * Declare current data's state
+ */
+sealed class Response<out R> {
+    data class Loading(val data: Nothing) : Response<Nothing>()
+    data class Success<out T>(val data: T) : Response<T>()
+    data class Error(val exception: Exception) : Response<Exception>()
+}
 
 /**
  * About login to NKUST system.
@@ -30,7 +40,7 @@ class NkustUser {
         }
     }
 
-    val session = suspend { client.cookies(NKUST_ROUTES.WEDAP_BASE) }
+    val session = suspend { client.cookies(NKUST_ROUTES.WEBAP_BASE) }
 //    private val client = HttpClient(CIO) {
 //        engine {
 //            https {
@@ -53,7 +63,7 @@ class NkustUser {
 
         val doRefreshSession = suspend {
             client.get {
-                url(NKUST_ROUTES.WEDAP_HOME)
+                url(NKUST_ROUTES.WEBAP_HOME)
             }
         }
 
@@ -74,16 +84,15 @@ class NkustUser {
         pwd: String,
         etxtCode: String,
     ): Boolean {
-
-
-        val loginResponse = client.submitForm(
-            url = NKUST_ROUTES.WEDAP_LOGIN,
-            formParameters = Parameters.build {
-                append("uid", uid)
-                append("pwd", pwd)
-                append("etxt_code", etxtCode)
+        val loginResponse = client.request(
+            url = Url(NKUST_ROUTES.WEBAP_LOGIN)) {
+            url {
+                parameters.append("uid", uid)
+                parameters.append("pwd", pwd)
+                parameters.append("etxt_code", etxtCode)
             }
-        )
+            method = HttpMethod.Post
+        }
 
         if (!loginResponse.status.isSuccess())
             throw Error("Fetch URL Error. HttpStateCode is ${loginResponse.status} ")
@@ -93,6 +102,28 @@ class NkustUser {
 
         return true
     }
+//    suspend fun loginWebap(
+//        uid: String,
+//        pwd: String,
+//        etxtCode: String,
+//    ): Boolean {
+//        val loginResponse = client.submitForm(
+//            url = NKUST_ROUTES.WEBAP_LOGIN,
+//            formParameters = Parameters.build {
+//                append("uid", uid)
+//                append("pwd", pwd)
+//                append("etxt_code", etxtCode)
+//            }
+//        )
+//
+//        if (!loginResponse.status.isSuccess())
+//            throw Error("Fetch URL Error. HttpStateCode is ${loginResponse.status} ")
+//
+//        if ("驗證碼錯誤" in loginResponse.bodyAsText())
+//            return false
+//
+//        return true
+//    }
 
     /**
      * GET etxt image on NKUST educational administration system(webap).
@@ -102,7 +133,7 @@ class NkustUser {
 //        println("1==============================")
 
         val etxtRes = client.get {
-            url(NKUST_ROUTES.WEDAP_ETXT_WITH_SYMBOL)
+            url(NKUST_ROUTES.WEBAP_ETXT_WITH_SYMBOL)
         }
         println("2==============================")
 
@@ -122,7 +153,7 @@ class NkustUser {
      * Get Image to ImageBitmap with same session
      */
     suspend fun getWebapEtxtBitmap(): ImageBitmap {
-        val etxtRes = client.get(url = Url(NKUST_ROUTES.WEDAP_ETXT_WITH_SYMBOL))
+        val etxtRes = client.get(url = Url(NKUST_ROUTES.WEBAP_ETXT_WITH_SYMBOL))
         Log.v("getWebapEtxtBitmap", "Status: ${etxtRes.status}")
 
         if (!etxtRes.status.isSuccess())
@@ -160,7 +191,7 @@ class NkustUser {
      * Check login state
      */
     suspend fun checkLoginValid(): Boolean {
-        val res = client.get(NKUST_ROUTES.WEDAP_ENTRY_FRAME)
+        val res = client.get(NKUST_ROUTES.WEBAP_ENTRY_FRAME)
 
         val isValid = res.bodyAsText().contains("NKUST")
 
