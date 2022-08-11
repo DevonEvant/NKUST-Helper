@@ -5,10 +5,12 @@ package com.example.nkustplatformassistant
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,6 +29,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -76,6 +79,16 @@ class LoginScreen : ComponentActivity() {
 fun LoginScreenPreview() {
     Nkust_platform_assistantTheme {
         LoginScreenBase()
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun LoginWhateverPreview() {
+    Nkust_platform_assistantTheme() {
+        Column() {
+            ShowDialogBase(showDialog = remember { mutableStateOf(true) })
+        }
     }
 }
 
@@ -145,14 +158,16 @@ fun LoginForm(
 
     Column(
         modifier = Modifier
-            .padding(start = 10.dp, bottom = 10.dp)
-            // TODO: pointerInput() broken
+            .fillMaxSize()
             .pointerInput(Unit) {
                 detectTapGestures(onTap = { focusManager.clearFocus() })
-            }
+            },
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(text = "Welcome!",
-            modifier = Modifier.padding(bottom = 8.dp))
+            fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.padding(bottom = 10.dp))
         OutlinedTextField(
             value = uid,
             onValueChange = onUidChanged,
@@ -173,6 +188,7 @@ fun LoginForm(
                 },
             )
         )
+        Spacer(modifier = Modifier.padding(bottom = 10.dp))
         OutlinedTextField(
             modifier = Modifier.fillMaxWidth(0.85F),
             value = pwd,
@@ -195,7 +211,8 @@ fun LoginForm(
             keyboardActions = KeyboardActions(
                 onDone = {
                     focusManager.clearFocus()
-                    // TODO: Course Activity
+                    // TODO: If auto etxt implement is complete
+                    //       then check and login here
                 }
             ), trailingIcon = {
                 val image =
@@ -237,18 +254,23 @@ fun LoginForm(
 }
 
 // EtxtCode State Hosting
-class EtxtCodeViewModel : ViewModel() {
+class EtxtCodeViewModel(
+    private val loginParmsViewModel: LoginParamsViewModel = LoginParamsViewModel(),
+) : ViewModel() {
     private val _imageBitmap = MutableLiveData<ImageBitmap>()
     private val _etxtcode: MutableLiveData<String> = MutableLiveData("")
+    private val _stateOfLogin = MutableLiveData<Boolean>(false)
 
     val etxtImageBitmap: LiveData<ImageBitmap> = _imageBitmap
     val etxtCode: LiveData<String> = _etxtcode
+    val stateOfLogin: LiveData<Boolean> = _stateOfLogin
+    // TODO: 只是應急用
 
     init {
         requestEtxtImageBitmap()
     }
 
-    private fun requestEtxtImageBitmap() {
+    fun requestEtxtImageBitmap() {
         viewModelScope.launch {
             onEtxtImageBitmapChange(user.getWebapEtxtBitmap())
         }
@@ -260,6 +282,15 @@ class EtxtCodeViewModel : ViewModel() {
 
     fun onEtxtCodeChange(newEtxtCode: String) {
         _etxtcode.value = newEtxtCode
+    }
+
+    fun loginForResult() {
+        viewModelScope.launch {
+            _stateOfLogin.value = user.loginWebap(
+                loginParmsViewModel.uid.value!!,
+                loginParmsViewModel.pwd.value!!,
+                etxtCode.value!!)
+        }
     }
 }
 
@@ -274,8 +305,11 @@ fun ShowDialogBase(
     val etxtImageBitmap: ImageBitmap by etxtCodeViewModel.etxtImageBitmap
         .observeAsState(ImageBitmap(width = 85, height = 40))
 
+    fun onImageClicked() {
+        etxtCodeViewModel.requestEtxtImageBitmap()
+    }
+
     fun onPositiveCallback() {
-        // TODO: dismiss dialog and start new intent
         when {
             etxtCode.length < 4 -> {
                 Toast.makeText(context, "Check validate code and enter again!", Toast.LENGTH_LONG)
@@ -289,13 +323,21 @@ fun ShowDialogBase(
                 Toast.makeText(context, "Checking...", Toast.LENGTH_LONG)
                     .show()
                 showDialog.value = false
+
+                // TODO: Login! and start new intent
+
+                etxtCodeViewModel.loginForResult()
+                if (etxtCodeViewModel.stateOfLogin.value!!) {
+                    Log.v("Logon", "Success")
+                } else {
+                    Log.v("Logon", "Fail")
+                }
             }
         }
 
     }
 
     fun onNegativeCallback() {
-        // TODO: dismiss dialog
         showDialog.value = false
     }
     if (showDialog.value)
@@ -303,6 +345,7 @@ fun ShowDialogBase(
             etxtCode = etxtCode,
             etxtImageBitmap = etxtImageBitmap,
             onEtxtCodeChange = { etxtCodeViewModel.onEtxtCodeChange(it) },
+            onImageClicked = { onImageClicked() },
             onPositiveClick = { onPositiveCallback() },
             onNegativeClick = { onNegativeCallback() })
 
@@ -316,6 +359,7 @@ fun AlertDialogForEtxtCode(
     etxtCode: String,
     etxtImageBitmap: ImageBitmap,
     onEtxtCodeChange: (String) -> Unit,
+    onImageClicked: () -> Unit,
     onPositiveClick: () -> Unit,
     onNegativeClick: () -> Unit,
 ) {
@@ -335,7 +379,9 @@ fun AlertDialogForEtxtCode(
                         bitmap = etxtImageBitmap,
                         contentDescription = null,
                         alignment = Alignment.Center,
-                        modifier = Modifier.aspectRatio(5F),
+                        modifier = Modifier
+                            .aspectRatio(5F)
+                            .clickable { onImageClicked.invoke() },
                     )
                     Spacer(modifier = Modifier.padding(5.dp))
                     OutlinedTextField(
