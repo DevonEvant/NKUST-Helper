@@ -201,6 +201,32 @@ class NkustUser {
     suspend fun getEtxtText(): String {
         return ""
     }
+
+    /**
+     * get School Timetable
+     */
+    suspend fun getSchoolTimetable(): Boolean {
+        val timetableResponse = client.request(
+            url = Url(NKUST_ROUTES.SCHOOL_TABLETIME)) {
+            url {
+                parameters.append("spath", "ag_pro/ag222.jsp?")
+                parameters.append("arg01", academicYear)
+                parameters.append("arg02", semester)
+            }
+            method = HttpMethod.Post
+        }
+
+        if ("" == "查無相關學年期課表資料") {
+//            fail
+        }
+
+        if ("" == "學生目前無選課資料!") {
+//            fail
+        }
+
+
+        return isValid
+    }
 }
 
 const val ETXTTAG: String = "etxtPaser"
