@@ -11,7 +11,6 @@ import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
-import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.util.*
@@ -33,31 +32,20 @@ sealed class Response<out R> {
 /**
  * About login to NKUST system.
  */
-class NkustUser {
+open class NkustUser {
     var client = HttpClient(CIO) {
         install(HttpCookies) {
             storage = AcceptAllCookiesStorage()
         }
     }
 
-    val session = suspend { client.cookies(NKUST_ROUTES.WEBAP_BASE) }
-//    private val client = HttpClient(CIO) {
-//        engine {
-//            https {
-//                trustManager = object: X509TrustManager {
-//                    override fun checkClientTrusted(p0: Array<out X509Certificate>?, p1: String?) { }
-//
-//                    override fun checkServerTrusted(p0: Array<out X509Certificate>?, p1: String?) { }
-//
-//                    override fun getAcceptedIssuers(): Array<X509Certificate>? = null
-//                }
-//            }
-//        }
-//    }
+//    val session = suspend { client.cookies(NKUST_ROUTES.WEBAP_BASE) }
 
     /**
      * Refresh Session if session unavailable.
-     * if parameter [forced] is true, the session will be forced to refresh
+     * We'll check [checkLoginValid] first, if session expire (which return false),
+     * it'll automatic refresh session, of course you will need to re-login.
+     * If parameter [forced] is true, the session will be forced to refresh
      */
     suspend fun refreshSession(forced: Boolean = false): Unit {
 
@@ -76,8 +64,8 @@ class NkustUser {
     }
 
     /**
-     * Login to NKUST educational administration system (webap).
-     * If you need etxt image, please call [getWebapEtxtImg] function
+     * Login to WEBAP, if you need etxt_code image for testing,
+     * call [getAndSaveWebapEtxtImage].
      */
     suspend fun loginWebap(
         uid: String,
@@ -85,7 +73,7 @@ class NkustUser {
         etxtCode: String,
     ): Boolean {
         val loginResponse = client.request(
-            url = Url(NKUST_ROUTES.WEBAP_LOGIN)) {
+            url = Url(NKUST_ROUTES.WEBAP_PERCHK)) {
             url {
                 parameters.append("uid", uid)
                 parameters.append("pwd", pwd)
@@ -97,56 +85,28 @@ class NkustUser {
         if (!loginResponse.status.isSuccess())
             throw Error("Fetch URL Error. HttpStateCode is ${loginResponse.status} ")
 
-        if ("驗證碼錯誤" in loginResponse.bodyAsText())
+        if (loginResponse.bodyAsText().contains("驗證碼錯誤"))
             return false
 
         return true
     }
-//    suspend fun loginWebap(
-//        uid: String,
-//        pwd: String,
-//        etxtCode: String,
-//    ): Boolean {
-//        val loginResponse = client.submitForm(
-//            url = NKUST_ROUTES.WEBAP_LOGIN,
-//            formParameters = Parameters.build {
-//                append("uid", uid)
-//                append("pwd", pwd)
-//                append("etxt_code", etxtCode)
-//            }
-//        )
-//
-//        if (!loginResponse.status.isSuccess())
-//            throw Error("Fetch URL Error. HttpStateCode is ${loginResponse.status} ")
-//
-//        if ("驗證碼錯誤" in loginResponse.bodyAsText())
-//            return false
-//
-//        return true
-//    }
 
     /**
-     * GET etxt image on NKUST educational administration system(webap).
+     * Save etxt_code image on webap using GET.
      */
     @OptIn(InternalAPI::class)
-    suspend fun getWebapEtxtImg(): File {
-//        println("1==============================")
+    suspend fun getAndSaveWebapEtxtImage() {
 
         val etxtRes = client.get {
             url(NKUST_ROUTES.WEBAP_ETXT_WITH_SYMBOL)
         }
-        println("2==============================")
 
         if (!etxtRes.status.isSuccess())
             throw Error("Fetch URL Error. HttpStateCode is ${etxtRes.status} ")
-        println("3==============================")
 
         val imgFile: File = File("./etxt.jpg")
         etxtRes.content.copyAndClose(imgFile.writeChannel())
-        // val imgBitmap = BitmapFactory.decodeFile(imgFile.path)
-        println("4==============================")
 
-        return imgFile
     }
 
     /**
@@ -174,30 +134,17 @@ class NkustUser {
         return imgBitmap
     }
 
-
-    /**
-     * Login to NKUST educational administration system (mobile version).
-     */
-    suspend fun loginMobile(
-        uid: String,
-        pwd: String,
-        etxtCode: String?,
-    ): Result<List<String>> {
-        throw Error("Sorry! this function is not completed.")
-    }
-
-
     /**
      * Check login state
      */
     suspend fun checkLoginValid(): Boolean {
-        val res = client.get(NKUST_ROUTES.WEBAP_ENTRY_FRAME)
 
-        val isValid = res.bodyAsText().contains("NKUST")
+        val res = client.get(NKUST_ROUTES.WEBAP_HEAD)
 
-        return isValid
+        return res.bodyAsText().contains("NKUST")
     }
 
+<<<<<<< HEAD
     suspend fun getEtxtText(): String {
         return ""
     }
@@ -227,6 +174,23 @@ class NkustUser {
 
         return isValid
     }
+=======
+//    suspend fun getAnyPage(url: Url){
+//
+//    }
+
+
+//    /**
+//     * Login to WEBAP (mobile version).
+//     */
+//    suspend fun loginMobile(
+//        uid: String,
+//        pwd: String,
+//        etxtCode: String?,
+//    ): Result<List<String>> {
+//        throw Error("Sorry! this function is not completed.")
+//    }
+>>>>>>> origin/test
 }
 
 const val ETXTTAG: String = "etxtPaser"
@@ -237,16 +201,16 @@ private fun etxtPaser(imgBitmap: Bitmap): IntArray {
 //            R.drawable.validate_code
 //        )
 
-    Log.v(ETXTTAG, "=>> ${imgBitmap.getHeight()} ${imgBitmap.getWidth()}")
+    Log.v(ETXTTAG, "=>> ${imgBitmap.height} ${imgBitmap.width}")
 
     val aWordSize = object {
-        val height: Int = imgBitmap.getHeight()
-        val width: Int = imgBitmap.getWidth() / 4
+        val height: Int = imgBitmap.height
+        val width: Int = imgBitmap.width / 4
     }
 
 
-    for (h in 0..(imgBitmap.height - 1)) {
-        for (w in (0..imgBitmap.width - 1) step 4) {
+    for (h in 0 until imgBitmap.height) {
+        for (w in (0 until imgBitmap.width) step 4) {
             val color = imgBitmap.getPixel(w, h)
 //                    val A: Int = color shr 24 and 0xff // or color >>> 24
             val R: Int = color shr 16 and 0xff
