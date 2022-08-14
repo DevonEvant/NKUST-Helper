@@ -261,12 +261,11 @@ class EtxtCodeViewModel(
 ) : ViewModel() {
     private val _imageBitmap = MutableLiveData<ImageBitmap>()
     private val _etxtcode: MutableLiveData<String> = MutableLiveData("")
-    private val _stateOfLogin = MutableLiveData<Boolean>(false)
 
     val etxtImageBitmap: LiveData<ImageBitmap> = _imageBitmap
     val etxtCode: LiveData<String> = _etxtcode
-    val stateOfLogin: LiveData<Boolean> = _stateOfLogin
-    // TODO: 只是應急用
+
+    private var stateOfLogin: Boolean = false
 
     init {
         requestEtxtImageBitmap()
@@ -285,20 +284,16 @@ class EtxtCodeViewModel(
     fun onEtxtCodeChange(newEtxtCode: String) {
         _etxtcode.value = newEtxtCode
     }
+
     // TODO: rewrite it to other method of Corouting scope
-    fun loginForResult() {
+    fun loginForResult(): Boolean {
         viewModelScope.launch {
-            _stateOfLogin.value = user.loginWebap(
+            stateOfLogin = user.loginWebap(
                 loginParmsViewModel.uid.value!!,
                 loginParmsViewModel.pwd.value!!,
                 etxtCode.value!!)
-
-            if (stateOfLogin.value!!) {
-                Log.v("Logon", "Success")
-            } else {
-                Log.v("Logon", "Fail")
-            }
         }
+        return stateOfLogin
     }
 }
 
@@ -333,7 +328,9 @@ fun ShowDialogBase(
                 showDialog.value = false
 
                 // TODO: Login! and start new intent
-                etxtCodeViewModel.loginForResult()
+                if(etxtCodeViewModel.loginForResult()){
+                    println()
+                }
 
             }
         }
