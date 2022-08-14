@@ -16,6 +16,12 @@ import org.jsoup.parser.*
  */
 class FetchData : NkustUser() {
     // TODO: 1. get 入學年分 2. get dropdown list and pop curryear < 入學年分
+
+    /**
+     * Parser to parse HTML into a "org.jsoup.nodes.Document"
+     * Class Document inherited org.jsoup.nodes.Element,
+     * org.jsoup.nodes.Node
+     */
     val parser: Parser = Parser.htmlParser()
 
 //    suspend fun showSomeData() = coroutineScope {
@@ -184,13 +190,27 @@ class FetchData : NkustUser() {
 
             val optionList = parser
                 .parseInput(content, urlDst)
-                .selectXpath("//form[@id='thisform']/table/tr/td//select")
-                .eachAttr("option")
-                .toList()
+                .selectXpath("//*[@id=\"yms\"]")
+                .eachAttr("value")
 
-            for (item in optionList) {
+            for (item in optionList.listIterator()){
                 println(item)
             }
+
+            val optionList2 = parser
+                .parseInput(content, urlDst)
+                .cssSelector()
+
+            println(optionList2)
+
+            val optionList3 = parser
+                .parseInput(content, urlDst)
+                .hasAttr("option")
+
+            println(optionList3)
+
+
+
         }
     }
 }
