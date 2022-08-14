@@ -117,17 +117,31 @@ fun ViewWeb(url: String) {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
 
+                if (url == NKUST_ROUTES.WEBAP_LOGIN) {
+                    val cookies = CookieManager.getInstance().getCookie(url)?.let {
+                        Log.v("onPageFinished", "Cookie received:" +
+                                String(it.toByteArray(), charset("UTF-8")))
+                        String(it.toByteArray(), charset("UTF-8"))
+                            .split(";")
+                            .toTypedArray()
+                    }
+                    if (cookies != null) {
+                        for (item in cookies) {
+                            Log.e("onPageFinished", item)
+                        }
+                    }
                 }
             }
         }
     }
 
     // Start WebView
-//    WebView(
-//        state = state,
-//        modifier = Modifier.fillMaxWidth(),
-//        onCreated = { webView ->
-//            webView.settings.javaScriptEnabled = true
-//        },
-//        client = webClient
-//    )
+    WebView(
+        state = state,
+        modifier = Modifier.fillMaxWidth(),
+        onCreated = { webView ->
+            webView.settings.javaScriptEnabled = true
+        },
+        client = webClient
+    )
+}
