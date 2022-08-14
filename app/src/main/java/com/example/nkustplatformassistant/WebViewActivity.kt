@@ -24,8 +24,6 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.core.net.toUri
 import com.example.nkustplatformassistant.data.NKUST_ROUTES.WEDAP_LOGIN
-import com.example.nkustplatformassistant.MainActivity
-import com.example.nkustplatformassistant.data.NKUST_ROUTES.WEDAP_BASE
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.cookies.*
