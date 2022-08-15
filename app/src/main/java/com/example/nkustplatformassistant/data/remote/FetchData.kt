@@ -4,7 +4,7 @@ import com.example.nkustplatformassistant.data.NKUST_ROUTES
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import org.jsoup.Jsoup
+import org.jsoup.nodes.FormElement
 import org.jsoup.parser.*
 
 
@@ -164,10 +164,12 @@ class FetchData : NkustUser() {
             .slice(IntRange(start = 1, endInclusive = 3))
     }
 
-    /*: Map<String, String>*/
-    // TODO: 觀察AG008的動作，他點進去很不一樣(fnc.jsp的action),
-    //  所以如果可以，用爬蟲直接把action抓下來
-    suspend fun getYearsOfDropDownList() {
+    /**
+     * Get Dropdown list as Map<String, String>.
+     * but we can't guarantee that all value is useful,
+     * because the design of the owner put some useless value in it.
+     */
+    suspend fun getYearsOfDropDownList(): Map<String, String> {
         // init...
         val startOfCurr = yearOfEnrollment()
         val dstBase: Map<String, String> = getDstJspBase("AG008")
@@ -186,31 +188,25 @@ class FetchData : NkustUser() {
                 }
             }
         }.bodyAsText().let { content ->
-            println(content)
-
-            val optionList = parser
+            // key (e.g. 110,1)
+            val dropdownListValue: List<String> = parser
                 .parseInput(content, urlDst)
-                .selectXpath("//*[@id=\"yms\"]")
+                .select("select")
+                .select("option")
                 .eachAttr("value")
 
-            for (item in optionList.listIterator()){
-                println(item)
+            // value (e.g. 110學年度第1學期)
+            val dropdownListString: List<String> = parser
+                .parseInput(content, urlDst)
+                .select("select")
+                .select("option")
+                .eachText()
+
+            val dropdownList = mutableMapOf<String, String>()
+            dropdownListString.forEachIndexed { index, _ ->
+                dropdownList[dropdownListValue[index]] = dropdownListString[index]
             }
-
-            val optionList2 = parser
-                .parseInput(content, urlDst)
-                .cssSelector()
-
-            println(optionList2)
-
-            val optionList3 = parser
-                .parseInput(content, urlDst)
-                .hasAttr("option")
-
-            println(optionList3)
-
-
-
+            return dropdownList
         }
     }
 }
