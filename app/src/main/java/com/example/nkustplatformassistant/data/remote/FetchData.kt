@@ -4,12 +4,17 @@ import com.example.nkustplatformassistant.data.NKUST_ROUTES
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import org.jsoup.nodes.FormElement
 import org.jsoup.parser.*
 
 
 // get xpath in jsoup
 // https://stackoverflow.com/questions/16335820/convert-xpath-to-jsoup-query
+
+data class Subject(
+    val subjectName: String,
+    val midScore: String,
+    val finalScore: String,
+)
 
 /**
  * Before using this section, you must logged in.
@@ -22,19 +27,7 @@ class FetchData : NkustUser() {
      * Class Document inherited org.jsoup.nodes.Element,
      * org.jsoup.nodes.Node
      */
-    val parser: Parser = Parser.htmlParser()
-
-//    suspend fun showSomeData() = coroutineScope {
-//        val data = async(Dispatchers.IO) { // <- extension on current scope
-//            ... load some Contacts.Intents.UI data for the Main thread ...
-//        }
-//
-//        withContext(Dispatchers.Main) {
-//            doSomeWork()
-//            val result = data.await()
-//            display(result)
-//        }
-//    }
+    private val parser: Parser = Parser.htmlParser()
 
     suspend fun getFncJspBase(): Map<String, String> {
         val url = NKUST_ROUTES.WEBAP_LEFT_PANEL
@@ -76,7 +69,8 @@ class FetchData : NkustUser() {
      * Get payload of destination (Must be uppercase),
      * it'll return Map<String,String>.
      * Notice: first value of map is action, which the value
-     * the website will auto submitted for.
+     * the website will auto submitted for, second value is spath,
+     *  按鈕按下後表單submit用
      */
     suspend fun getDstJspBase(dst: String): Map<String, String> {
 //        val dstPre = dst.slice(IntRange(start = 0, endInclusive = 1))
@@ -103,11 +97,16 @@ class FetchData : NkustUser() {
             }")
 
             val mapOfDstInfo = mapOf<String, String>(
+                // TODO use parser only once
                 "action" to "http://webap.nkust.edu.tw/nkust/${
                     parser.parseInput(content, urlFnc)
                         .selectXpath("//*[@id=\"thisform\"]")
                         .attr("action")
                 }",
+                "spath" to parser.parseInput(content, urlFnc)
+                    .selectXpath("//*[@id=\"thisform\"]")
+                    .attr("action")
+                    .split("?", limit = 2)[1],
                 "arg01" to parser.parseInput(content, urlFnc)
                     .selectXpath("//*[@id=\"arg01\"]")
                     .attr("value"),
@@ -144,6 +143,9 @@ class FetchData : NkustUser() {
         }
     }
 
+    /**
+     * 回傳現在學年+學期
+     */
     suspend fun getCurrCurriculum(): String {
         client.get(url = Url(NKUST_ROUTES.WEBAP_LEFT_PANEL))
             .bodyAsText().let { content ->
@@ -169,7 +171,7 @@ class FetchData : NkustUser() {
      * but we can't guarantee that all value is useful,
      * because the design of the owner put some useless value in it.
      */
-    suspend fun getYearsOfDropDownList(): Map<String, String> {
+    suspend fun getYearsOfDropDownListByMap(): Map<String, String> {
         // init...
         val startOfCurr = yearOfEnrollment()
         val dstBase: Map<String, String> = getDstJspBase("AG008")
@@ -182,7 +184,7 @@ class FetchData : NkustUser() {
             url {
                 // TODO: action added
                 dstBase.forEach { (k, v) ->
-                    if (k != "action") {
+                    if (k != "action" && k != "spath") {
                         parameters.append(k, v)
                     }
                 }
@@ -206,8 +208,76 @@ class FetchData : NkustUser() {
             dropdownListString.forEachIndexed { index, _ ->
                 dropdownList[dropdownListValue[index]] = dropdownListString[index]
             }
+
+//            // TODO: Pop option before year of enrollment
+//            val enrollment = yearOfEnrollment()
+//            dropdownList.forEach { (key, _) ->
+//                if (key.slice(IntRange(start = 0, endInclusive = 2)) < enrollment){
+//
+//                }
+//            }
+
+
             return dropdownList
         }
+    }
+
+    /**
+     * By providing year and semester, you can get a list of [Subject]
+     * consist of subjectName, Mid-term-exam Score, and Final-exam Score,
+     * but we won't guarantee it's non-null.
+     */
+    suspend fun getYearlyScore(
+        year: String,
+        semester: String,
+    ) {
+        // temprory usage
+        val dropdownList = getDstJspBase("AG008") // score page
+
+        val scoreUrl = Url(NKUST_ROUTES.WEBAP_ENTRY_FRAME + "/../ag_pro/ag008.jsp")
+
+        client.post(scoreUrl) {
+            url {
+                parameters.append("yms", "$year,$semester")
+                parameters.append("spath", dropdownList["spath"]!!)
+                parameters.append("arg01", year)
+                parameters.append("arg02", semester)
+            }
+        }.bodyAsText().let {
+            val subject = parser
+                .parseInput(it, scoreUrl.toString())
+                .selectXpath("(//td[@align='left'])")
+                .eachText()
+
+            val midScore = parser
+                .parseInput(it, scoreUrl.toString())
+                .selectXpath("//form[@name='thisform']/table[1]/tbody[1]/tr/td[7]")
+                .eachText().drop(1)
+
+
+            val finalScore = parser
+                .parseInput(it, scoreUrl.toString())
+                .selectXpath("//form[@name='thisform']/table[1]/tbody[1]/tr/td[8]")
+                .eachText().drop(1)
+
+            val subjectList = mutableListOf<Subject>()
+
+            subject.forEachIndexed { index, _ ->
+                subjectList.add(index, Subject(
+                    subject[index],
+                    midScore[index],
+                    finalScore[index])
+                )
+            }
+
+            for (item in subjectList) {
+                println("Subject: ${item.subjectName} " +
+                        "Mid-term Score: ${item.midScore} " +
+                        "Final Score: ${item.finalScore}"
+                )
+            }
+        }
+
     }
 }
 

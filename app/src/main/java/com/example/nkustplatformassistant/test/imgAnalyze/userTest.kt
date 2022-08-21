@@ -12,6 +12,8 @@ import io.ktor.http.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import org.jsoup.Jsoup
+import org.jsoup.parser.Parser
 
 fun main() {
 
@@ -31,8 +33,9 @@ fun main() {
 
             println("login state: ${user.loginWebap(id, pw, etxtCode)}")
 
-//            println(user.yearOfEnrollment())
-            println(user.getYearsOfDropDownList())
+            user.getYearlyScore(year = "110", semester = "1")
+
+//            println(user.getYearsOfDropDownListByMap())
 
         }
     }
