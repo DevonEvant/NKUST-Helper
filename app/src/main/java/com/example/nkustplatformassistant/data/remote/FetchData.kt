@@ -20,7 +20,6 @@ data class Subject(
  * Before using this section, you must logged in.
  */
 class FetchData : NkustUser() {
-    // TODO: 1. get 入學年分 2. get dropdown list and pop curryear < 入學年分
 
     /**
      * Parser to parse HTML into a "org.jsoup.nodes.Document"
@@ -144,7 +143,7 @@ class FetchData : NkustUser() {
     }
 
     /**
-     * 回傳現在學年+學期
+     * return current year and semester as "year,semester" String
      */
     suspend fun getCurrCurriculum(): String {
         client.get(url = Url(NKUST_ROUTES.WEBAP_LEFT_PANEL))
@@ -204,21 +203,22 @@ class FetchData : NkustUser() {
                 .select("option")
                 .eachText()
 
+            val enrollment = yearOfEnrollment()
             val dropdownList = mutableMapOf<String, String>()
+
             dropdownListString.forEachIndexed { index, _ ->
                 dropdownList[dropdownListValue[index]] = dropdownListString[index]
             }
 
-//            // TODO: Pop option before year of enrollment
-//            val enrollment = yearOfEnrollment()
-//            dropdownList.forEach { (key, _) ->
-//                if (key.slice(IntRange(start = 0, endInclusive = 2)) < enrollment){
-//
-//                }
-//            }
-
-
-            return dropdownList
+            return dropdownList.let {
+                val tempListMap = mutableMapOf<String, String>()
+                it.forEach { (key, value) ->
+                    if (key.split(",")[0].toInt() >= enrollment.toInt()) {
+                        tempListMap[key] = value
+                    }
+                }
+                tempListMap
+            }
         }
     }
 
@@ -230,7 +230,7 @@ class FetchData : NkustUser() {
     suspend fun getYearlyScore(
         year: String,
         semester: String,
-    ) {
+    ): List<Subject> {
         // temprory usage
         val dropdownList = getDstJspBase("AG008") // score page
 
@@ -270,12 +270,14 @@ class FetchData : NkustUser() {
                 )
             }
 
-            for (item in subjectList) {
-                println("Subject: ${item.subjectName} " +
-                        "Mid-term Score: ${item.midScore} " +
-                        "Final Score: ${item.finalScore}"
-                )
-            }
+//          Debug...
+//            for (item in subjectList) {
+//                println("Subject: ${item.subjectName} " +
+//                        "Mid-term Score: ${item.midScore} " +
+//                        "Final Score: ${item.finalScore}"
+//                )
+//            }
+            return subjectList
         }
 
     }
