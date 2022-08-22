@@ -93,6 +93,7 @@ dependencies {
 
     // jsoup HTML parser library @ https://jsoup.org/
     implementation 'org.jsoup:jsoup:1.15.2'
+    implementation 'org.apache.pdfbox:pdfbox:2.0.17'
 
     // implementation 'org.tensorflow:tensorflow-lite-support:0.1.0'
     // implementation 'org.tensorflow:tensorflow-lite-metadata:0.1.0'
