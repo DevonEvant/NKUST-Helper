@@ -4,7 +4,12 @@ import com.example.nkustplatformassistant.data.NKUST_ROUTES
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import org.apache.pdfbox.pdmodel.PDDocument
+import org.apache.pdfbox.text.PDFTextStripper
+import org.jsoup.Jsoup
 import org.jsoup.parser.*
+import java.io.File
+import java.util.*
 
 
 // get xpath in jsoup
@@ -90,11 +95,13 @@ class FetchData : NkustUser() {
             }
         }.bodyAsText().let { content ->
             // testing print
-            println("action: http://webap.nkust.edu.tw/nkust/${
-                parser.parseInput(content, urlFnc)
-                    .selectXpath("//*[@id=\"thisform\"]")
-                    .attr("action")
-            }")
+            println(
+                "action: http://webap.nkust.edu.tw/nkust/${
+                    parser.parseInput(content, urlFnc)
+                        .selectXpath("//*[@id=\"thisform\"]")
+                        .attr("action")
+                }"
+            )
 
             val mapOfDstInfo = mapOf<String, String>(
                 // TODO use parser only once
@@ -263,23 +270,70 @@ class FetchData : NkustUser() {
             val subjectList = mutableListOf<Subject>()
 
             subject.forEachIndexed { index, _ ->
-                subjectList.add(index, Subject(
-                    subject[index],
-                    midScore[index],
-                    finalScore[index])
+                subjectList.add(
+                    index, Subject(
+                        subject[index],
+                        midScore[index],
+                        finalScore[index]
+                    )
                 )
             }
 
             for (item in subjectList) {
-                println("Subject: ${item.subjectName} " +
-                        "Mid-term Score: ${item.midScore} " +
-                        "Final Score: ${item.finalScore}"
+                println(
+                    "Subject: ${item.subjectName} " +
+                            "Mid-term Score: ${item.midScore} " +
+                            "Final Score: ${item.finalScore}"
                 )
             }
         }
 
     }
 }
+
+data class NkustEvent(
+    val agency: String,
+    val time: String,
+    val description: String
+)
+
+/**
+ * paser Nkust Calender. give Nkust Calender pdf file. return all of eventlist in the pdf file
+ */
+fun paserNkustCalender(pdf: File): MutableList<NkustEvent> {
+    val doc = PDDocument.load(pdf)
+    val docTextSoup = PDFTextStripper().getText(doc).let {
+//        it.dropLast(5)
+        it.dropLast(it.indexOfLast { it == '1' })
+        it
+    }
+
+    val nkustEvents = mutableListOf<NkustEvent>()
+
+    Regex("[A○].+\\((\\S* ?\\S)+\\s").findAll(docTextSoup).forEach {
+        val event = docTextSoup.substring(it.range)
+
+        val agency = event.substring(0, event.indexOf('(')).let{
+            it.replace("[A○E \\s]+".toRegex(),"")
+        }
+        val time = event.substring(event.indexOf('(') + 1, event.indexOf(')'))
+        val description = event.substringAfter(')')
+
+        println("=>> $agency | $time | $description")
+
+        nkustEvents.add(
+            NkustEvent(
+                agency = agency,
+                time = time,
+                description = description
+            )
+        )
+    }
+    return nkustEvents
+}
+
+
+
 
 
 
