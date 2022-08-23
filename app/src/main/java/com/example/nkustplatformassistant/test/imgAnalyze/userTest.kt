@@ -2,18 +2,10 @@
 
 package com.example.nkustplatformassistant.test.imgAnalyze
 
-import com.example.nkustplatformassistant.data.NKUST_ROUTES
 import com.example.nkustplatformassistant.data.remote.FetchData
-import com.example.nkustplatformassistant.data.remote.NkustUser
-import com.example.nkustplatformassistant.user
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import org.jsoup.Jsoup
-import org.jsoup.parser.Parser
 
 fun main() {
 
@@ -33,10 +25,19 @@ fun main() {
 
             println("login state: ${user.loginWebap(id, pw, etxtCode)}")
 
-            user.getYearlyScore(year = "110", semester = "1")
 
-//            println(user.getYearsOfDropDownListByMap())
+            user.getYearlyScore(year = "110", semester = "1").let {
+                it.forEach { (subjectName, midScore, finalScore) ->
+                    println("Subject: $subjectName " +
+                            "Mid-term Score: $midScore " +
+                            "Final Score: $finalScore"
+                    )
+                }
+            }
 
+            user.getYearsOfDropDownListByMap().forEach { (key, value) ->
+                println("$key: $value")
+            }
         }
     }
 }

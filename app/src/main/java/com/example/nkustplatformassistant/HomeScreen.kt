@@ -48,7 +48,15 @@ class HomeScreen : ComponentActivity() {
 fun HomeScreenPreview(
 ) {
     Nkust_platform_assistantTheme {
-//        Greeting("Android111111")
+        Greeting1("Android111111")
+    }
+}
+
+@Composable
+@Preview(showBackground = true)
+fun WhateverPreview() {
+    Nkust_platform_assistantTheme {
+        ComposeCard({}, {})
     }
 }
 
@@ -60,6 +68,10 @@ fun HomeScreenPreview(
  * https://pratikchauhan11.medium.com/playing-with-textfield-in-compose-android-declarative-ui-de8c03aa4748
  */
 
+@Composable
+fun Greeting1(name: String) {
+    Text(text = "Hello $name!")
+}
 
 
 
@@ -103,13 +115,4 @@ fun ComposeCard(
         }
     }
 }
-
-@Composable
-@Preview(showBackground = true)
-fun WhateverPreview() {
-    Nkust_platform_assistantTheme {
-        ComposeCard({}, {})
-    }
-}
-
 

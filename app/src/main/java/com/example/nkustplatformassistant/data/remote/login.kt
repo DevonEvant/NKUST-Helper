@@ -29,16 +29,6 @@ sealed class Response<out R> {
     data class Error(val exception: Exception) : Response<Exception>()
 }
 
-data class webapFncOption (
-    var fncid:String = "AG222",
-    var std_id:String = "",
-    var local_ip:String = "",
-    var sysyear:String = "111",
-    var syssms:String = "1",
-    var online:String = "okey",
-    var loginid:String = "C110152351",
-)
-
 /**
  * About login to NKUST system.
  */
@@ -83,8 +73,7 @@ open class NkustUser {
         etxtCode: String,
     ): Boolean {
         val loginResponse = client.request(
-            url = Url(NKUST_ROUTES.WEBAP_PERCHK)
-        ) {
+            url = Url(NKUST_ROUTES.WEBAP_LOGIN)) {
             url {
                 parameters.append("uid", uid)
                 parameters.append("pwd", pwd)
@@ -102,28 +91,11 @@ open class NkustUser {
         return true
     }
 
-    @OptIn(InternalAPI::class)
-    suspend fun getWebapEtxtImg(): File {
-
-        val etxtRes = client.get {
-            url(NKUST_ROUTES.WEBAP_ETXT_WITH_SYMBOL)
-        }
-
-        if (!etxtRes.status.isSuccess())
-            throw Error("Fetch URL Error. HttpStateCode is ${etxtRes.status} ")
-
-        val imgFile: File = File("./etxt.jpg")
-        etxtRes.content.copyAndClose(imgFile.writeChannel())
-        // val imgBitmap = BitmapFactory.decodeFile(imgFile.path)
-
-        return imgFile
-    }
-
     /**
      * Save etxt_code image on webap using GET.
      */
     @OptIn(InternalAPI::class)
-    suspend fun getAndSaveWebapEtxtImage() {
+    suspend fun getAndSaveWebapEtxtImage(): File {
 
         val etxtRes = client.get {
             url(NKUST_ROUTES.WEBAP_ETXT_WITH_SYMBOL)
@@ -135,6 +107,7 @@ open class NkustUser {
         val imgFile: File = File("./etxt.jpg")
         etxtRes.content.copyAndClose(imgFile.writeChannel())
 
+        return imgFile
     }
 
     /**
@@ -164,6 +137,19 @@ open class NkustUser {
         return imgBitmap
     }
 
+
+    /**
+     * Login to NKUST educational administration system (mobile version).
+     */
+    suspend fun loginMobile(
+        uid: String,
+        pwd: String,
+        etxtCode: String?,
+    ): Result<List<String>> {
+        throw Error("Sorry! this function is not completed.")
+    }
+
+
     /**
      * Check login state
      */
@@ -177,60 +163,6 @@ open class NkustUser {
     suspend fun getEtxtText(): String {
         return ""
     }
-
-    /**
-     *  chose Business function on webap function page and return it(is a page)
-     */
-    suspend fun getWebapBusinessFunction(option: webapFncOption) {
-        val res = client.request(
-            url = Url(NKUST_ROUTES.WEBAP_FNC)
-        ) {
-            url {
-                  parameters.append( "fncid", option.fncid)
-                parameters.append( "std_id", option.std_id)
-                parameters.append( "local_ip", option.local_ip)
-                parameters.append( "sysyear", option.sysyear)
-                parameters.append( "syssms", option.syssms)
-                parameters.append( "online", option.online)
-                parameters.append( "loginid", option.loginid)
-            }
-            method = HttpMethod.Post
-        }
-
-        println(res.bodyAsText())
-
-    }
-
-    /**
-     * get School Timetable
-     */
-    suspend fun getSchoolTimetable(): Boolean {
-        val academicYear = "" //
-        val semester = "" //
-        val timetableResponse = client.request(
-            url = Url(NKUST_ROUTES.SCHOOL_TABLETIME)
-        ) {
-            url {
-                parameters.append("spath", "ag_pro/ag222.jsp?")
-                parameters.append("arg01", academicYear)
-                parameters.append("arg02", semester)
-            }
-            method = HttpMethod.Post
-        }
-
-        if ("" == "查無相關學年期課表資料") {
-//            fail
-        }
-
-        if ("" == "學生目前無選課資料!") {
-//            fail
-        }
-
-
-        return true
-    }
-
-    suspend fun paserHtmlForm(source:String):List<>{}
 }
 
 const val ETXTTAG: String = "etxtPaser"

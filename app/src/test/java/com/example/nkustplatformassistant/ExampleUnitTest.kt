@@ -19,15 +19,15 @@ class ExampleUnitTest {
 
     @Test
     fun addition_isCorrect() {
-        val u = NkustUser()
+        val user = NkustUser()
 
         runBlocking {
-            u.getWebapEtxtImg()
+            user.getWebapEtxtBitmap()
             println(">>>>>>>>>>>>>>>>>>Enter text: ")
             val stringInput = "ABCD"
 
-            u.loginWebap("C110152351","c110ankust",stringInput)
-            println(u.checkLoginValid().toString())
+            user.loginWebap("C110152351","c110ankust",stringInput)
+            println(user.checkLoginValid().toString())
         }
 
 

@@ -23,8 +23,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.core.net.toUri
-import com.example.nkustplatformassistant.data.NKUST_ROUTES.WEDAP_LOGIN
 import io.ktor.client.*
+import com.example.nkustplatformassistant.data.NKUST_ROUTES
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.cookies.*
 import io.ktor.http.*
@@ -117,7 +117,7 @@ fun ViewWeb(url: String) {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
 
-                if (url == WEDAP_LOGIN) {
+                if (url == NKUST_ROUTES.WEBAP_LOGIN) {
                     val cookies = CookieManager.getInstance().getCookie(url)?.let {
                         Log.v("onPageFinished", "Cookie received:" +
                                 String(it.toByteArray(), charset("UTF-8")))

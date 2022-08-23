@@ -29,7 +29,6 @@ data class Subject(
  * Before using this section, you must logged in.
  */
 class FetchData : NkustUser() {
-    // TODO: 1. get 入學年分 2. get dropdown list and pop curryear < 入學年分
 
     /**
      * Parser to parse HTML into a "org.jsoup.nodes.Document"
@@ -99,13 +98,11 @@ class FetchData : NkustUser() {
             }
         }.bodyAsText().let { content ->
             // testing print
-            println(
-                "action: http://webap.nkust.edu.tw/nkust/${
-                    parser.parseInput(content, urlFnc)
-                        .selectXpath("//*[@id=\"thisform\"]")
-                        .attr("action")
-                }"
-            )
+            println("action: http://webap.nkust.edu.tw/nkust/${
+                parser.parseInput(content, urlFnc)
+                    .selectXpath("//*[@id=\"thisform\"]")
+                    .attr("action")
+            }")
 
             val mapOfDstInfo = mapOf<String, String>(
                 // TODO use parser only once
@@ -155,7 +152,7 @@ class FetchData : NkustUser() {
     }
 
     /**
-     * 回傳現在學年+學期
+     * return current year and semester as "year,semester" String
      */
     suspend fun getCurrCurriculum(): String {
         client.get(url = Url(NKUST_ROUTES.WEBAP_LEFT_PANEL))
@@ -180,7 +177,7 @@ class FetchData : NkustUser() {
     /**
      * Get Dropdown list as Map<String, String>.
      * but we can't guarantee that all value is useful,
-     * because the design of the owner put some useless value in it.
+     * because the designer put some useless value in it.
      */
     suspend fun getYearsOfDropDownListByMap(): Map<String, String> {
         // init...
@@ -215,21 +212,22 @@ class FetchData : NkustUser() {
                 .select("option")
                 .eachText()
 
+            val enrollment = yearOfEnrollment()
             val dropdownList = mutableMapOf<String, String>()
+
             dropdownListString.forEachIndexed { index, _ ->
                 dropdownList[dropdownListValue[index]] = dropdownListString[index]
             }
 
-//            // TODO: Pop option before year of enrollment
-//            val enrollment = yearOfEnrollment()
-//            dropdownList.forEach { (key, _) ->
-//                if (key.slice(IntRange(start = 0, endInclusive = 2)) < enrollment){
-//
-//                }
-//            }
-
-
-            return dropdownList
+            return dropdownList.let {
+                val tempListMap = mutableMapOf<String, String>()
+                it.forEach { (key, value) ->
+                    if (key.split(",")[0].toInt() >= enrollment.toInt()) {
+                        tempListMap[key] = value
+                    }
+                }
+                tempListMap
+            }
         }
     }
 
@@ -241,7 +239,7 @@ class FetchData : NkustUser() {
     suspend fun getYearlyScore(
         year: String,
         semester: String,
-    ) {
+    ): List<Subject> {
         // temprory usage
         val dropdownList = getDstJspBase("AG008") // score page
 
@@ -274,22 +272,21 @@ class FetchData : NkustUser() {
             val subjectList = mutableListOf<Subject>()
 
             subject.forEachIndexed { index, _ ->
-                subjectList.add(
-                    index, Subject(
-                        subject[index],
-                        midScore[index],
-                        finalScore[index]
-                    )
+                subjectList.add(index, Subject(
+                    subject[index],
+                    midScore[index],
+                    finalScore[index])
                 )
             }
 
-            for (item in subjectList) {
-                println(
-                    "Subject: ${item.subjectName} " +
-                            "Mid-term Score: ${item.midScore} " +
-                            "Final Score: ${item.finalScore}"
-                )
-            }
+//          Debug...
+//            for (item in subjectList) {
+//                println("Subject: ${item.subjectName} " +
+//                        "Mid-term Score: ${item.midScore} " +
+//                        "Final Score: ${item.finalScore}"
+//                )
+//            }
+            return subjectList
         }
 
     }
@@ -372,11 +369,6 @@ fun paserNkustCalender(pdf: File): MutableList<NkustEvent> {
     }
     return nkustEvents
 }
-
-
-
-
-
 
 
 
