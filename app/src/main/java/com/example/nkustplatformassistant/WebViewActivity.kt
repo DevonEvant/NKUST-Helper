@@ -23,9 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.core.net.toUri
-import com.example.nkustplatformassistant.data.NKUST_ROUTES.WEDAP_LOGIN
-import com.example.nkustplatformassistant.MainActivity
-import com.example.nkustplatformassistant.data.NKUST_ROUTES.WEDAP_BASE
+import com.example.nkustplatformassistant.data.NKUST_ROUTES
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.cookies.*
@@ -119,31 +117,17 @@ fun ViewWeb(url: String) {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
 
-                if (url == WEDAP_LOGIN) {
-                    val cookies = CookieManager.getInstance().getCookie(url)?.let {
-                        Log.v("onPageFinished", "Cookie received:" +
-                                String(it.toByteArray(), charset("UTF-8")))
-                        String(it.toByteArray(), charset("UTF-8"))
-                            .split(";")
-                            .toTypedArray()
-                    }
-                    if (cookies != null) {
-                        for (item in cookies) {
-                            Log.e("onPageFinished", item)
-                        }
-                    }
                 }
             }
         }
     }
 
     // Start WebView
-    WebView(
-        state = state,
-        modifier = Modifier.fillMaxWidth(),
-        onCreated = { webView ->
-            webView.settings.javaScriptEnabled = true
-        },
-        client = webClient
-    )
-}
+//    WebView(
+//        state = state,
+//        modifier = Modifier.fillMaxWidth(),
+//        onCreated = { webView ->
+//            webView.settings.javaScriptEnabled = true
+//        },
+//        client = webClient
+//    )
