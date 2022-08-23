@@ -168,7 +168,7 @@ class FetchData : NkustUser() {
     /**
      * Get Dropdown list as Map<String, String>.
      * but we can't guarantee that all value is useful,
-     * because the design of the owner put some useless value in it.
+     * because the designer put some useless value in it.
      */
     suspend fun getYearsOfDropDownListByMap(): Map<String, String> {
         // init...
