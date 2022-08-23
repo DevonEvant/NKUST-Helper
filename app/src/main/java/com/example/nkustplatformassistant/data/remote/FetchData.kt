@@ -4,11 +4,15 @@ import com.example.nkustplatformassistant.data.NKUST_ROUTES
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.util.*
+import io.ktor.util.cio.*
+import io.ktor.utils.io.*
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.text.PDFTextStripper
 import org.jsoup.Jsoup
 import org.jsoup.parser.*
 import java.io.File
+import java.net.URI
 import java.util.*
 
 
@@ -289,6 +293,30 @@ class FetchData : NkustUser() {
         }
 
     }
+
+
+    //    https://acad.nkust.edu.tw/var/file/4/1004/img/273/cal110-1.pdf
+//    https://acad.nkust.edu.tw/var/file/4/1004/img/273/cal110-2.pdf
+//    https://acad.nkust.edu.tw/var/file/4/1004/img/273/cal111-1.pdf
+//    https://acad.nkust.edu.tw/var/file/4/1004/img/273/cal111-2.pdf
+    @OptIn(InternalAPI::class)
+    suspend fun getNkustCnCalenderPdf(year: String, semester: String, path: String?): File {
+
+        // todo not complete. unable to find valid certification path to requested target
+
+        val res = client.get {
+//            url(NKUST_ROUTES.getCnCalenarUrl(year, semester))
+            url("http://acad.nkust.edu.tw/var/file/4/1004/img/273/cal110-2.pdf")
+        }
+
+        if (!res.status.isSuccess())
+            throw Error("Fetch URL Error. HttpStateCode is ${res.status} ")
+
+        val calenderPdf = File(path)
+        res.content.copyAndClose(calenderPdf.writeChannel())
+
+        return calenderPdf
+    }
 }
 
 data class NkustEvent(
@@ -296,6 +324,19 @@ data class NkustEvent(
     val time: String,
     val description: String
 )
+
+enum class Agency {
+    OfficeOfTheSecretariat,
+    PersonnelOffice,
+    CurriculumDivision,
+    RegistrationDivision,
+    StudentLearningCounselingDivision,
+    OfficeOfStudent,
+    OfficeOfGeneralAffairs,
+    OfficeOfPhysicalEducation,
+    CenterOfGeneralStudies,
+    ForeignLanguageEducationCente
+}
 
 /**
  * paser Nkust Calender. give Nkust Calender pdf file. return all of eventlist in the pdf file
@@ -313,13 +354,13 @@ fun paserNkustCalender(pdf: File): MutableList<NkustEvent> {
     Regex("[A○].+\\((\\S* ?\\S)+\\s").findAll(docTextSoup).forEach {
         val event = docTextSoup.substring(it.range)
 
-        val agency = event.substring(0, event.indexOf('(')).let{
-            it.replace("[A○E \\s]+".toRegex(),"")
+        val agency = event.substring(0, event.indexOf('(')).let {
+            it.replace("[A○E \\s]+".toRegex(), "")
         }
         val time = event.substring(event.indexOf('(') + 1, event.indexOf(')'))
         val description = event.substringAfter(')')
 
-        println("=>> $agency | $time | $description")
+//        println("=>> $agency | $time | $description")
 
         nkustEvents.add(
             NkustEvent(
@@ -331,6 +372,8 @@ fun paserNkustCalender(pdf: File): MutableList<NkustEvent> {
     }
     return nkustEvents
 }
+
+
 
 
 
