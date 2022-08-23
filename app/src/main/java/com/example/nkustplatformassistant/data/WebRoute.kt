@@ -5,11 +5,35 @@ object NKUST_ROUTES {
     val WEBAP_HOME = "$WEBAP_BASE/nkust/index_main.html"
     val WEBAP_PERCHK = "$WEBAP_BASE/nkust/perchk.jsp"
     val WEBAP_FNC = "$WEBAP_BASE/nkust/fnc.jsp"
-//    val WEBAP_FNC = "http://webap0.nkust.edu.tw/nkust/system/sys001_00.jsp?spath=ag_pro/ag222.jsp?"
     val WEBAP_ETXT = "$WEBAP_BASE/nkust/validateCode.jsp"
     val WEBAP_ETXT_WITH_SYMBOL = "$WEBAP_ETXT?it=${Math.random()}"
     val WEDAP_LOGIN = "$WEBAP_BASE/nkust/perchk.jsp"
     val WEBAP_ENTRY_FRAME = "$WEBAP_BASE/nkust/f_index.html"
+
+    /**
+     * return calendar Url
+     * [year] , if year.lenght == 4, [year] is going to treated as AD . if not, [year] is going to treated as ROC era
+     * [semester] , semester must is "1" or "2"
+     */
+    fun getCnCalenarUrl(year: String, semester: String): String {
+        lateinit var _year: String
+        lateinit var _semester: String
+
+        if (year.length == 4)
+            _year = (year.toInt() - 1911).toString()
+        else if (year.length == 3)
+            _year = year
+        else if (year.length == 2)
+            _year = "0" + year
+        else
+            throw Error("illegal parameter -> 'year'")
+
+        if (!(semester == "1" || semester == "2"))
+            throw Error("illegal parameter -> 'semester' must is '1' or '2'")
+
+        _semester = semester
+        return "http://acad.nkust.edu.tw/var/file/4/1004/img/273/cal$_year-$_semester.pdf"
+    }
 
 
     val SCHOOL_TABLETIME = "$WEBAP_BASE/ag_pro/ag222.jsp"
