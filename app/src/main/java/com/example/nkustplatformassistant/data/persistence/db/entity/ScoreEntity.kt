@@ -8,7 +8,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "score_table")
 class Score(
     @PrimaryKey(autoGenerate = true) val id: Int? = 0,
-    @NonNull @ColumnInfo(name = "subject") val subject: String,
-    @ColumnInfo(name = "mid_term_exam_score") val midScore: String,
-    @ColumnInfo(name = "final_exam_score") val finalScore: String,
+    @NonNull @ColumnInfo val subjectName: String,
+    @ColumnInfo val midScore: String,
+    @ColumnInfo val finalScore: String,
 )

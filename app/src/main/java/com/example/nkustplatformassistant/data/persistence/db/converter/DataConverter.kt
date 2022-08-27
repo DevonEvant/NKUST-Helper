@@ -1,8 +1,10 @@
 package com.example.nkustplatformassistant.data.persistence.db.converter
 
+import androidx.room.ProvidedTypeConverter
 import androidx.room.TypeConverter
 import com.example.nkustplatformassistant.data.remote.Subject
 
+@ProvidedTypeConverter
 class DataConverter {
     @TypeConverter
     fun fromSubjectToDB(subject: List<Subject>): List<List<String>> {
