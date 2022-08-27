@@ -10,7 +10,7 @@ object NKUST_ROUTES {
     val WEBAP_HEAD = "$WEBAP_BASE/nkust/f_head.jsp"
     val WEBAP_LEFT_PANEL = "$WEBAP_BASE/nkust/f_left.jsp"
     val WEBAP_RIGHT_PANEL = "$WEBAP_BASE/nkust/f_right.jsp"
-    val SCHOOL_TABLETIME = "$WEBAP_BASE/ag_pro/ag222.jsp"
+    val SCHOOL_TABLETIME = "$WEBAP_BASE/nkust/ag_pro/ag222.jsp"
     val WEBAP_FNC = "$WEBAP_BASE/nkust/fnc.jsp"
 
     /**
