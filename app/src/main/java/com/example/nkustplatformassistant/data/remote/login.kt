@@ -73,7 +73,7 @@ open class NkustUser {
         etxtCode: String,
     ): Boolean {
         val loginResponse = client.request(
-            url = Url(NKUST_ROUTES.WEBAP_PERCHK)) {
+            url = Url(NKUST_ROUTES.WEBAP_LOGIN)) {
             url {
                 parameters.append("uid", uid)
                 parameters.append("pwd", pwd)
@@ -95,7 +95,7 @@ open class NkustUser {
      * Save etxt_code image on webap using GET.
      */
     @OptIn(InternalAPI::class)
-    suspend fun getAndSaveWebapEtxtImage() {
+    suspend fun getAndSaveWebapEtxtImage(): File {
 
         val etxtRes = client.get {
             url(NKUST_ROUTES.WEBAP_ETXT_WITH_SYMBOL)
@@ -107,6 +107,7 @@ open class NkustUser {
         val imgFile: File = File("./etxt.jpg")
         etxtRes.content.copyAndClose(imgFile.writeChannel())
 
+        return imgFile
     }
 
     /**
@@ -128,11 +129,26 @@ open class NkustUser {
             .decodeByteArray(imgByte, 0, imgByte.size, bitmapOption)
             .asImageBitmap()
 
-        Log.v("getWebapEtxtBitmap",
-            "Width: ${imgBitmap.width}, Height: ${imgBitmap.height}")
+        Log.v(
+            "getWebapEtxtBitmap",
+            "Width: ${imgBitmap.width}, Height: ${imgBitmap.height}"
+        )
 
         return imgBitmap
     }
+
+
+    /**
+     * Login to NKUST educational administration system (mobile version).
+     */
+    suspend fun loginMobile(
+        uid: String,
+        pwd: String,
+        etxtCode: String?,
+    ): Result<List<String>> {
+        throw Error("Sorry! this function is not completed.")
+    }
+
 
     /**
      * Check login state
@@ -144,21 +160,9 @@ open class NkustUser {
         return res.bodyAsText().contains("NKUST")
     }
 
-//    suspend fun getAnyPage(url: Url){
-//
-//    }
-
-
-//    /**
-//     * Login to WEBAP (mobile version).
-//     */
-//    suspend fun loginMobile(
-//        uid: String,
-//        pwd: String,
-//        etxtCode: String?,
-//    ): Result<List<String>> {
-//        throw Error("Sorry! this function is not completed.")
-//    }
+    suspend fun getEtxtText(): String {
+        return ""
+    }
 }
 
 const val ETXTTAG: String = "etxtPaser"
