@@ -86,3 +86,4 @@ lint/tmp/
 
 # validate code picture
 etxt.jpg
+/.idea/discord.xml

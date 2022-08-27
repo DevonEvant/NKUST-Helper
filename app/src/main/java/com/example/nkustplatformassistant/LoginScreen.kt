@@ -9,7 +9,6 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -30,7 +29,6 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -39,36 +37,41 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.example.nkustplatformassistant.data.remote.NkustUser
+import com.example.nkustplatformassistant.data.remote.FetchData
 import com.example.nkustplatformassistant.ui.theme.Nkust_platform_assistantTheme
 import kotlinx.coroutines.launch
 
-val user = NkustUser()
+val user = FetchData()
 
 class LoginScreen : ComponentActivity() {
     lateinit var navController: NavHostController
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent() {
+            val viewModelStoreOwner = checkNotNull(LocalViewModelStoreOwner.current) {
+                throw Error("No ViewModelStoreOwner was provided via LocalViewModelStoreOwner")
+            }
+            val loginParamsViewModel: LoginParamsViewModel =
+                viewModel(viewModelStoreOwner = viewModelStoreOwner)
+
             Nkust_platform_assistantTheme {
+
                 // navController As start destination
                 navController = rememberNavController()
 //                NkustpaNavGraph(navController = navController)
-
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-//                    LoginForm(navController)
+                    LoginScreenBase(loginParamsViewModel)
                 }
             }
         }
@@ -78,8 +81,13 @@ class LoginScreen : ComponentActivity() {
 @Preview(showBackground = true)
 @Composable
 fun LoginScreenPreview() {
+    val viewModelStoreOwner = checkNotNull(LocalViewModelStoreOwner.current) {
+        throw Error("No ViewModelStoreOwner was provided via LocalViewModelStoreOwner")
+    }
+    val loginParamsViewModel: LoginParamsViewModel =
+        viewModel(viewModelStoreOwner = viewModelStoreOwner)
     Nkust_platform_assistantTheme {
-        LoginScreenBase()
+        LoginScreenBase(loginParamsViewModel)
     }
 }
 
@@ -92,6 +100,7 @@ fun LoginWhateverPreview() {
         }
     }
 }
+
 
 // LoginParams State hosting
 class LoginParamsViewModel : ViewModel() {
@@ -117,17 +126,19 @@ class LoginParamsViewModel : ViewModel() {
 }
 
 @Composable
-fun LoginScreenBase(loginParmsViewModel: LoginParamsViewModel = viewModel()) {
-    val uid: String by loginParmsViewModel.uid.observeAsState("")
-    val pwd: String by loginParmsViewModel.pwd.observeAsState("")
-    val pwdVisibility: Boolean by loginParmsViewModel.pwdVisibility.observeAsState(false)
-
+fun LoginScreenBase(loginParamsViewModel: LoginParamsViewModel = viewModel()) {
+    val uid: String by loginParamsViewModel.uid.observeAsState("")
+    val pwd: String by loginParamsViewModel.pwd.observeAsState("")
+    val pwdVisibility: Boolean by loginParamsViewModel.pwdVisibility.observeAsState(false)
+    // To pass viewmodel between composable, we use viewModelStoreOwner and
+    // add a loginParamsViewModel4 to showDialogBase
     LoginForm(
         uid = uid, pwd = pwd, pwdVisibility = pwdVisibility,
-        onUidChanged = { loginParmsViewModel.onUidChange(it) },
-        onPwdChanged = { loginParmsViewModel.onPwdChange(it) },
-        onPwdVisibilityReversed = { loginParmsViewModel.onPwdVisibilityReversed() })
-
+        onUidChanged = { loginParamsViewModel.onUidChange(it) },
+        onPwdChanged = { loginParamsViewModel.onPwdChange(it) },
+        onPwdVisibilityReversed = { loginParamsViewModel.onPwdVisibilityReversed() },
+        loginParamsViewModel = loginParamsViewModel,
+    )
 }
 
 
@@ -141,12 +152,15 @@ fun LoginForm(
     onUidChanged: (String) -> Unit,
     onPwdChanged: (String) -> Unit,
     onPwdVisibilityReversed: () -> Unit,
+    loginParamsViewModel: LoginParamsViewModel,
 ) {
     val focusManager = LocalFocusManager.current
     val context = LocalContext.current
     val showDialog = remember { mutableStateOf(false) }
 
-    ShowDialogBase(showDialog)
+    ShowDialogBase(showDialog, etxtCodeViewModel = EtxtCodeViewModel(
+        loginParamsViewModel
+    ))
 
     // user.loginWebap(uid, pwd, etxtCode)
     // navController.navigate(
@@ -257,7 +271,8 @@ fun LoginForm(
 
 // EtxtCode State Hosting
 class EtxtCodeViewModel(
-    private val loginParmsViewModel: LoginParamsViewModel = LoginParamsViewModel(),
+    // Please pass viewModel here or it'll create an new instance!
+    private val loginParmsViewModel: LoginParamsViewModel,
 ) : ViewModel() {
     private val _imageBitmap = MutableLiveData<ImageBitmap>()
     private val _etxtcode: MutableLiveData<String> = MutableLiveData("")
@@ -301,7 +316,8 @@ class EtxtCodeViewModel(
 fun ShowDialogBase(
     showDialog: MutableState<Boolean>,
     context: Context = LocalContext.current,
-    etxtCodeViewModel: EtxtCodeViewModel = viewModel(),
+    etxtCodeViewModel: EtxtCodeViewModel = EtxtCodeViewModel(
+        loginParmsViewModel = LoginParamsViewModel()),
 ) {
 
     val etxtCode: String by etxtCodeViewModel.etxtCode.observeAsState("")
@@ -325,13 +341,10 @@ fun ShowDialogBase(
             etxtCode.length == 4 -> {
                 Toast.makeText(context, "Checking...", Toast.LENGTH_LONG)
                     .show()
-                showDialog.value = false
 
                 // TODO: Login! and start new intent
-                if(etxtCodeViewModel.loginForResult()){
-                    println()
-                }
-
+                Log.v("Login", etxtCodeViewModel.loginForResult().toString())
+                showDialog.value = false
             }
         }
 
@@ -363,6 +376,7 @@ fun AlertDialogForEtxtCode(
     onPositiveClick: () -> Unit,
     onNegativeClick: () -> Unit,
 ) {
+    val focusManager = LocalFocusManager.current
     // https://stackoverflow.com/questions/68639232/jetpack-compose-how-to-create-an-imagebitmap-with-specific-size-and-configuratio
     Dialog(onDismissRequest = {}) {
         OutlinedCard(
@@ -402,8 +416,13 @@ fun AlertDialogForEtxtCode(
                         modifier = Modifier
                             .focusTarget()
                             .fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                        keyboardActions = KeyboardActions { onPositiveClick.invoke() }
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Done,
+                            keyboardType = KeyboardType.Password),
+                        keyboardActions = KeyboardActions(onDone = {
+                            focusManager.clearFocus()
+                            onPositiveClick.invoke()
+                        })
                     )
                     Spacer(modifier = Modifier.padding(5.dp))
                     //button
