@@ -1,6 +1,6 @@
 @file:Suppress("SpellCheckingInspection")
 
-package com.example.nkustplatformassistant
+package com.example.nkustplatformassistant.ui.login
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -51,9 +51,9 @@ val user = FetchData()
 class LoginScreen : ComponentActivity() {
     lateinit var navController: NavHostController
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // https://stackoverflow.com/questions/68971231/activity-view-model-in-jetpack-compose
         setContent() {
             val viewModelStoreOwner = checkNotNull(LocalViewModelStoreOwner.current) {
                 throw Error("No ViewModelStoreOwner was provided via LocalViewModelStoreOwner")
