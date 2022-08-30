@@ -74,13 +74,13 @@ data class Course(
     var id: String,
     var courseName: String,
     var className: String,
-    var classGroup : String,
+    var classGroup: String,
     var credits: String,
     var teachingHours: String,
     var isElectiveSubject: Boolean,
     var semesterType: String,
     var session: String,
-    var professor : String,
+    var professor: String,
     var classLocation: String
 ) {
 //    operator fun get(index: Int): String {
@@ -121,13 +121,20 @@ data class Course(
 
 
 class CurriculumViewModel : ViewModel() {
-//    private val _curriculums: MutableLiveData<List<>> = MutableLiveData("")
-//
-//    val uid = _curriculums
-//
-//    fun onUidChange(newUid: String) {
-//        _uid.value = newUid
-//    }
+    private val _timeVisibility: MutableLiveData<Boolean> = MutableLiveData(false)
+    private val _timeCodeVisibility: MutableLiveData<Boolean> = MutableLiveData(false)
+
+
+    val timeVisibility: LiveData<Boolean> = _timeVisibility
+    val timeCodeVisibility: LiveData<Boolean> = _timeCodeVisibility
+
+    fun onTimeVisibilityChange() {
+        _timeVisibility.value = !_timeVisibility.value!!
+    }
+
+    fun onTimeCodeVisibilityChange() {
+        _timeCodeVisibility.value = !_timeCodeVisibility.value!!
+    }
 //
 //    fun onPwdChange(newPwd: String) {
 //        _pwd.value = newPwd
