@@ -25,29 +25,39 @@ class DataRepository(context: Context) {
  * including all score from the year you enrolled to the latest (now)
  */
 suspend fun getAllScoreToTypedScoreEntity(): List<ScoreEntity> {
-    val semYearMap = mutableMapOf<String, String>()
+//    val semYearMap = mutableMapOf<String, String>()
+//    user.getYearsOfDropDownListByMap()
+//        .forEach { (yearSemester, _) ->
+//            yearSemester.split(",").let {
+//                semYearMap[it[1]] = it[0]
+//            }
+//        }
+
+    val listToGet: MutableList<List<String>> = mutableListOf()
     user.getYearsOfDropDownListByMap()
-        .forEach { (yearSemester, _) ->
+        .forEach { (yearSemester, Description) ->
             yearSemester.split(",").let {
-                semYearMap[it[1]] = it[0]
+                listToGet.add(listOf(it[0], it[1], Description))
             }
         }
 
+
     val scoreEntityList = mutableListOf<ScoreEntity>()
     try {
-        semYearMap.forEach { (semester, year) ->
+        listToGet.forEach { (semester, year, semDescription) ->
             user.getYearlyScore(year, semester)
                 .forEach { (subjectName, midScore, finalScore) ->
                     scoreEntityList.add(ScoreEntity(null,
                         year.toInt(),
                         semester.toInt(),
+                        semDescription,
                         subjectName,
                         midScore,
                         finalScore))
                 }
         }
     } catch (e: IndexOutOfBoundsException) {
-        println("Error when getting yearly score: ${e.toString()}\n" +
+        println("Error when getting yearly score: $e\n" +
                 "It maybe no data, but it's okay")
     }
 
