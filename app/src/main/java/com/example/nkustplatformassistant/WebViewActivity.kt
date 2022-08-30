@@ -23,8 +23,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.core.net.toUri
+import com.example.nkustplatformassistant.data.remote.NKUST_ROUTES
 import io.ktor.client.*
-import com.example.nkustplatformassistant.data.NKUST_ROUTES
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.cookies.*
 import io.ktor.http.*
