@@ -12,6 +12,9 @@ interface ScoreDao {
     @Query("SELECT * FROM score_table ORDER BY id ASC")
     fun getScoreList(): List<ScoreEntity>
 
+    @Query("SELECT * FROM score_table WHERE year = :year AND semester = :semester")
+    fun getSpecScoreList(year: Int, semester: Int): List<ScoreEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertScore(scoreEntity: ScoreEntity)
 

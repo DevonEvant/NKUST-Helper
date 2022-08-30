@@ -1,7 +1,6 @@
 package com.example.nkustplatformassistant.data.persistence
 
 import android.content.Context
-import android.util.Log
 import com.example.nkustplatformassistant.data.persistence.db.NkustDatabase
 import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
 import com.example.nkustplatformassistant.ui.login.user
@@ -11,9 +10,13 @@ import java.lang.IndexOutOfBoundsException
 class DataRepository(context: Context) {
     private val db = NkustDatabase.getDatabase(context)
 
-    suspend fun fetchScoreData() {
+    suspend fun fetchScoreDataToDB() {
         val listToInsert = getAllScoreToTypedScoreEntity()
         db.ScoreDao().insertMultiScore(listToInsert)
+    }
+
+    suspend fun getSpecScoreDataFromDB(year: Int, semester: Int) {
+        db.ScoreDao().getSpecScoreList(year, semester)
     }
 }
 
