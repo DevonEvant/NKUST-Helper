@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import com.example.nkustplatformassistant.data.persistence.db.entity.Course
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
@@ -15,6 +16,7 @@ import io.ktor.http.*
 import io.ktor.util.*
 import io.ktor.util.cio.*
 import io.ktor.utils.io.*
+import org.jsoup.parser.Parser
 
 import java.io.File
 import java.lang.Exception
@@ -161,6 +163,58 @@ open class NkustUser {
 
     suspend fun getEtxtText(): String {
         return ""
+    }
+
+
+    /**
+     * get School Timetable
+     */
+    suspend fun getCurriculum(year: String, semester: String) {
+
+        val url = NKUST_ROUTES.SCHOOL_TABLETIME
+
+        val curriculumRes = client.request(
+            url = Url(url)
+        ) {
+            url {
+                parameters.append("spath", "ag_pro/ag222.jsp?")
+                parameters.append("arg01", year)
+                parameters.append("arg02", semester)
+            }
+            method = HttpMethod.Post
+        }
+
+        val body = curriculumRes.bodyAsText()
+
+        if (!curriculumRes.status.isSuccess())
+            throw Error("Fetch URL Error. HttpStateCode is ${curriculumRes.status} ")
+        else if ("您請求的網址無法在此服務器上找到" in body)
+            throw Error("Error! no timetable information found ")
+        else if ("查無相關學年期課表資料" in body)
+            throw Error("Error! no timetable information found ")
+        else if ("學生目前無選課資料!" in body)
+            throw Error("Error! no timetable information found ")
+
+//        println(curriculumRes.bodyAsText())
+
+        val parser: Parser = Parser.htmlParser()
+        val courses = mutableListOf<Course>()
+
+        body.let { content ->
+            val a = parser.parseInput(content, url)
+                .select("form tr").forEach {
+//                    val course = Courses()
+                    it.select("td").forEach {
+                        println(it.text())
+                    }
+
+                }
+//            courses.add(course)
+        }
+
+
+
+//        return isValid
     }
 }
 
