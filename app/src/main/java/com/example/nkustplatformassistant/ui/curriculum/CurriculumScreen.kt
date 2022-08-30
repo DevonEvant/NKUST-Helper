@@ -49,15 +49,16 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.example.nkustplatformassistant.EtxtCodeViewModel
+//import com.example.nkustplatformassistant.EtxtCodeViewModel
 import com.example.nkustplatformassistant.data.remote.NkustUser
 import com.example.nkustplatformassistant.ui.theme.Nkust_platform_assistantTheme
 //import com.example.nkustplatformassistant.ViewModeliewModel
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.*
 import androidx.compose.material.icons.filled.AutoAwesome
+import com.example.nkustplatformassistant.ui.login.EtxtCodeViewModel
 
-val user = NkustUser()
+//val user = NkustUser()
 
 class LoginScreen : ComponentActivity() {
     lateinit var navController: NavHostController
