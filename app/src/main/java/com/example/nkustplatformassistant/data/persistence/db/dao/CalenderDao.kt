@@ -5,7 +5,6 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.nkustplatformassistant.data.persistence.db.entity.Calender
-import com.example.nkustplatformassistant.data.remote.Subject
 import kotlinx.coroutines.flow.Flow
 
 @Dao
