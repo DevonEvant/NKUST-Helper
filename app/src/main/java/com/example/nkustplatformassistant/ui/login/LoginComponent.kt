@@ -32,7 +32,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.nkustplatformassistant.data.persistence.DataRepository
 
 @Composable
 fun LoginScreenBase(loginParamsViewModel: LoginParamsViewModel = viewModel()) {
@@ -65,6 +64,10 @@ fun LoginForm(
     val focusManager = LocalFocusManager.current
     val context = LocalContext.current
     val showDialog = remember { mutableStateOf(false) }
+
+    LaunchedEffect(showDialog) {
+
+    }
 
     ShowDialogBase(showDialog, etxtCodeViewModel = EtxtCodeViewModel(
         loginParamsViewModel
@@ -188,6 +191,8 @@ fun ShowDialogBase(
     val etxtCode: String by etxtCodeViewModel.etxtCode.observeAsState("")
     val etxtImageBitmap: ImageBitmap by etxtCodeViewModel.etxtImageBitmap
         .observeAsState(ImageBitmap(width = 85, height = 40))
+    val etxtIsLoading: Boolean by etxtCodeViewModel.etxtIsLoading.observeAsState(false)
+
 
     fun onImageClicked() {
         etxtCodeViewModel.requestEtxtImageBitmap()
@@ -222,14 +227,20 @@ fun ShowDialogBase(
     fun onNegativeCallback() {
         showDialog.value = false
     }
-    if (showDialog.value)
+    if (showDialog.value) {
+        LaunchedEffect(showDialog.value) {
+            etxtCodeViewModel.requestEtxtImageBitmap()
+        }
+
         AlertDialogForEtxtCode(
             etxtCode = etxtCode,
             etxtImageBitmap = etxtImageBitmap,
+            etxtIsLoading = etxtIsLoading,
             onEtxtCodeChange = { etxtCodeViewModel.onEtxtCodeChange(it) },
             onImageClicked = { onImageClicked() },
             onPositiveClick = { onPositiveCallback() },
             onNegativeClick = { onNegativeCallback() })
+    }
 
 }
 
@@ -238,6 +249,7 @@ fun ShowDialogBase(
 @Composable
 @SuppressLint("CoroutineCreationDuringComposition")
 fun AlertDialogForEtxtCode(
+    etxtIsLoading: Boolean,
     etxtCode: String,
     etxtImageBitmap: ImageBitmap,
     onEtxtCodeChange: (String) -> Unit,
@@ -253,7 +265,7 @@ fun AlertDialogForEtxtCode(
             modifier = Modifier.aspectRatio(1F))
         {
             // 應該要交給observer處理
-            if (etxtImageBitmap != ImageBitmap(width = 85, height = 40)) {
+            if (!etxtIsLoading) {
                 Column(
                     modifier = Modifier.padding(8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally) {
@@ -319,8 +331,11 @@ fun AlertDialogForEtxtCode(
                     }
                 }
             } else {
-                Column() {
-                    Text(text = "Please wait...", fontSize = 20.sp)
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(text = "Please wait a while for EtxtCode...",
+                        fontSize = 20.sp)
                     Box(modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
