@@ -1,4 +1,4 @@
-package com.example.nkustplatformassistant.data
+package com.example.nkustplatformassistant.data.remote
 
 object NKUST_ROUTES {
     val WEBAP_BASE = "http://webap.nkust.edu.tw"

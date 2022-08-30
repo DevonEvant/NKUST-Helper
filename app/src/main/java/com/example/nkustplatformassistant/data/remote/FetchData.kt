@@ -1,6 +1,5 @@
 package com.example.nkustplatformassistant.data.remote
 
-import com.example.nkustplatformassistant.data.NKUST_ROUTES
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -9,17 +8,15 @@ import io.ktor.util.cio.*
 import io.ktor.utils.io.*
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.text.PDFTextStripper
-import org.jsoup.Jsoup
 import org.jsoup.parser.*
 import java.io.File
-import java.net.URI
-import java.util.*
 
+// TODO Timeout handling
 
 // get xpath in jsoup
 // https://stackoverflow.com/questions/16335820/convert-xpath-to-jsoup-query
 
-data class Subject(
+data class Score(
     val subjectName: String,
     val midScore: String,
     val finalScore: String,
@@ -65,10 +62,11 @@ class FetchData : NkustUser() {
                         .attr("value")
                 )
 
-                mapOfInfo.forEach { (k, v) ->
-                    println("getFncJspInformationMap: $k:$v")
-                }
-                println()
+                // Debug...
+                // mapOfInfo.forEach { (k, v) ->
+                //     println("getFncJspInformationMap: $k:$v")
+                // }
+                // println()
                 return mapOfInfo
             }
     }
@@ -98,14 +96,13 @@ class FetchData : NkustUser() {
             }
         }.bodyAsText().let { content ->
             // testing print
-            println("action: http://webap.nkust.edu.tw/nkust/${
-                parser.parseInput(content, urlFnc)
-                    .selectXpath("//*[@id=\"thisform\"]")
-                    .attr("action")
-            }")
+            // println("action: http://webap.nkust.edu.tw/nkust/${
+            //     parser.parseInput(content, urlFnc)
+            //         .selectXpath("//*[@id=\"thisform\"]")
+            //         .attr("action")
+            // }")
 
             val mapOfDstInfo = mapOf<String, String>(
-                // TODO use parser only once
                 "action" to "http://webap.nkust.edu.tw/nkust/${
                     parser.parseInput(content, urlFnc)
                         .selectXpath("//*[@id=\"thisform\"]")
@@ -144,10 +141,12 @@ class FetchData : NkustUser() {
                     .attr("value"),
             )
 
-            mapOfDstInfo.forEach { (k, v) ->
-                println("getFncJspInformationMap: $k:$v")
-            }
+            // Debug...
+            // mapOfDstInfo.forEach { (k, v) ->
+            //     println("getFncJspInformationMap: $k:$v")
+            // }
             return mapOfDstInfo
+
         }
     }
 
@@ -176,6 +175,7 @@ class FetchData : NkustUser() {
 
     /**
      * Get Dropdown list as Map<String, String>.
+     * E.g "111,1", "111學年度第一學期"
      * but we can't guarantee that all value is useful,
      * because the designer put some useless value in it.
      */
@@ -232,14 +232,14 @@ class FetchData : NkustUser() {
     }
 
     /**
-     * By providing year and semester, you can get a list of [Subject]
+     * By providing year and semester, you can get a list of [Score]
      * consist of subjectName, Mid-term-exam Score, and Final-exam Score,
      * but we won't guarantee it's non-null.
      */
     suspend fun getYearlyScore(
         year: String,
         semester: String,
-    ): List<Subject> {
+    ): List<Score> {
         // temprory usage
         val dropdownList = getDstJspBase("AG008") // score page
 
@@ -269,10 +269,10 @@ class FetchData : NkustUser() {
                 .selectXpath("//form[@name='thisform']/table[1]/tbody[1]/tr/td[8]")
                 .eachText().drop(1)
 
-            val subjectList = mutableListOf<Subject>()
+            val scoreList = mutableListOf<Score>()
 
             subject.forEachIndexed { index, _ ->
-                subjectList.add(index, Subject(
+                scoreList.add(index, Score(
                     subject[index],
                     midScore[index],
                     finalScore[index])
@@ -286,7 +286,7 @@ class FetchData : NkustUser() {
 //                        "Final Score: ${item.finalScore}"
 //                )
 //            }
-            return subjectList
+            return scoreList
         }
 
     }
@@ -319,7 +319,7 @@ class FetchData : NkustUser() {
 data class NkustEvent(
     val agency: String,
     val time: String,
-    val description: String
+    val description: String,
 )
 
 enum class Agency {

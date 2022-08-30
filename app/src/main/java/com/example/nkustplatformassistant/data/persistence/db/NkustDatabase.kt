@@ -1,20 +1,22 @@
 package com.example.nkustplatformassistant.data.persistence.db
 
 import android.content.Context
-import androidx.annotation.VisibleForTesting
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.nkustplatformassistant.data.persistence.db.dao.CalenderDao
 import com.example.nkustplatformassistant.data.persistence.db.dao.ScoreDao
 import com.example.nkustplatformassistant.data.persistence.db.entity.Calender
-import com.example.nkustplatformassistant.data.persistence.db.entity.Score
+import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
 
 /* Reference:
  * https://wm4n.github.io/Android-Room%20Database-%E7%AB%8B%E9%A6%AC%E4%B8%8A%E6%89%8B%E5%B0%B1%E7%9C%8B%E9%80%99%E7%AF%87/
  * https://developer.android.com/codelabs/android-room-with-a-view-kotlin?hl=zh-tw#7
  */
-@Database(entities = arrayOf(Calender::class, Score::class), version = 1, exportSchema = false)
+
+// TODO 資料庫變動時，不需要遷移，直接重建
+
+@Database(entities = arrayOf(Calender::class, ScoreEntity::class), version = 1, exportSchema = false)
 abstract class NkustDatabase : RoomDatabase() {
 
     abstract fun calenderDao(): CalenderDao

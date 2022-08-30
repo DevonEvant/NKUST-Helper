@@ -1,7 +1,7 @@
 package com.example.nkustplatformassistant
 
 
-import com.example.nkustplatformassistant.data.NKUST_ROUTES
+import com.example.nkustplatformassistant.data.remote.NKUST_ROUTES
 import com.example.nkustplatformassistant.data.remote.NkustUser
 import org.junit.Test
 //import android.content.res.Resources

@@ -1,11 +1,57 @@
 package com.example.nkustplatformassistant.data.persistence
 
-import com.example.nkustplatformassistant.data.persistence.db.dao.CalenderDao
-import com.example.nkustplatformassistant.data.persistence.db.dao.ScoreDao
+import android.content.Context
+import com.example.nkustplatformassistant.data.persistence.db.NkustDatabase
+import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
+import com.example.nkustplatformassistant.ui.login.user
+import java.lang.IndexOutOfBoundsException
 
-class DataRepository(
-    private val scoreDao: ScoreDao,
-    private val calenderDao: CalenderDao
-) {
 
+class DataRepository(context: Context) {
+    private val db = NkustDatabase.getDatabase(context)
+
+    suspend fun fetchScoreDataToDB() {
+        val listToInsert = getAllScoreToTypedScoreEntity()
+        db.ScoreDao().insertMultiScore(listToInsert)
+    }
+
+    suspend fun getSpecScoreDataFromDB(year: Int, semester: Int) {
+        db.ScoreDao().getSpecScoreList(year, semester)
+    }
+}
+
+/**
+ * By using this function, you'll get a [List]<[ScoreEntity]>
+ * including all score from the year you enrolled to the latest (now)
+ */
+suspend fun getAllScoreToTypedScoreEntity(): List<ScoreEntity> {
+    val semYearMap = mutableMapOf<String, String>()
+    user.getYearsOfDropDownListByMap()
+        .forEach { (yearSemester, _) ->
+            yearSemester.split(",").let {
+                semYearMap[it[1]] = it[0]
+            }
+        }
+
+    val scoreEntityList = mutableListOf<ScoreEntity>()
+    try {
+        semYearMap.forEach { (semester, year) ->
+            user.getYearlyScore(year, semester)
+                .forEach { (subjectName, midScore, finalScore) ->
+                    scoreEntityList.add(ScoreEntity(null,
+                        year.toInt(),
+                        semester.toInt(),
+                        subjectName,
+                        midScore,
+                        finalScore))
+                }
+        }
+    } catch (e: IndexOutOfBoundsException) {
+        println("Error when getting yearly score: ${e.toString()}\n" +
+                "It maybe no data, but it's okay")
+    }
+
+    println(scoreEntityList.size)
+
+    return scoreEntityList
 }

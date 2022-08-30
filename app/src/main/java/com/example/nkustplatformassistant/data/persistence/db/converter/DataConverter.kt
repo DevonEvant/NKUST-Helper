@@ -1,28 +1,26 @@
 package com.example.nkustplatformassistant.data.persistence.db.converter
 
-import androidx.room.ProvidedTypeConverter
 import androidx.room.TypeConverter
-import com.example.nkustplatformassistant.data.remote.Subject
+import com.example.nkustplatformassistant.data.remote.Score
 
-@ProvidedTypeConverter
 class DataConverter {
     @TypeConverter
-    fun fromSubjectToDB(subject: List<Subject>): List<List<String>> {
-        val tempArr = mutableListOf<List<String>>()
-        subject.forEach { (subjectName, midScore, finalScore) ->
-            tempArr.add(listOf(subjectName, midScore, finalScore))
-        }
-        return tempArr
+    fun fromSubjectToDB(score: Score): List<String> {
+        return listOf(
+            score.subjectName,
+            score.midScore,
+            score.finalScore
+        )
     }
 
-//    @TypeConverter
-//    fun fromDBToSubject(listSubject: List<String>): Subject {
-//        return Subject(
-//            listSubject[0],
-//            listSubject[1],
-//            listSubject[2]
-//        )
-//    }
+    @TypeConverter
+    fun fromDBToSubject(listSubject: List<String>): Score {
+        return Score(
+            listSubject[0],
+            listSubject[1],
+            listSubject[2]
+        )
+    }
 
 
 }
