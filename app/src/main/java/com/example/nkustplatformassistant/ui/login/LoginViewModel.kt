@@ -82,7 +82,7 @@ class EtxtCodeViewModel(
     fun startFetchData(context: Context) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                DataRepository(context).fetchScoreData()
+                DataRepository(context).fetchScoreDataToDB()
             }
         }
     }
