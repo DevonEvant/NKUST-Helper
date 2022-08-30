@@ -296,6 +296,8 @@ class FetchData : NkustUser() {
 //    https://acad.nkust.edu.tw/var/file/4/1004/img/273/cal110-2.pdf
 //    https://acad.nkust.edu.tw/var/file/4/1004/img/273/cal111-1.pdf
 //    https://acad.nkust.edu.tw/var/file/4/1004/img/273/cal111-2.pdf
+
+//   todo rename Calender to schedule
     @OptIn(InternalAPI::class)
     suspend fun getNkustCnCalenderPdf(year: String, semester: String, path: String?): File {
 
