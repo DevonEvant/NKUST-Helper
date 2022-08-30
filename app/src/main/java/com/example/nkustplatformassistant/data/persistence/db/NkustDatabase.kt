@@ -15,6 +15,7 @@ import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
  */
 
 // TODO 資料庫變動時，不需要遷移，直接重建
+// https://medium.com/androiddevelopers/7-steps-to-room-27a5fe5f99b2
 
 @Database(entities = arrayOf(Calender::class, ScoreEntity::class), version = 1, exportSchema = false)
 abstract class NkustDatabase : RoomDatabase() {
