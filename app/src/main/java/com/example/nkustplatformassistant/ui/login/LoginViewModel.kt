@@ -43,10 +43,12 @@ class EtxtCodeViewModel(
     private val loginParmsViewModel: LoginParamsViewModel,
 ) : ViewModel() {
     private val _imageBitmap = MutableLiveData<ImageBitmap>()
-    private val _etxtcode: MutableLiveData<String> = MutableLiveData("")
+    private val _etxtcode: MutableLiveData<String> = MutableLiveData()
+    private val _etxtIsLoading: MutableLiveData<Boolean> = MutableLiveData()
 
     val etxtImageBitmap: LiveData<ImageBitmap> = _imageBitmap
     val etxtCode: LiveData<String> = _etxtcode
+    val etxtIsLoading: LiveData<Boolean> = _etxtIsLoading
 
     private var stateOfLogin: Boolean = false
 
@@ -56,8 +58,10 @@ class EtxtCodeViewModel(
 
     fun requestEtxtImageBitmap() {
         viewModelScope.launch {
+            _etxtIsLoading.value = true
             onEtxtImageBitmapChange(user.getWebapEtxtBitmap())
         }
+        _etxtIsLoading.value = false
     }
 
     private fun onEtxtImageBitmapChange(newEtxtImageBitmap: ImageBitmap) {
