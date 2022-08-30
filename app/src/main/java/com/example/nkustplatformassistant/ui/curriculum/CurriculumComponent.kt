@@ -8,105 +8,112 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CutCornerShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialogDefaults.shape
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.LiveData
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.nkustplatformassistant.ui.theme.Nkust_platform_assistantTheme
 import com.soywiz.klogger.AnsiEscape
 
 @Composable
-fun CurriculumContext() {
-    val itemsList = (0..80).toList()
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(7),
-        contentPadding = PaddingValues(
-            start = 12.dp,
-            top = 16.dp,
-            end = 12.dp,
-            bottom = 16.dp
-        )
-    ) {
-        items(77) { index ->
-            if (index == 0)
-                Text("")
-            else if (index < 7)
-                Text(Week[index - 1].name)
-            else if (index % 7 == 0) {
-                val curriculumTime = CurriculumTime[(index / 7) - 1]
-                CurriculumTimeCard(curriculumTime)
-            } else
-                Text(itemsList[index].toString())
+fun CurriculumContext(curriculumViewModel: CurriculumViewModel) {
+    val timeVisibility by curriculumViewModel.timeVisibility.observeAsState(true)
+    val timeCodeVisibility by curriculumViewModel.timeCodeVisibility.observeAsState(true)
 
-
-        }
-//        courseItem(
-//            Course(
-//                "123",
-//                "123",
-//                "123",
-//                "123",
-//                "123",
-//                "123",
-//                false,
-//                "123",
-//                "123",
-//                "123",
-//                "123"
-//            )
-//        )
-
-    }
-}
-
-@Composable
-fun DisplayOption() {
     val state = rememberScrollState()
     LaunchedEffect(Unit) { state.animateScrollTo(100) }
 
-    Row(
-        modifier = Modifier
-            .padding(horizontal = 8.dp)
-            .horizontalScroll(state)
-    ) {
-        Icon(
-            imageVector = Icons.Default.AutoAwesome,
-            contentDescription = null
-        )
-        Text(text = "Display:")
+    Column {
+//    -----DisplayOption-----
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 8.dp)
+                .horizontalScroll(state),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Default.AutoAwesome,
+                contentDescription = null,
+                modifier = Modifier.padding(horizontal = 2.dp)
+            )
+            Text(text = "Display：")
 
-//        ChipCell()
+            ChipCell(
+                "Time",
+                timeVisibility
+            ) { curriculumViewModel.onTimeVisibilityChange() }
 
-//        repeat(10) {
-//            Text("Item $it", modifier = Modifier.padding(2.dp))
-//        }
+            ChipCell(
+                "Time Code",
+                timeCodeVisibility
+            ) { curriculumViewModel.onTimeCodeVisibilityChange() }
+
+        }
+
+//    -----CurriculumTable-----
+        val itemsList = (0..80).toList()
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(7),
+            contentPadding = PaddingValues(
+                start = 12.dp,
+//                top = 16.dp,
+                end = 12.dp,
+                bottom = 16.dp
+            )
+        ) {
+            items(77) { index ->
+                if (index == 0) {
+                } else if (index < 7) {
+                    val week = Weeks[index - 1]
+                    WeeksCard(week)
+                } else if (index % 7 == 0) {
+                    val curriculumTime = CurriculumTime[(index / 7) - 1]
+                    CurriculumTimeCard(curriculumTime, timeVisibility, timeCodeVisibility)
+                } else
+                    Text(itemsList[index].toString())
+
+
+            }
+        }
     }
-
-
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ChipCell(lable: String, state: State<Boolean>, onClick: () -> Unit) {
+fun ChipCell(lable: String, state: Boolean, onClick: (() -> Unit)) {
 //    val uid: String by loginParamsViewModel.uid.observeAsState("")
 //    val pwd: String by loginParamsViewModel.pwd.observeAsState("")
     FilterChip(
-        selected = state.value,
+        selected = state,
         onClick = onClick,
-        label = { lable }
+        label = { Text(lable) },
+        modifier = Modifier.padding(2.dp)
+
     )
+}
+
+@Composable
+fun WeeksCard(week: Weeks) {
+    Card(
+        modifier = Modifier.padding(2.dp),
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(week.shortCode)
+        }
+    }
 }
 
 
@@ -129,8 +136,10 @@ fun CourseCard(course: Course) {
         modifier = Modifier.padding(2.dp)
     ) {
         Column(
-            modifier = Modifier.padding(12.dp)
+            modifier = Modifier.padding(12.dp),
         ) {
+//            todo option
+
             Text(course.courseName)
             Text(course.professor)
             Text(course.classLocation)
@@ -139,7 +148,11 @@ fun CourseCard(course: Course) {
 }
 
 @Composable
-fun CurriculumTimeCard(curriculumTime: CurriculumTime) {
+fun CurriculumTimeCard(
+    curriculumTime: CurriculumTime,
+    timeVisibility: Boolean = true,
+    timeCodeVisibility: Boolean = true,
+) {
     Card(
         modifier = Modifier.padding(2.dp)
     ) {
@@ -153,8 +166,11 @@ fun CurriculumTimeCard(curriculumTime: CurriculumTime) {
                     .background(Color.LightGray)
                     .padding(2.dp)
             )
-            Text(curriculumTime.startTime)
-            Text(curriculumTime.endTime)
+
+            if (timeVisibility)
+                Text(curriculumTime.startTime)
+            if (timeCodeVisibility)
+                Text(curriculumTime.endTime)
         }
     }
 }
@@ -170,13 +186,13 @@ fun CurriculumTimeCard(curriculumTime: CurriculumTime) {
 
 // ------------------
 
-@Preview(showBackground = true)
-@Composable
-fun CurriculumTimeCardPreview() {
-    CurriculumTimeCard(CurriculumTime[1])
-//    CurriculumTimeCard(CurriculumTime[2])
-
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun CurriculumTimeCardPreview() {
+//    CurriculumTimeCard(CurriculumTime[1])
+////    CurriculumTimeCard(CurriculumTime[2])
+//
+//}
 
 @Preview(showBackground = true)
 @Composable
@@ -204,7 +220,8 @@ fun CourseBlockPreview() {
 @Composable
 fun LoginScreenPreview() {
     Nkust_platform_assistantTheme {
-        CurriculumContext()
+        val curriculumViewModel: CurriculumViewModel = viewModel()
+        CurriculumContext(curriculumViewModel)
     }
 }
 

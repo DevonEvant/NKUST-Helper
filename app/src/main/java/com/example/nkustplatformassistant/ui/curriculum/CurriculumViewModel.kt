@@ -33,17 +33,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import java.io.File
 
-enum class Week(val cn: String) {
-    Mon("星期一"),
-    Tue("星期二"),
-    Wed("星期三"),
-    Thu("星期四"),
-    Fri("星期五"),
-    Sat("星期六"),
-    Sun("星期日");
+enum class Weeks(val shortCode: String, val cn: String) {
+    Mon("M","星期一"),
+    Tue("T","星期二"),
+    Wed("W","星期三"),
+    Thu("T","星期四"),
+    Fri("F","星期五"),
+    Sat("S","星期六"),
+    Sun("S","星期日");
 
     companion object {
-        operator fun get(ordinal: Int): Week {
+        operator fun get(ordinal: Int): Weeks {
             return values()[ordinal]
         }
     }
