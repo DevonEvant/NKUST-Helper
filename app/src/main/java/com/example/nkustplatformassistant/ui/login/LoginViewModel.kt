@@ -38,7 +38,7 @@ class LoginParamsViewModel : ViewModel() {
 // EtxtCode State Hosting
 class EtxtCodeViewModel(
     // Please pass viewModel here or it'll create an new instance!
-    private val loginParmsViewModel: LoginParamsViewModel,
+    private val loginParamsViewModel: LoginParamsViewModel,
 ) : ViewModel() {
     private val _imageBitmap = MutableLiveData<ImageBitmap>()
     private val _etxtcode: MutableLiveData<String> = MutableLiveData()
@@ -70,13 +70,13 @@ class EtxtCodeViewModel(
         _etxtcode.value = newEtxtCode
     }
 
-    // TODO: rewrite it to other method of Corouting scope
+    // TODO: rewrite it to other method of Coroutine scope
     fun loginForResult(context: Context): Boolean {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 stateOfLogin = DataRepository(context).userLogin(
-                    loginParmsViewModel.uid.value!!,
-                    loginParmsViewModel.pwd.value!!,
+                    loginParamsViewModel.uid.value!!,
+                    loginParamsViewModel.pwd.value!!,
                     etxtCode.value!!
                 )
             }

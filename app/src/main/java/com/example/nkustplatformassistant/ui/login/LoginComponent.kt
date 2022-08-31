@@ -66,10 +66,6 @@ fun LoginForm(
     val context = LocalContext.current
     val showDialog = remember { mutableStateOf(false) }
 
-    LaunchedEffect(showDialog) {
-
-    }
-
     ShowDialogBase(showDialog, etxtCodeViewModel = EtxtCodeViewModel(
         loginParamsViewModel
     ))
@@ -186,7 +182,7 @@ fun ShowDialogBase(
     showDialog: MutableState<Boolean>,
     context: Context = LocalContext.current,
     etxtCodeViewModel: EtxtCodeViewModel = EtxtCodeViewModel(
-        loginParmsViewModel = LoginParamsViewModel()),
+        loginParamsViewModel = LoginParamsViewModel()),
 ) {
 
     val etxtCode: String by etxtCodeViewModel.etxtCode.observeAsState("")
