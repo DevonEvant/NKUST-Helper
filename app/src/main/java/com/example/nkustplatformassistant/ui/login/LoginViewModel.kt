@@ -7,12 +7,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nkustplatformassistant.data.persistence.DataRepository
-import com.example.nkustplatformassistant.data.remote.FetchData
+import com.example.nkustplatformassistant.data.persistence.user
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
-val user = FetchData()
 
 // LoginParams State hosting
 class LoginParamsViewModel : ViewModel() {
@@ -73,22 +71,17 @@ class EtxtCodeViewModel(
     }
 
     // TODO: rewrite it to other method of Corouting scope
-    fun loginForResult(): Boolean {
-        viewModelScope.launch {
-            stateOfLogin = user.loginWebap(
-                loginParmsViewModel.uid.value!!,
-                loginParmsViewModel.pwd.value!!,
-                etxtCode.value!!)
-        }
-        return stateOfLogin
-    }
-
-    fun startFetchData(context: Context) {
+    fun loginForResult(context: Context): Boolean {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                DataRepository(context).fetchScoreDataToDB()
+                stateOfLogin = DataRepository(context).userLogin(
+                    loginParmsViewModel.uid.value!!,
+                    loginParmsViewModel.pwd.value!!,
+                    etxtCode.value!!
+                )
             }
         }
+        return stateOfLogin
     }
 
 }

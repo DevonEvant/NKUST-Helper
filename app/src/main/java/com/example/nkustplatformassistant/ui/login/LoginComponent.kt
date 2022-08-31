@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.nkustplatformassistant.ui.home.HomeScreen
 
 @Composable
 fun LoginScreenBase(loginParamsViewModel: LoginParamsViewModel = viewModel()) {
@@ -213,10 +214,16 @@ fun ShowDialogBase(
                     .show()
 
                 // TODO: Login! and start new intent
-                val result = etxtCodeViewModel.loginForResult()
-                Log.v("Login", result.toString())
-                if (result) {
-                    etxtCodeViewModel.startFetchData(context)
+                // Redirect to Home Page and Start fetching data to
+                // DB in HomeScreen
+                etxtCodeViewModel.loginForResult(context).let {
+                    Toast.makeText(context, "Login result: $it", Toast.LENGTH_LONG)
+                        .show()
+                    if (it) {
+                        /* Redirect to Home Page and Start fetching data to
+                           DB in HomeScreen */
+
+                    }
                 }
                 showDialog.value = false
             }
@@ -227,6 +234,7 @@ fun ShowDialogBase(
     fun onNegativeCallback() {
         showDialog.value = false
     }
+
     if (showDialog.value) {
         LaunchedEffect(showDialog.value) {
             etxtCodeViewModel.requestEtxtImageBitmap()

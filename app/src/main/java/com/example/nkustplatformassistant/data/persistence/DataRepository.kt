@@ -3,20 +3,34 @@ package com.example.nkustplatformassistant.data.persistence
 import android.content.Context
 import com.example.nkustplatformassistant.data.persistence.db.NkustDatabase
 import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
-import com.example.nkustplatformassistant.ui.login.user
+import com.example.nkustplatformassistant.data.remote.FetchData
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.lang.IndexOutOfBoundsException
 
+val user = FetchData()
 
 class DataRepository(context: Context) {
+
     private val db = NkustDatabase.getDatabase(context)
 
-    suspend fun fetchScoreDataToDB() {
+    private suspend fun fetchScoreDataToDB() {
         val listToInsert = getAllScoreToTypedScoreEntity()
         db.ScoreDao().insertMultiScore(listToInsert)
     }
 
     suspend fun getSpecScoreDataFromDB(year: Int, semester: Int) {
         db.ScoreDao().getSpecScoreList(year, semester)
+    }
+
+    suspend fun userLogin(uid: String, pwd: String, etxtCode: String): Boolean {
+        return user.loginWebap(uid, pwd, etxtCode)
+    }
+
+    suspend fun fetchData(context: Context) {
+        withContext(Dispatchers.IO) {
+            DataRepository(context).fetchScoreDataToDB()
+        }
     }
 }
 
@@ -25,14 +39,6 @@ class DataRepository(context: Context) {
  * including all score from the year you enrolled to the latest (now)
  */
 suspend fun getAllScoreToTypedScoreEntity(): List<ScoreEntity> {
-//    val semYearMap = mutableMapOf<String, String>()
-//    user.getYearsOfDropDownListByMap()
-//        .forEach { (yearSemester, _) ->
-//            yearSemester.split(",").let {
-//                semYearMap[it[1]] = it[0]
-//            }
-//        }
-
     val listToGet: MutableList<List<String>> = mutableListOf()
     user.getYearsOfDropDownListByMap()
         .forEach { (yearSemester, Description) ->
@@ -61,7 +67,7 @@ suspend fun getAllScoreToTypedScoreEntity(): List<ScoreEntity> {
                 "It maybe no data, but it's okay")
     }
 
-    println(scoreEntityList.size)
+//    println(scoreEntityList.size)
 
     return scoreEntityList
 }
