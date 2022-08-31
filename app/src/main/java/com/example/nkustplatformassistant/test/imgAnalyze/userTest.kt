@@ -4,12 +4,10 @@ package com.example.nkustplatformassistant.test.imgAnalyze
 
 import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
 import com.example.nkustplatformassistant.data.persistence.getAllScoreToTypedScoreEntity
-import com.example.nkustplatformassistant.data.remote.FetchData
-import com.example.nkustplatformassistant.ui.login.user
+import com.example.nkustplatformassistant.data.persistence.user
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import java.lang.IndexOutOfBoundsException
 
 fun main() {
 
