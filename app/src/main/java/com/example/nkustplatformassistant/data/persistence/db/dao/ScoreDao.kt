@@ -6,7 +6,6 @@ import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreDropDo
 import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
 
 @Dao
-@TypeConverters(DataConverter::class)
 interface ScoreDao {
 
     @Query("SELECT * FROM score_table ORDER BY id ASC")
