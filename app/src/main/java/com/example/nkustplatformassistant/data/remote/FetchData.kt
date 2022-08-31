@@ -1,5 +1,7 @@
 package com.example.nkustplatformassistant.data.remote
 
+import com.example.nkustplatformassistant.data.NkustEvent
+import com.example.nkustplatformassistant.data.Score
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -16,11 +18,7 @@ import java.io.File
 // get xpath in jsoup
 // https://stackoverflow.com/questions/16335820/convert-xpath-to-jsoup-query
 
-data class Score(
-    val subjectName: String,
-    val midScore: String,
-    val finalScore: String,
-)
+
 
 /**
  * Before using this section, you must logged in.
@@ -316,25 +314,6 @@ class FetchData : NkustUser() {
 
         return calenderPdf
     }
-}
-
-data class NkustEvent(
-    val agency: String,
-    val time: String,
-    val description: String,
-)
-
-enum class Agency {
-    OfficeOfTheSecretariat,
-    PersonnelOffice,
-    CurriculumDivision,
-    RegistrationDivision,
-    StudentLearningCounselingDivision,
-    OfficeOfStudent,
-    OfficeOfGeneralAffairs,
-    OfficeOfPhysicalEducation,
-    CenterOfGeneralStudies,
-    ForeignLanguageEducationCente
 }
 
 /**

@@ -1,7 +1,7 @@
 package com.example.nkustplatformassistant.data.persistence.db.converter
 
 import androidx.room.TypeConverter
-import com.example.nkustplatformassistant.data.remote.Score
+import com.example.nkustplatformassistant.data.Score
 
 class DataConverter {
     @TypeConverter

@@ -24,11 +24,7 @@ import java.lang.Exception
 /**
  * Declare current data's state
  */
-sealed class Response<out R> {
-    data class Loading(val data: Nothing) : Response<Nothing>()
-    data class Success<out T>(val data: T) : Response<T>()
-    data class Error(val exception: Exception) : Response<Exception>()
-}
+
 
 /**
  * About login to NKUST system.
