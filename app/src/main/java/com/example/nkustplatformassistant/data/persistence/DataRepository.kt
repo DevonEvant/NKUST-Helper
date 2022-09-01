@@ -2,6 +2,7 @@ package com.example.nkustplatformassistant.data.persistence
 
 import android.content.Context
 import com.example.nkustplatformassistant.data.persistence.db.NkustDatabase
+import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreDropDownParams
 import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
 import com.example.nkustplatformassistant.data.remote.FetchData
 import kotlinx.coroutines.Dispatchers
@@ -14,24 +15,69 @@ class DataRepository(context: Context) {
 
     private val db = NkustDatabase.getDatabase(context)
 
+    // TODO: Check if score, subject, calender is null
+    suspend fun checkDataIsReady(): Boolean {
+        val isDataReady = mutableListOf<Boolean>()
+        withContext(Dispatchers.IO) {
+            isDataReady.add(
+                isScoreExist()
+            )
+        }
+        return !isDataReady.contains(false)
+    }
+
+    // Login...
+    suspend fun userLogin(uid: String, pwd: String, etxtCode: String): Boolean {
+        return user.loginWebap(uid, pwd, etxtCode)
+    }
+
+    // Score...
     private suspend fun fetchScoreDataToDB() {
         val listToInsert = getAllScoreToTypedScoreEntity()
         db.ScoreDao().insertMultiScore(listToInsert)
     }
 
-    suspend fun getSpecScoreDataFromDB(year: Int, semester: Int) {
-        db.ScoreDao().getSpecScoreList(year, semester)
-    }
-
-    suspend fun userLogin(uid: String, pwd: String, etxtCode: String): Boolean {
-        return user.loginWebap(uid, pwd, etxtCode)
-    }
-
-    suspend fun fetchData(context: Context) {
+    suspend fun getDropDownListFromDB(): List<ScoreDropDownParams> {
+        val dropDownList = mutableListOf<ScoreDropDownParams>()
         withContext(Dispatchers.IO) {
-            DataRepository(context).fetchScoreDataToDB()
+            dropDownList.addAll(
+                db.ScoreDao().getDropDownList()
+            )
+        }
+        return dropDownList
+    }
+
+    /**
+     * By using [getLatestScoreParams], you can get latest year, semester, and semester description
+     * with a data class of [ScoreDropDownParams]
+     */
+    suspend fun getLatestScoreParams(): ScoreDropDownParams {
+        lateinit var latestScoreParams: ScoreDropDownParams
+        withContext(Dispatchers.IO) {
+            latestScoreParams = db.ScoreDao().getLatestScoreList()
+        }
+        return latestScoreParams
+    }
+
+    suspend fun getSpecScoreDataFromDB(year: Int, semester: Int): List<ScoreEntity> {
+        return db.ScoreDao().getSpecScoreList(year, semester)
+    }
+
+    suspend fun getAllScore() {
+        withContext(Dispatchers.IO) {
+            fetchScoreDataToDB()
         }
     }
+
+    private suspend fun isScoreExist(): Boolean {
+        var scoreExist: Boolean
+        withContext(Dispatchers.IO) {
+            scoreExist = db.ScoreDao().isExist()
+        }
+        return scoreExist
+    }
+
+    // Subject...
 }
 
 /**
