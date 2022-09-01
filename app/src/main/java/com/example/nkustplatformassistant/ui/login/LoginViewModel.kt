@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 // LoginParams State hosting
-class LoginParamsViewModel : ViewModel() {
+class LoginParamsViewModel(private val dataRepository: DataRepository) : ViewModel() {
     private val _uid: MutableLiveData<String> = MutableLiveData("")
     private val _pwd: MutableLiveData<String> = MutableLiveData("")
     private val _pwdVisibility: MutableLiveData<Boolean> = MutableLiveData(false)
@@ -33,13 +33,7 @@ class LoginParamsViewModel : ViewModel() {
     fun onPwdVisibilityReversed() {
         _pwdVisibility.value = (_pwdVisibility.value)!!.not()
     }
-}
 
-// EtxtCode State Hosting
-class EtxtCodeViewModel(
-    // Please pass viewModel here or it'll create an new instance!
-    private val loginParamsViewModel: LoginParamsViewModel,
-) : ViewModel() {
     private val _imageBitmap = MutableLiveData<ImageBitmap>()
     private val _etxtcode: MutableLiveData<String> = MutableLiveData()
     private val _etxtIsLoading: MutableLiveData<Boolean> = MutableLiveData()
@@ -49,10 +43,6 @@ class EtxtCodeViewModel(
     val etxtIsLoading: LiveData<Boolean> = _etxtIsLoading
 
     private var stateOfLogin: Boolean = false
-
-//    init {
-//        requestEtxtImageBitmap()
-//    }
 
     fun requestEtxtImageBitmap() {
         viewModelScope.launch {
@@ -72,16 +62,14 @@ class EtxtCodeViewModel(
 
     // TODO: rewrite it to other method of Coroutine scope
     fun loginForResult(context: Context): Boolean {
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                stateOfLogin = DataRepository(context).userLogin(
-                    loginParamsViewModel.uid.value!!,
-                    loginParamsViewModel.pwd.value!!,
-                    etxtCode.value!!
-                )
-            }
+        viewModelScope.launch(Dispatchers.IO) {
+            stateOfLogin = DataRepository(context).userLogin(
+                uid.value!!,
+                pwd.value!!,
+                etxtCode.value!!
+            )
         }
+        println("Login State: $stateOfLogin")
         return stateOfLogin
     }
-
 }

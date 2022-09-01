@@ -31,11 +31,19 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.navArgument
+import com.example.nkustplatformassistant.data.persistence.DataRepository
+import com.example.nkustplatformassistant.navigation.Screen
 import com.example.nkustplatformassistant.ui.home.HomeScreen
 
 @Composable
-fun LoginScreenBase(loginParamsViewModel: LoginParamsViewModel = viewModel()) {
+fun LoginScreenBase(
+    loginParamsViewModel: LoginParamsViewModel = viewModel(),
+    navController: NavController,
+) {
     val uid: String by loginParamsViewModel.uid.observeAsState("")
     val pwd: String by loginParamsViewModel.pwd.observeAsState("")
     val pwdVisibility: Boolean by loginParamsViewModel.pwdVisibility.observeAsState(false)
@@ -47,13 +55,13 @@ fun LoginScreenBase(loginParamsViewModel: LoginParamsViewModel = viewModel()) {
         onPwdChanged = { loginParamsViewModel.onPwdChange(it) },
         onPwdVisibilityReversed = { loginParamsViewModel.onPwdVisibilityReversed() },
         loginParamsViewModel = loginParamsViewModel,
+        navController = navController,
     )
 }
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun LoginForm(
-//    navController: NavController,
     uid: String,
     pwd: String,
     pwdVisibility: Boolean,
@@ -61,19 +69,18 @@ fun LoginForm(
     onPwdChanged: (String) -> Unit,
     onPwdVisibilityReversed: () -> Unit,
     loginParamsViewModel: LoginParamsViewModel,
+    navController: NavController,
 ) {
     val focusManager = LocalFocusManager.current
     val context = LocalContext.current
     val showDialog = remember { mutableStateOf(false) }
 
-    ShowDialogBase(showDialog, etxtCodeViewModel = EtxtCodeViewModel(
-        loginParamsViewModel
-    ))
+    ShowDialogBase(
+        showDialog,
+        loginParamsViewModel = loginParamsViewModel,
+        navController = navController
+    )
 
-    // user.loginWebap(uid, pwd, etxtCode)
-    // navController.navigate(
-    // route = Screen.Home.route,
-    // )
     // TODO(1. only put etxt to home screen and do login in HomeScreen - bad
     //      2. create data class to determinate is it okay to logon
     //         if it's OK, then direct put Home screen
@@ -181,18 +188,17 @@ fun LoginForm(
 fun ShowDialogBase(
     showDialog: MutableState<Boolean>,
     context: Context = LocalContext.current,
-    etxtCodeViewModel: EtxtCodeViewModel = EtxtCodeViewModel(
-        loginParamsViewModel = LoginParamsViewModel()),
+    loginParamsViewModel: LoginParamsViewModel,
+    navController: NavController,
 ) {
 
-    val etxtCode: String by etxtCodeViewModel.etxtCode.observeAsState("")
-    val etxtImageBitmap: ImageBitmap by etxtCodeViewModel.etxtImageBitmap
+    val etxtCode: String by loginParamsViewModel.etxtCode.observeAsState("")
+    val etxtImageBitmap: ImageBitmap by loginParamsViewModel.etxtImageBitmap
         .observeAsState(ImageBitmap(width = 85, height = 40))
-    val etxtIsLoading: Boolean by etxtCodeViewModel.etxtIsLoading.observeAsState(false)
 
 
     fun onImageClicked() {
-        etxtCodeViewModel.requestEtxtImageBitmap()
+        loginParamsViewModel.requestEtxtImageBitmap()
     }
 
     fun onPositiveCallback() {
@@ -206,19 +212,20 @@ fun ShowDialogBase(
                     .show()
             }
             etxtCode.length == 4 -> {
-                Toast.makeText(context, "Checking...", Toast.LENGTH_LONG)
+                Toast.makeText(context, "Checking...", Toast.LENGTH_SHORT)
                     .show()
 
                 // TODO: Login! and start new intent
                 // Redirect to Home Page and Start fetching data to
                 // DB in HomeScreen
-                etxtCodeViewModel.loginForResult(context).let {
-                    Toast.makeText(context, "Login result: $it", Toast.LENGTH_LONG)
+                loginParamsViewModel.loginForResult(context).let {
+                    Toast.makeText(context, "Login result: $it", Toast.LENGTH_SHORT)
                         .show()
                     if (it) {
                         /* Redirect to Home Page and Start fetching data to
                            DB in HomeScreen */
-
+                        navController.navigate(Screen.Home.route)
+                        TODO("start fetching data (function in DataRepository.kt)")
                     }
                 }
                 showDialog.value = false
@@ -233,17 +240,18 @@ fun ShowDialogBase(
 
     if (showDialog.value) {
         LaunchedEffect(showDialog.value) {
-            etxtCodeViewModel.requestEtxtImageBitmap()
+            loginParamsViewModel.requestEtxtImageBitmap()
         }
 
         AlertDialogForEtxtCode(
             etxtCode = etxtCode,
             etxtImageBitmap = etxtImageBitmap,
-            etxtIsLoading = etxtIsLoading,
-            onEtxtCodeChange = { etxtCodeViewModel.onEtxtCodeChange(it) },
+            etxtIsLoading = loginParamsViewModel.etxtIsLoading,
+            onEtxtCodeChange = { loginParamsViewModel.onEtxtCodeChange(it) },
             onImageClicked = { onImageClicked() },
             onPositiveClick = { onPositiveCallback() },
-            onNegativeClick = { onNegativeCallback() })
+            onNegativeClick = { onNegativeCallback() },
+        )
     }
 
 }
@@ -253,7 +261,7 @@ fun ShowDialogBase(
 @Composable
 @SuppressLint("CoroutineCreationDuringComposition")
 fun AlertDialogForEtxtCode(
-    etxtIsLoading: Boolean,
+    etxtIsLoading: LiveData<Boolean>,
     etxtCode: String,
     etxtImageBitmap: ImageBitmap,
     onEtxtCodeChange: (String) -> Unit,
@@ -269,10 +277,11 @@ fun AlertDialogForEtxtCode(
             modifier = Modifier.aspectRatio(1F))
         {
             // 應該要交給observer處理
-            if (!etxtIsLoading) {
+            if (!etxtIsLoading.observeAsState(false).value) {
                 Column(
                     modifier = Modifier.padding(8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally) {
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center) {
                     Text(
                         text = "Please input validate code below:",
                         style = MaterialTheme.typography.titleMedium,
@@ -336,7 +345,8 @@ fun AlertDialogForEtxtCode(
                 }
             } else {
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
                     Text(text = "Please wait a while for EtxtCode...",
                         fontSize = 20.sp)
