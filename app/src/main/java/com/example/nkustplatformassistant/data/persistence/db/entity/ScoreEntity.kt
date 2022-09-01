@@ -16,7 +16,7 @@ data class ScoreEntity(
     @ColumnInfo val finalScore: String,
 )
 
-data class ScoreDropDownList(
+data class ScoreDropDownParams(
     val year: Int,
     val semester: Int,
     val semDescription: String,
