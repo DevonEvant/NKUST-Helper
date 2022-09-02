@@ -2,6 +2,7 @@ package com.example.nkustplatformassistant.data.persistence
 
 import android.content.Context
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.lifecycle.MutableLiveData
 import com.example.nkustplatformassistant.data.NkustEvent
 import com.example.nkustplatformassistant.data.persistence.db.NkustDatabase
 import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
@@ -9,15 +10,24 @@ import com.example.nkustplatformassistant.data.remote.NkustAccessor
 import com.example.nkustplatformassistant.ui.curriculum.user
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.File
-import java.lang.IndexOutOfBoundsException
 
 
 class DataRepository(context: Context) {
+    companion object {
+        @Volatile
+        private var INSTANCE: DataRepository? = null
 
-    val nkustAccessor = NkustAccessor()
+        fun getInstance(context: Context): DataRepository {
+            INSTANCE ?: synchronized(this) {
+                INSTANCE ?: DataRepository(context).also { INSTANCE = it }
+            }
 
-    private val db = NkustDatabase.getDatabase(context)
+            return INSTANCE as DataRepository
+        }
+    }
+
+    private val nkustAccessor = NkustAccessor()
+    private val db = NkustDatabase.getInstance(context)
 
     private suspend fun fetchScoreDataToDB() {
         val listToInsert = getAllScoreToTypedScoreEntity()
@@ -71,6 +81,7 @@ class DataRepository(context: Context) {
     suspend fun getWebapCaptchaImage(
         reflash: Boolean = false
     ): ImageBitmap {
+        throw Error("not complete")
         withContext(Dispatchers.IO) {
             if (reflash)
                 nkustAccessor.getWebapEtxtBitmap()
