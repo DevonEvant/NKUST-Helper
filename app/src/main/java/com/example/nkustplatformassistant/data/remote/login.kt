@@ -24,11 +24,7 @@ import java.lang.Exception
 /**
  * Declare current data's state
  */
-sealed class Response<out R> {
-    data class Loading(val data: Nothing) : Response<Nothing>()
-    data class Success<out T>(val data: T) : Response<T>()
-    data class Error(val exception: Exception) : Response<Exception>()
-}
+
 
 /**
  * About login to NKUST system.
@@ -39,8 +35,6 @@ open class NkustUser {
             storage = AcceptAllCookiesStorage()
         }
     }
-
-//    val session = suspend { client.cookies(NKUST_ROUTES.WEBAP_BASE) }
 
     /**
      * Refresh Session if session unavailable.
@@ -92,51 +86,7 @@ open class NkustUser {
         return true
     }
 
-    /**
-     * Save etxt_code image on webap using GET.
-     */
-    @OptIn(InternalAPI::class)
-    suspend fun getAndSaveWebapEtxtImage(): File {
 
-        val etxtRes = client.get {
-            url(NKUST_ROUTES.WEBAP_ETXT_WITH_SYMBOL)
-        }
-
-        if (!etxtRes.status.isSuccess())
-            throw Error("Fetch URL Error. HttpStateCode is ${etxtRes.status} ")
-
-        val imgFile: File = File("./etxt.jpg")
-        etxtRes.content.copyAndClose(imgFile.writeChannel())
-
-        return imgFile
-    }
-
-    /**
-     * Get Image to ImageBitmap with same session
-     */
-    suspend fun getWebapEtxtBitmap(): ImageBitmap {
-        val etxtRes = client.get(url = Url(NKUST_ROUTES.WEBAP_ETXT_WITH_SYMBOL))
-        Log.v("getWebapEtxtBitmap", "Status: ${etxtRes.status}")
-
-        if (!etxtRes.status.isSuccess())
-            throw Error("Fetch URL Error. HttpStateCode is ${etxtRes.status} ")
-
-        val imgByte = etxtRes.body<ByteArray>()
-
-        val bitmapOption = BitmapFactory.Options().apply {
-            this.inPreferredConfig = Bitmap.Config.ARGB_8888
-        }
-        val imgBitmap = BitmapFactory
-            .decodeByteArray(imgByte, 0, imgByte.size, bitmapOption)
-            .asImageBitmap()
-
-        Log.v(
-            "getWebapEtxtBitmap",
-            "Width: ${imgBitmap.width}, Height: ${imgBitmap.height}"
-        )
-
-        return imgBitmap
-    }
 
 
     /**
@@ -161,61 +111,11 @@ open class NkustUser {
         return res.bodyAsText().contains("NKUST")
     }
 
-    suspend fun getEtxtText(): String {
-        return ""
-    }
+//    suspend fun getEtxtText(): String {
+//        return ""
+//    }
 
 
-    /**
-     * get School Timetable
-     */
-    suspend fun getCurriculum(year: String, semester: String) {
-
-        val url = NKUST_ROUTES.SCHOOL_TABLETIME
-
-        val curriculumRes = client.request(
-            url = Url(url)
-        ) {
-            url {
-                parameters.append("spath", "ag_pro/ag222.jsp?")
-                parameters.append("arg01", year)
-                parameters.append("arg02", semester)
-            }
-            method = HttpMethod.Post
-        }
-
-        val body = curriculumRes.bodyAsText()
-
-        if (!curriculumRes.status.isSuccess())
-            throw Error("Fetch URL Error. HttpStateCode is ${curriculumRes.status} ")
-        else if ("您請求的網址無法在此服務器上找到" in body)
-            throw Error("Error! no timetable information found ")
-        else if ("查無相關學年期課表資料" in body)
-            throw Error("Error! no timetable information found ")
-        else if ("學生目前無選課資料!" in body)
-            throw Error("Error! no timetable information found ")
-
-//        println(curriculumRes.bodyAsText())
-
-        val parser: Parser = Parser.htmlParser()
-        val courses = mutableListOf<Course>()
-
-        body.let { content ->
-            val a = parser.parseInput(content, url)
-                .select("form tr").forEach {
-//                    val course = Courses()
-                    it.select("td").forEach {
-                        println(it.text())
-                    }
-
-                }
-//            courses.add(course)
-        }
-
-
-
-//        return isValid
-    }
 }
 
 const val ETXTTAG: String = "etxtPaser"

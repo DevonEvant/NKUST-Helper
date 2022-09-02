@@ -1,5 +1,14 @@
 package com.example.nkustplatformassistant.data.remote
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.Log
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import com.example.nkustplatformassistant.data.NkustEvent
+import com.example.nkustplatformassistant.data.Score
+import com.example.nkustplatformassistant.data.persistence.db.entity.Course
+import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -16,16 +25,11 @@ import java.io.File
 // get xpath in jsoup
 // https://stackoverflow.com/questions/16335820/convert-xpath-to-jsoup-query
 
-data class Score(
-    val subjectName: String,
-    val midScore: String,
-    val finalScore: String,
-)
 
 /**
  * Before using this section, you must logged in.
  */
-class FetchData : NkustUser() {
+class NkustAccessor : NkustUser() {
 
     /**
      * Parser to parse HTML into a "org.jsoup.nodes.Document"
@@ -272,10 +276,12 @@ class FetchData : NkustUser() {
             val scoreList = mutableListOf<Score>()
 
             subject.forEachIndexed { index, _ ->
-                scoreList.add(index, Score(
-                    subject[index],
-                    midScore[index],
-                    finalScore[index])
+                scoreList.add(
+                    index, Score(
+                        subject[index],
+                        midScore[index],
+                        finalScore[index]
+                    )
                 )
             }
 
@@ -292,20 +298,16 @@ class FetchData : NkustUser() {
     }
 
 
-    //    https://acad.nkust.edu.tw/var/file/4/1004/img/273/cal110-1.pdf
-//    https://acad.nkust.edu.tw/var/file/4/1004/img/273/cal110-2.pdf
-//    https://acad.nkust.edu.tw/var/file/4/1004/img/273/cal111-1.pdf
-//    https://acad.nkust.edu.tw/var/file/4/1004/img/273/cal111-2.pdf
-
-//   todo rename Calender to schedule
+    //   todo rename Calender to schedule
     @OptIn(InternalAPI::class)
     suspend fun getNkustCnCalenderPdf(year: String, semester: String, path: String?): File {
+
 
         // todo not complete. unable to find valid certification path to requested target
 
         val res = client.get {
-//            url(NKUST_ROUTES.getCnCalenarUrl(year, semester))
-            url("http://acad.nkust.edu.tw/var/file/4/1004/img/273/cal110-2.pdf")
+            url(NKUST_ROUTES.getCnCalendarUrl(year, semester))
+//            url("http://acad.nkust.edu.tw/var/file/4/1004/img/273/cal110-2.pdf")
         }
 
         if (!res.status.isSuccess())
@@ -313,28 +315,96 @@ class FetchData : NkustUser() {
 
         val calenderPdf = File(path)
         res.content.copyAndClose(calenderPdf.writeChannel())
-
+        throw Error("not complete")
         return calenderPdf
     }
-}
 
-data class NkustEvent(
-    val agency: String,
-    val time: String,
-    val description: String,
-)
+//    /**
+//     * Save etxt_code image on webap using GET.
+//     */
+//    @OptIn(InternalAPI::class)
+//    suspend fun getAndSaveWebapEtxtImage(): File {
+//
+//        val etxtRes = client.get {
+//            url(NKUST_ROUTES.WEBAP_ETXT_WITH_SYMBOL)
+//        }
+//
+//        if (!etxtRes.status.isSuccess())
+//            throw Error("Fetch URL Error. HttpStateCode is ${etxtRes.status} ")
+//
+//        val imgFile: File = File("./etxt.jpg")
+//        etxtRes.content.copyAndClose(imgFile.writeChannel())
+//
+//        return imgFile
+//    }
 
-enum class Agency {
-    OfficeOfTheSecretariat,
-    PersonnelOffice,
-    CurriculumDivision,
-    RegistrationDivision,
-    StudentLearningCounselingDivision,
-    OfficeOfStudent,
-    OfficeOfGeneralAffairs,
-    OfficeOfPhysicalEducation,
-    CenterOfGeneralStudies,
-    ForeignLanguageEducationCente
+    /**
+     * Get Image to ImageBitmap with same session
+     */
+    suspend fun getWebapEtxtBitmap(): ImageBitmap {
+        val etxtRes = client.get(url = Url(NKUST_ROUTES.WEBAP_ETXT_WITH_SYMBOL))
+
+        if (!etxtRes.status.isSuccess())
+            throw Error("Fetch URL Error. HttpStateCode is ${etxtRes.status} ")
+
+        val imgByte = etxtRes.body<ByteArray>()
+
+        val bitmapOption = BitmapFactory.Options().apply {
+            this.inPreferredConfig = Bitmap.Config.ARGB_8888
+        }
+        val imgBitmap = BitmapFactory
+            .decodeByteArray(imgByte, 0, imgByte.size, bitmapOption)
+            .asImageBitmap()
+
+        return imgBitmap
+    }
+
+
+    /**
+     * get School Timetable
+     */
+    suspend fun getCurriculum(year: String, semester: String) {
+
+        val url = NKUST_ROUTES.SCHOOL_TABLETIME
+
+        val curriculumRes = client.request(
+            url = Url(url)
+        ) {
+            url {
+                parameters.append("spath", "ag_pro/ag222.jsp?")
+                parameters.append("arg01", year)
+                parameters.append("arg02", semester)
+            }
+            method = HttpMethod.Post
+        }
+
+        val body = curriculumRes.bodyAsText()
+
+        if (!curriculumRes.status.isSuccess())
+            throw Error("Fetch URL Error. HttpStateCode is ${curriculumRes.status} ")
+        else if ("您請求的網址無法在此服務器上找到" in body)
+            throw Error("Error! no timetable information found ")
+        else if ("查無相關學年期課表資料" in body)
+            throw Error("Error! no timetable information found ")
+        else if ("學生目前無選課資料!" in body)
+            throw Error("Error! no timetable information found ")
+
+        val parser: Parser = Parser.htmlParser()
+        val courses = mutableListOf<Course>()
+
+        body.let { content ->
+            val a = parser.parseInput(content, url)
+                .select("form tr").forEach {
+//                    val course = Courses()
+                    it.select("td").forEach {
+                        println(it.text())
+                        // todo
+                        throw Error("not complete")
+                    }
+                }
+//            courses.add(course)
+        }
+    }
 }
 
 /**

@@ -21,6 +21,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.nkustplatformassistant.data.CurriculumTime
+import com.example.nkustplatformassistant.data.Weeks
+import com.example.nkustplatformassistant.data.persistence.db.entity.Course
 import com.example.nkustplatformassistant.ui.theme.Nkust_platform_assistantTheme
 import com.soywiz.klogger.AnsiEscape
 
@@ -28,9 +31,10 @@ import com.soywiz.klogger.AnsiEscape
 fun CurriculumContext(curriculumViewModel: CurriculumViewModel) {
     val timeVisibility by curriculumViewModel.timeVisibility.observeAsState(true)
     val timeCodeVisibility by curriculumViewModel.timeCodeVisibility.observeAsState(true)
+    val courses by curriculumViewModel.courses.observeAsState()
 
     val state = rememberScrollState()
-    LaunchedEffect(Unit) { state.animateScrollTo(100) }
+    LaunchedEffect(Unit) { state.animateScrollTo(0) }
 
     Column {
 //    -----DisplayOption-----
@@ -48,15 +52,14 @@ fun CurriculumContext(curriculumViewModel: CurriculumViewModel) {
             Text(text = "Display：")
 
             ChipCell(
-                "Time",
-                timeVisibility
-            ) { curriculumViewModel.onTimeVisibilityChange() }
+                timeVisibility,
+                { curriculumViewModel.onTimeVisibilityChange() }
+            ) { Text("Time") }
 
             ChipCell(
-                "Time Code",
-                timeCodeVisibility
-            ) { curriculumViewModel.onTimeCodeVisibilityChange() }
-
+                timeCodeVisibility,
+                { curriculumViewModel.onTimeCodeVisibilityChange() }
+            ) { Text("Time Code") }
         }
 
 //    -----CurriculumTable-----
@@ -78,9 +81,20 @@ fun CurriculumContext(curriculumViewModel: CurriculumViewModel) {
                 } else if (index % 7 == 0) {
                     val curriculumTime = CurriculumTime[(index / 7) - 1]
                     CurriculumTimeCard(curriculumTime, timeVisibility, timeCodeVisibility)
-                } else
-                    Text(itemsList[index].toString())
+                }
+            }
 
+            courses?.forEachIndexed { index, course ->
+                val span:Int = 0
+
+                item(
+                    key = { index },
+                    span = {
+                        GridItemSpan(span)
+                    }
+                ) {
+                    CourseCard(course)
+                }
 
             }
         }
@@ -90,13 +104,17 @@ fun CurriculumContext(curriculumViewModel: CurriculumViewModel) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChipCell(lable: String, state: Boolean, onClick: (() -> Unit)) {
+fun ChipCell(
+    state: Boolean,
+    onClick: (() -> Unit),
+    content: @Composable () -> Unit
+) {
 //    val uid: String by loginParamsViewModel.uid.observeAsState("")
 //    val pwd: String by loginParamsViewModel.pwd.observeAsState("")
     FilterChip(
         selected = state,
         onClick = onClick,
-        label = { Text(lable) },
+        label = content,
         modifier = Modifier.padding(2.dp)
 
     )
@@ -113,20 +131,6 @@ fun WeeksCard(week: Weeks) {
         ) {
             Text(week.shortCode)
         }
-    }
-}
-
-
-fun LazyGridScope.CourseItem(course: Course) {
-    val index: Int = 12
-
-    item(
-        key = { index },
-        span = {
-            GridItemSpan(maxLineSpan)
-        }
-    ) {
-        CourseCard(course)
     }
 }
 
@@ -194,27 +198,6 @@ fun CurriculumTimeCard(
 //
 //}
 
-@Preview(showBackground = true)
-@Composable
-fun CourseBlockPreview() {
-    Nkust_platform_assistantTheme {
-        CourseCard(
-            Course(
-                "123",
-                "123",
-                "123",
-                "123",
-                "123",
-                "123",
-                false,
-                "123",
-                "123",
-                "123",
-                "123"
-            )
-        )
-    }
-}
 
 @Preview(showBackground = true)
 @Composable

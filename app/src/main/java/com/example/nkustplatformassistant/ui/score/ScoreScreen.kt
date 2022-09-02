@@ -55,4 +55,36 @@ import com.example.nkustplatformassistant.ui.theme.Nkust_platform_assistantTheme
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.*
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import com.example.nkustplatformassistant.ui.login.EtxtCodeViewModel
+import com.example.nkustplatformassistant.ui.login.LoginParamsViewModel
+import com.example.nkustplatformassistant.ui.login.LoginScreenBase
+
+class ScoreScreen : ComponentActivity() {
+    lateinit var navController: NavHostController
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        // https://stackoverflow.com/questions/68971231/activity-view-model-in-jetpack-compose
+        setContent() {
+            val viewModelStoreOwner = checkNotNull(LocalViewModelStoreOwner.current) {
+                throw Error("No ViewModelStoreOwner was provided via LocalViewModelStoreOwner")
+            }
+            val scoreViewModel = ScoreViewModel()
+
+            Nkust_platform_assistantTheme {
+
+                // navController As start destination
+                navController = rememberNavController()
+//                NkustpaNavGraph(navController = navController)
+                // A surface container using the 'background' color from the theme
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    ScoreContent(scoreViewModel)
+                }
+            }
+        }
+    }
+}

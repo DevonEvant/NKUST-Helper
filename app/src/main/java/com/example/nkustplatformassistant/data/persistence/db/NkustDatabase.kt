@@ -17,7 +17,11 @@ import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
 // TODO 資料庫變動時，不需要遷移，直接重建
 // https://medium.com/androiddevelopers/7-steps-to-room-27a5fe5f99b2
 
-@Database(entities = arrayOf(Calender::class, ScoreEntity::class), version = 1, exportSchema = false)
+@Database(
+    entities = arrayOf(Calender::class, ScoreEntity::class),
+    version = 1,
+    exportSchema = false
+)
 abstract class NkustDatabase : RoomDatabase() {
 
     abstract fun calenderDao(): CalenderDao
@@ -36,17 +40,18 @@ abstract class NkustDatabase : RoomDatabase() {
          * the application context from the WordRoomDatabase class
          * and names it "word_database".
          */
-        fun getDatabase(context: Context): NkustDatabase {
+        fun getInstance(context: Context): NkustDatabase {
             /* if the INSTANCE is not null, then return it,
              * if it is, then create the database
              */
-            val instance = Room.databaseBuilder(
-                context.applicationContext,
-                NkustDatabase::class.java,
-                "nkust_database"
-            ).build()
-            INSTANCE = instance
-            return instance
+            if (INSTANCE === null)
+                INSTANCE = Room.databaseBuilder(
+                    context.applicationContext,
+                    NkustDatabase::class.java,
+                    "nkust_database"
+                ).build()
+
+            return INSTANCE as NkustDatabase
         }
     }
 

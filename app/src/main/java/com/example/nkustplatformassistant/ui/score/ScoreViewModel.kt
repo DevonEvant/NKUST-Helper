@@ -28,7 +28,27 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
 import com.example.nkustplatformassistant.data.remote.NkustUser
+import com.example.nkustplatformassistant.data.remote.Score
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import java.io.File
+
+class ScoreViewModel : ViewModel() {
+    private val _scores = MutableLiveData(mutableListOf<ScoreEntity?>())
+
+    val scores: LiveData<MutableList<ScoreEntity?>> = _scores
+
+    fun reflashScores() {
+//        _scores.value =
+    }
+//
+//    fun onPwdChange(newPwd: String) {
+//        _pwd.value = newPwd
+//    }
+//
+//    fun onPwdVisibilityReversed() {
+//        _pwdVisibility.value = (_pwdVisibility.value)!!.not()
+//    }
+}
