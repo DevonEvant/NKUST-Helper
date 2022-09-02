@@ -28,21 +28,27 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.nkustplatformassistant.data.persistence.db.entity.Course
 import com.example.nkustplatformassistant.data.remote.NkustUser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import java.io.File
 
 
-
-
 class CurriculumViewModel : ViewModel() {
-    private val _timeVisibility: MutableLiveData<Boolean> = MutableLiveData(false)
-    private val _timeCodeVisibility: MutableLiveData<Boolean> = MutableLiveData(false)
+    private val _timeVisibility = MutableLiveData(false)
+    private val _timeCodeVisibility = MutableLiveData(false)
+    private val _courses = MutableLiveData(mutableListOf<Course>())
 
 
     val timeVisibility: LiveData<Boolean> = _timeVisibility
     val timeCodeVisibility: LiveData<Boolean> = _timeCodeVisibility
+    val courses: LiveData<MutableList<Course>> = _courses
+
+    init {
+        if (_courses.value!!.isEmpty())
+            updataCourses()
+    }
 
     fun onTimeVisibilityChange() {
         _timeVisibility.value = !_timeVisibility.value!!
@@ -51,14 +57,12 @@ class CurriculumViewModel : ViewModel() {
     fun onTimeCodeVisibilityChange() {
         _timeCodeVisibility.value = !_timeCodeVisibility.value!!
     }
-//
-//    fun onPwdChange(newPwd: String) {
-//        _pwd.value = newPwd
-//    }
-//
-//    fun onPwdVisibilityReversed() {
-//        _pwdVisibility.value = (_pwdVisibility.value)!!.not()
-//    }
+
+    fun updataCourses(reflash: Boolean = false) {
+        throw Error("not complete")
+//        _courses.value =
+    }
+
 }
 
 
