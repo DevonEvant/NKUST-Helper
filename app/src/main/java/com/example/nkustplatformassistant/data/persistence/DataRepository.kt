@@ -2,13 +2,11 @@ package com.example.nkustplatformassistant.data.persistence
 
 import android.content.Context
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.lifecycle.MutableLiveData
 import com.example.nkustplatformassistant.data.NkustEvent
 import com.example.nkustplatformassistant.data.persistence.db.NkustDatabase
 import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreDropDownParams
 import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
 import com.example.nkustplatformassistant.data.remote.NkustAccessor
-import com.example.nkustplatformassistant.ui.curriculum.user
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -43,7 +41,7 @@ class DataRepository(context: Context) {
 
     // Login...
     suspend fun userLogin(uid: String, pwd: String, etxtCode: String): Boolean {
-        return user.loginWebap(uid, pwd, etxtCode)
+        return nkustAccessor.loginWebap(uid, pwd, etxtCode)
     }
 
     // Score...
@@ -80,9 +78,7 @@ class DataRepository(context: Context) {
     }
 
     suspend fun getAllScore() {
-        withContext(Dispatchers.IO) {
-            fetchScoreDataToDB()
-        }
+        fetchScoreDataToDB()
     }
 
     private suspend fun isScoreExist(): Boolean {
@@ -109,13 +105,13 @@ class DataRepository(context: Context) {
         if (reflash)
             throw Error("not complete")
 
-        return user.loginWebap(uid, pwd, etxtCode)
+        return nkustAccessor.loginWebap(uid, pwd, etxtCode)
     }
 
     suspend fun getSchedule(
         year: String,
         semester: String,
-        reflash: Boolean = false
+        refresh: Boolean = false
     ): List<NkustEvent> {
         throw Error("not complete")
         withContext(Dispatchers.IO) {
@@ -135,11 +131,11 @@ class DataRepository(context: Context) {
     }
 
     suspend fun getWebapCaptchaImage(
-        reflash: Boolean = false
+        refresh: Boolean = false
     ): ImageBitmap {
         throw Error("not complete")
         withContext(Dispatchers.IO) {
-            if (reflash)
+            if (refresh)
                 nkustAccessor.getWebapEtxtBitmap()
 
         }

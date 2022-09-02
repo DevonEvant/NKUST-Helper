@@ -56,11 +56,9 @@ import kotlinx.coroutines.launch
 import androidx.compose.material.icons.*
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
-import com.example.nkustplatformassistant.ui.login.EtxtCodeViewModel
 import com.example.nkustplatformassistant.ui.login.LoginParamsViewModel
 import com.example.nkustplatformassistant.ui.login.LoginScreenBase
 
-val user = NkustUser()
 
 class CurriculumScreen : ComponentActivity() {
         lateinit var navController: NavHostController

@@ -30,7 +30,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
 import com.example.nkustplatformassistant.data.remote.NkustUser
-import com.example.nkustplatformassistant.data.remote.Score
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import java.io.File
@@ -40,7 +39,7 @@ class ScoreViewModel : ViewModel() {
 
     val scores: LiveData<MutableList<ScoreEntity?>> = _scores
 
-    fun reflashScores() {
+    fun refreshScores() {
 //        _scores.value =
     }
 //

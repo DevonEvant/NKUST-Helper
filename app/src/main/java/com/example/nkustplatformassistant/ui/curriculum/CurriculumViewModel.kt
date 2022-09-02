@@ -58,7 +58,7 @@ class CurriculumViewModel : ViewModel() {
         _timeCodeVisibility.value = !_timeCodeVisibility.value!!
     }
 
-    fun updataCourses(reflash: Boolean = false) {
+    fun updataCourses(refresh: Boolean = false) {
         throw Error("not complete")
 //        _courses.value =
     }

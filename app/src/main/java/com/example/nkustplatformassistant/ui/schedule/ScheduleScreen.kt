@@ -55,5 +55,4 @@ import com.example.nkustplatformassistant.ui.theme.Nkust_platform_assistantTheme
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.*
 import androidx.compose.material.icons.filled.AutoAwesome
-import com.example.nkustplatformassistant.ui.login.EtxtCodeViewModel
 

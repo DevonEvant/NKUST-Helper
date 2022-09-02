@@ -7,7 +7,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nkustplatformassistant.data.persistence.DataRepository
-import com.example.nkustplatformassistant.data.persistence.user
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -21,6 +20,7 @@ class LoginParamsViewModel(private val dataRepository: DataRepository) : ViewMod
     val uid: LiveData<String> = _uid
     val pwd: LiveData<String> = _pwd
     val pwdVisibility: LiveData<Boolean> = _pwdVisibility
+
 
     fun onUidChange(newUid: String) {
         _uid.value = newUid
@@ -47,7 +47,7 @@ class LoginParamsViewModel(private val dataRepository: DataRepository) : ViewMod
     fun requestEtxtImageBitmap() {
         viewModelScope.launch {
             _etxtIsLoading.value = true
-            onEtxtImageBitmapChange(user.getWebapEtxtBitmap())
+            onEtxtImageBitmapChange(dataRepository.getWebapCaptchaImage(true))
         }
         _etxtIsLoading.value = false
     }
