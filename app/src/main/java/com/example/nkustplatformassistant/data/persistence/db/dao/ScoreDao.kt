@@ -1,12 +1,10 @@
 package com.example.nkustplatformassistant.data.persistence.db.dao
 
 import androidx.room.*
-import com.example.nkustplatformassistant.data.persistence.db.converter.DataConverter
-import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreDropDownList
+import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreDropDownParams
 import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
 
 @Dao
-@TypeConverters(DataConverter::class)
 interface ScoreDao {
 
     @Query("SELECT * FROM score_table ORDER BY id ASC")
@@ -16,7 +14,13 @@ interface ScoreDao {
     fun getSpecScoreList(year: Int, semester: Int): List<ScoreEntity>
 
     @Query("SELECT DISTINCT year,semester,semDescription FROM SCORE_TABLE")
-    fun getDropDownList(): List<ScoreDropDownList>
+    fun getDropDownList(): List<ScoreDropDownParams>
+
+    @Query("SELECT DISTINCT year,semester,semDescription FROM SCORE_TABLE ORDER BY semester,year LIMIT 1")
+    fun getLatestScoreList(): ScoreDropDownParams
+
+    @Query("SELECT EXISTS(SELECT * FROM score_table)")
+    fun isExist():Boolean
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertScore(scoreEntity: ScoreEntity)

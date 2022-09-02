@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">nkust_platform_assistant</string>
     <string name="title_activity_web_view">WebViewActivity</string>
+    <string name="title_activity_nkust">NkustActivity</string>
 </resources>
