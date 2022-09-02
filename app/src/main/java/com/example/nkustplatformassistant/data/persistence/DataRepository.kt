@@ -44,6 +44,7 @@ class DataRepository(context: Context) {
                 db.ScoreDao().getDropDownList()
             )
         }
+        println(dropDownList.size)
         return dropDownList
     }
 
