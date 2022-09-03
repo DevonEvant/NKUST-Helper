@@ -109,8 +109,6 @@ fun ChipCell(
     onClick: (() -> Unit),
     content: @Composable () -> Unit
 ) {
-//    val uid: String by loginParamsViewModel.uid.observeAsState("")
-//    val pwd: String by loginParamsViewModel.pwd.observeAsState("")
     FilterChip(
         selected = state,
         onClick = onClick,
