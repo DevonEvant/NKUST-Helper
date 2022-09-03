@@ -1,5 +1,6 @@
 package com.example.nkustplatformassistant.data.remote
 
+import android.content.res.TypedArray
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
@@ -157,7 +158,7 @@ class NkustAccessor : NkustUser() {
     /**
      * return current year and semester as "year,semester" String
      */
-    suspend fun getCurrCurriculum(): String {
+    suspend fun getCurrYearAndSemester(): String {
         client.get(url = Url(NKUST_ROUTES.WEBAP_LEFT_PANEL))
             .bodyAsText().let { content ->
                 val sysyear = parser
@@ -319,24 +320,24 @@ class NkustAccessor : NkustUser() {
         return calenderPdf
     }
 
-//    /**
-//     * Save etxt_code image on webap using GET.
-//     */
-//    @OptIn(InternalAPI::class)
-//    suspend fun getAndSaveWebapEtxtImage(): File {
-//
-//        val etxtRes = client.get {
-//            url(NKUST_ROUTES.WEBAP_ETXT_WITH_SYMBOL)
-//        }
-//
-//        if (!etxtRes.status.isSuccess())
-//            throw Error("Fetch URL Error. HttpStateCode is ${etxtRes.status} ")
-//
-//        val imgFile: File = File("./etxt.jpg")
-//        etxtRes.content.copyAndClose(imgFile.writeChannel())
-//
-//        return imgFile
-//    }
+    /**
+     * Save etxt_code image on webap using GET.
+     */
+    @OptIn(InternalAPI::class)
+    suspend fun getAndSaveWebapEtxtImage(): File {
+
+        val etxtRes = client.get {
+            url(NKUST_ROUTES.WEBAP_ETXT_WITH_SYMBOL)
+        }
+
+        if (!etxtRes.status.isSuccess())
+            throw Error("Fetch URL Error. HttpStateCode is ${etxtRes.status} ")
+
+        val imgFile: File = File("./etxt.jpg")
+        etxtRes.content.copyAndClose(imgFile.writeChannel())
+
+        return imgFile
+    }
 
     /**
      * Get Image to ImageBitmap with same session
@@ -361,9 +362,13 @@ class NkustAccessor : NkustUser() {
 
 
     /**
-     * get School Timetable
+     * Get specific semester curriculum
+     * By providing year and semester, you can get a [listOf]<[Course]>
      */
-    suspend fun getCurriculum(year: String, semester: String) {
+    suspend fun getSpecCurriculum(
+        year: String,
+        semester: String,
+    ): List<Course> {
 
         val url = NKUST_ROUTES.SCHOOL_TABLETIME
 
@@ -380,30 +385,48 @@ class NkustAccessor : NkustUser() {
 
         val body = curriculumRes.bodyAsText()
 
-        if (!curriculumRes.status.isSuccess())
-            throw Error("Fetch URL Error. HttpStateCode is ${curriculumRes.status} ")
-        else if ("您請求的網址無法在此服務器上找到" in body)
-            throw Error("Error! no timetable information found ")
-        else if ("查無相關學年期課表資料" in body)
-            throw Error("Error! no timetable information found ")
-        else if ("學生目前無選課資料!" in body)
-            throw Error("Error! no timetable information found ")
+
+//        if (!curriculumRes.status.isSuccess())
+//            throw Error("Fetch URL Error. HttpStateCode is ${curriculumRes.status} ")
+//        else if ("您請求的網址無法在此服務器上找到" in body)
+//            throw Error("Error! no timetable information found ")
+//        else if ("查無相關學年期課表資料" in body)
+//            throw Error("Error! no timetable information found ")
+//        else if ("學生目前無選課資料!" in body)
+//            throw Error("Error! no timetable information found ")
 
         val parser: Parser = Parser.htmlParser()
         val courses = mutableListOf<Course>()
+        val courseList = mutableListOf<Course>()
 
         body.let { content ->
-            val a = parser.parseInput(content, url)
-                .select("form tr").forEach {
-//                    val course = Courses()
-                    it.select("td").forEach {
-                        println(it.text())
-                        // todo
-                        throw Error("not complete")
+            val allCourse = parser.parseInput(content, url)
+                .select("form tr")
+            allCourse.removeFirst()
+
+            allCourse.forEach { processedAllCourses ->
+                processedAllCourses.select("td").let { oneCourse ->
+                    oneCourse.eachText().let { element: List<String> ->
+                        courseList.add(
+                            Course(
+                                courseId = element[0].toInt(),
+                                courseName = element[1],
+                                className = element[2],
+                                classGroup = element[3],
+                                credits = element[4],
+                                teachingHours = element[5],
+                                importance = element[6].contains("必修"),
+                                classTime = element[8],
+                                professor = element[9],
+                                classLocation = element[10]
+                            )
+                        )
                     }
+
                 }
-//            courses.add(course)
+            }
         }
+        return courseList
     }
 }
 
