@@ -44,6 +44,18 @@ class DataRepository(context: Context) {
         return nkustAccessor.loginWebap(uid, pwd, etxtCode)
     }
 
+    suspend fun userLogin(
+        uid: String,
+        pwd: String,
+        etxtCode: String,
+        refresh: Boolean = false,
+    ): Boolean {
+        if (refresh)
+            throw Error("not complete")
+
+        return nkustAccessor.loginWebap(uid, pwd, etxtCode)
+    }
+
     // Score...
     private suspend fun fetchScoreDataToDB() {
         val listToInsert = getAllScoreToTypedScoreEntity()
@@ -89,29 +101,18 @@ class DataRepository(context: Context) {
         return scoreExist
     }
 
-    // Subject...
     suspend fun fetchData(context: Context) {
         withContext(Dispatchers.IO) {
             DataRepository(context).fetchScoreDataToDB()
         }
     }
 
-    suspend fun userLogin(
-        uid: String,
-        pwd: String,
-        etxtCode: String,
-        reflash: Boolean = false
-    ): Boolean {
-        if (reflash)
-            throw Error("not complete")
 
-        return nkustAccessor.loginWebap(uid, pwd, etxtCode)
-    }
 
     suspend fun getSchedule(
         year: String,
         semester: String,
-        refresh: Boolean = false
+        refresh: Boolean = false,
     ): List<NkustEvent> {
         throw Error("not complete")
         withContext(Dispatchers.IO) {
@@ -121,7 +122,7 @@ class DataRepository(context: Context) {
     suspend fun getAllScores(
         year: String,
         semester: String,
-        reflash: Boolean = false
+        reflash: Boolean = false,
     ): List<ScoreEntity> {
         throw Error("not complete")
         withContext(Dispatchers.IO) {
@@ -131,14 +132,14 @@ class DataRepository(context: Context) {
     }
 
     suspend fun getWebapCaptchaImage(
-        refresh: Boolean = false
+        refresh: Boolean = false,
     ): ImageBitmap {
-        throw Error("not complete")
+        lateinit var imageBitmap: ImageBitmap
         withContext(Dispatchers.IO) {
             if (refresh)
-                nkustAccessor.getWebapEtxtBitmap()
-
+                imageBitmap = nkustAccessor.getWebapEtxtBitmap()
         }
+        return imageBitmap
     }
 
 }
