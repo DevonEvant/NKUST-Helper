@@ -18,11 +18,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
+import com.example.nkustplatformassistant.ui.curriculum.CurriculumContext
 import com.example.nkustplatformassistant.ui.curriculum.CurriculumTimeCard
+import com.example.nkustplatformassistant.ui.curriculum.CurriculumViewModel
 import com.example.nkustplatformassistant.ui.curriculum.WeeksCard
 import com.example.nkustplatformassistant.ui.theme.Nkust_platform_assistantTheme
 import com.soywiz.klogger.AnsiEscape
@@ -39,22 +43,117 @@ fun ScoreContent(scoreViewModel: ScoreViewModel) {
                 top = 16.dp,
                 end = 12.dp,
                 bottom = 16.dp
-            )
+            ),
+            modifier = Modifier
+                .clip(RoundedCornerShape(5))
+//                .background(Color.Red)
+
         ) {
-            scores?.let { scores ->
-                items(scores.size) { index ->
-                    val gridOrder = index % 3
-                    val scoreOrder = index / 3
+            if (scores != null || scores!!.isNotEmpty()) {
+                item(1) { Text("Subject", fontWeight = FontWeight.Bold) }
+                item(2) { Text("Mid score", fontWeight = FontWeight.Bold) }
+                item(3) { Text("Final score", fontWeight = FontWeight.Bold) }
+            }
 
-                    if (gridOrder == 0)
-                        Text(scores[scoreOrder]!!.subjectName)
-                    else if (gridOrder == 1)
-                        Text(scores[scoreOrder]!!.midScore)
-                    else if (gridOrder == 2)
-                        Text(scores[scoreOrder]!!.finalScore)
-
-                }
+            scores?.forEachIndexed { index, scores ->
+                item(3 * (index + 1) + 1) { scores?.subjectName?.let { Text(it) } }
+                item(3 * (index + 1) + 2) { scores?.midScore?.let { Text(it) } }
+                item(3 * (index + 1) + 3) { scores?.finalScore?.let { Text(it) } }
             }
         }
+    }
+}
+
+@Composable
+@Preview(showBackground = true)
+fun LoginScreenPreview() {
+    Nkust_platform_assistantTheme {
+        val scoreViewModel = ScoreViewModel()
+        scoreViewModel.rS(
+            mutableListOf(
+                ScoreEntity(
+                    1,
+                    2,
+                    3,
+                    "123",
+                    "s1",
+                    "m1",
+                    "f1",
+                ), ScoreEntity(
+                    1,
+                    2,
+                    3,
+                    "123",
+                    "s2",
+                    "m2",
+                    "f2",
+                ), ScoreEntity(
+                    1,
+                    2,
+                    3,
+                    "123",
+                    "s2",
+                    "m2",
+                    "f2",
+                ), ScoreEntity(
+                    1,
+                    2,
+                    3,
+                    "123",
+                    "s2",
+                    "m2",
+                    "f2",
+                ), ScoreEntity(
+                    1,
+                    2,
+                    3,
+                    "123",
+                    "s2",
+                    "m2",
+                    "f2",
+                ), ScoreEntity(
+                    1,
+                    2,
+                    3,
+                    "123",
+                    "s2",
+                    "m2",
+                    "f2",
+                ), ScoreEntity(
+                    1,
+                    2,
+                    3,
+                    "123",
+                    "s2",
+                    "m2",
+                    "f2",
+                ), ScoreEntity(
+                    1,
+                    2,
+                    3,
+                    "123",
+                    "s2",
+                    "m2",
+                    "f2",
+                ), ScoreEntity(
+                    1,
+                    2,
+                    3,
+                    "123",
+                    "s2",
+                    "m2",
+                    "f2",
+                ), ScoreEntity(
+                    1,
+                    2,
+                    3,
+                    "123",
+                    "s2",
+                    "m2",
+                    "f2",
+                )
+            )
+        )
+        ScoreContent(scoreViewModel)
     }
 }

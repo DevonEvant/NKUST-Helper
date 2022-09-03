@@ -39,15 +39,13 @@ class ScoreViewModel : ViewModel() {
 
     val scores: LiveData<MutableList<ScoreEntity?>> = _scores
 
-    fun refreshScores() {
+    fun refreshScores(refresh:Boolean) {
+        // todo refreshScores
 //        _scores.value =
     }
-//
-//    fun onPwdChange(newPwd: String) {
-//        _pwd.value = newPwd
-//    }
-//
-//    fun onPwdVisibilityReversed() {
-//        _pwdVisibility.value = (_pwdVisibility.value)!!.not()
-//    }
+
+    fun rS(l:MutableList<ScoreEntity?>) {
+        _scores.value = l
+    }
+
 }
