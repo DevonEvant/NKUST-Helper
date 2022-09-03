@@ -19,25 +19,6 @@ class ExampleUnitTest {
 
     @Test
     fun addition_isCorrect() {
-        val user = NkustUser()
-
-        runBlocking {
-            user.getWebapEtxtBitmap()
-            println(">>>>>>>>>>>>>>>>>>Enter text: ")
-            val stringInput = "ABCD"
-
-            user.loginWebap("C110152351","c110ankust",stringInput)
-            println(user.checkLoginValid().toString())
-        }
-
 
     }
-
-    @Test
-    fun a() {
-        println(NKUST_ROUTES.WEBAP_ETXT_WITH_SYMBOL)
-    }
-
-//    https://webap.nkust.edu.tw/nkust/validateCode.jsp/?it=1.3759458507944256
-//    https://webap.nkust.edu.tw/nkust/validateCode.jsp?it=0.26295017141077903
 }
