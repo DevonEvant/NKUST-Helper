@@ -11,7 +11,6 @@ class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
     private val _isDataReady: MutableLiveData<Boolean> = MutableLiveData()
     val isDataReady: LiveData<Boolean> = _isDataReady
 
-    // TODO: Change to livedata and observable
     private fun checkDataState() {
         viewModelScope.launch {
             _isDataReady.value = dataRepository.checkDataIsReady()

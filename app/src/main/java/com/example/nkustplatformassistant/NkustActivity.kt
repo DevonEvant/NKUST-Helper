@@ -22,7 +22,7 @@ import kotlinx.coroutines.withContext
 class NkustActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val dataRepository = DataRepository(applicationContext)
+        val dataRepository = DataRepository.getInstance(applicationContext)
 
         setContent {
 
