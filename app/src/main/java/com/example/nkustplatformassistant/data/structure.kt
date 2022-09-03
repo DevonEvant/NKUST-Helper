@@ -2,19 +2,25 @@ package com.example.nkustplatformassistant.data
 
 import java.lang.Exception
 
-enum class Weeks(val shortCode: String, val cn: String) {
-    Mon("M","星期一"),
-    Tue("T","星期二"),
-    Wed("W","星期三"),
-    Thu("T","星期四"),
-    Fri("F","星期五"),
-    Sat("S","星期六"),
-    Sun("S","星期日");
+enum class Weeks(val shortCode: String, val cn: String, val shortCnCode: Char) {
+    Mon("M", "星期一", '一'),
+    Tue("T", "星期二", '二'),
+    Wed("W", "星期三", '三'),
+    Thu("T", "星期四", '四'),
+    Fri("F", "星期五", '五'),
+    Sat("S", "星期六", '六'),
+    Sun("S", "星期日", '日');
 
-    companion object {
-        operator fun get(ordinal: Int): Weeks {
-            return values()[ordinal]
+    operator fun get(ordinal: Int): Weeks {
+        return values()[ordinal]
+    }
+
+    fun findByShortCnCode(shortCnCode: Char): Weeks? {
+        for (v in values()) {
+            if (v.shortCnCode == shortCnCode)
+                return v
         }
+        return null
     }
 }
 
@@ -31,10 +37,28 @@ enum class CurriculumTime(val id: String, val startTime: String, val endTime: St
     _8("8", "16:30", "17:20"),
     _9("9", "17:30", "18:20");
 
-    companion object {
-        operator fun get(ordinal: Int): CurriculumTime {
-            return values()[ordinal]
+
+    operator fun get(ordinal: Int): CurriculumTime {
+        return values()[ordinal]
+    }
+
+    operator fun rangeTo(end: CurriculumTime): ClosedRange<CurriculumTime> {
+        return object : ClosedRange<CurriculumTime> {
+            override val start: CurriculumTime = this@CurriculumTime
+            override val endInclusive: CurriculumTime = end
         }
+    }
+
+    operator fun ClosedRange<CurriculumTime>.contains(at: CurriculumTime): Boolean {
+        return endInclusive.ordinal >= at.ordinal && at.ordinal >= start.ordinal
+    }
+
+    fun findById(id: String): CurriculumTime? {
+        for (v in values()) {
+            if (v.id == id)
+                return v
+        }
+        return null
     }
 }
 
@@ -49,6 +73,7 @@ data class Score(
     val midScore: String,
     val finalScore: String,
 )
+
 
 data class Course(
     var id: String,
