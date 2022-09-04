@@ -23,9 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.nkustplatformassistant.data.CurriculumTime
 import com.example.nkustplatformassistant.data.Weeks
-import com.example.nkustplatformassistant.data.persistence.db.entity.Course
+import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntity
 import com.example.nkustplatformassistant.ui.theme.Nkust_platform_assistantTheme
-import com.soywiz.klogger.AnsiEscape
 
 @Composable
 fun CurriculumContext(curriculumViewModel: CurriculumViewModel) {
@@ -84,7 +83,7 @@ fun CurriculumContext(curriculumViewModel: CurriculumViewModel) {
                 }
             }
 
-            courses?.forEachIndexed { index, course ->
+            courses?.forEachIndexed { index, courseEntity ->
                 val span:Int = 0
 
                 item(
@@ -93,7 +92,7 @@ fun CurriculumContext(curriculumViewModel: CurriculumViewModel) {
                         GridItemSpan(span)
                     }
                 ) {
-                    CourseCard(course)
+                    CourseCard(courseEntity)
                 }
 
             }
@@ -127,13 +126,13 @@ fun WeeksCard(week: Weeks) {
             modifier = Modifier.padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(week.shortCode)
+            Text(week.shortCode.toString())
         }
     }
 }
 
 @Composable
-fun CourseCard(course: Course) {
+fun CourseCard(course: CourseEntity) {
     Card(
         modifier = Modifier.padding(2.dp)
     ) {
@@ -162,7 +161,7 @@ fun CurriculumTimeCard(
             modifier = Modifier.padding(12.dp)
         ) {
             Text(
-                curriculumTime.id,
+                curriculumTime.id.toString(),
                 modifier = Modifier
                     .clip(shape)
                     .background(Color.LightGray)

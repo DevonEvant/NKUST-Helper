@@ -1,11 +1,7 @@
 package com.example.nkustplatformassistant.data.remote
 
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.util.Log
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
-import com.example.nkustplatformassistant.data.persistence.db.entity.Course
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
@@ -16,10 +12,6 @@ import io.ktor.http.*
 import io.ktor.util.*
 import io.ktor.util.cio.*
 import io.ktor.utils.io.*
-import org.jsoup.parser.Parser
-
-import java.io.File
-import java.lang.Exception
 
 /**
  * Declare current data's state

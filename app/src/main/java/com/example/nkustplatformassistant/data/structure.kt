@@ -90,6 +90,11 @@ enum class CurriculumTime(val id: Char, val startTime: String, val endTime: Stri
     }
 }
 
+data class CourseTime(
+    val week: Weeks?,
+    val curriculumTimeRange: ClosedRange<CurriculumTime>
+)
+
 sealed class Response<out R> {
     data class Loading(val data: Nothing) : Response<Nothing>()
     data class Success<out T>(val data: T) : Response<T>()
@@ -103,19 +108,19 @@ data class Score(
 )
 
 
-data class Course(
-    var id: String,
-    var courseName: String,
-    var className: String,
-    var classGroup: String,
-    var credits: String,
-    var teachingHours: String,
-    var isElectiveSubject: Boolean,
-    var semesterType: String,
-    var session: String,
-    var professor: String,
-    var classLocation: String
-) {
+//data class Course(
+//    var id: String,
+//    var courseName: String,
+//    var className: String,
+//    var classGroup: String,
+//    var credits: String,
+//    var teachingHours: String,
+//    var isElectiveSubject: Boolean,
+//    var semesterType: String,
+//    var session: String,
+//    var professor: String,
+//    var classLocation: String
+//) {
 //    operator fun get(index: Int): String {
 //        return when (index) {
 //            1 -> id
@@ -150,7 +155,7 @@ data class Course(
 //        }
 //    }
 
-}
+//}
 
 data class NkustEvent(
     val agency: String,

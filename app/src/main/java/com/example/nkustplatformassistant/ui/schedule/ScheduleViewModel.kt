@@ -29,7 +29,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nkustplatformassistant.data.NkustEvent
-import com.example.nkustplatformassistant.data.persistence.db.entity.Course
 import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
 import com.example.nkustplatformassistant.data.remote.NkustUser
 import kotlinx.coroutines.Dispatchers
