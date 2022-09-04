@@ -1,14 +1,12 @@
 package com.example.nkustplatformassistant.data.remote
 
-import android.content.res.TypedArray
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import com.example.nkustplatformassistant.data.NkustEvent
 import com.example.nkustplatformassistant.data.Score
-import com.example.nkustplatformassistant.data.persistence.db.entity.Course
+import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntity
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -368,7 +366,7 @@ class NkustAccessor : NkustUser() {
     suspend fun getSpecCurriculum(
         year: String,
         semester: String,
-    ): List<Course> {
+    ): List<CourseEntity> {
 
         val url = NKUST_ROUTES.SCHOOL_TABLETIME
 
@@ -396,8 +394,7 @@ class NkustAccessor : NkustUser() {
 //            throw Error("Error! no timetable information found ")
 
         val parser: Parser = Parser.htmlParser()
-        val courses = mutableListOf<Course>()
-        val courseList = mutableListOf<Course>()
+        val courseList = mutableListOf<CourseEntity>()
 
         body.let { content ->
             val allCourse = parser.parseInput(content, url)
@@ -408,8 +405,10 @@ class NkustAccessor : NkustUser() {
                 processedAllCourses.select("td").let { oneCourse ->
                     oneCourse.eachText().let { element: List<String> ->
                         courseList.add(
-                            Course(
+                            CourseEntity(
                                 courseId = element[0].toInt(),
+                                year = year.toInt(),
+                                semester = semester.toInt(),
                                 courseName = element[1],
                                 className = element[2],
                                 classGroup = element[3],
@@ -418,7 +417,7 @@ class NkustAccessor : NkustUser() {
                                 importance = element[6].contains("必修"),
                                 classTime = element[8],
                                 professor = element[9],
-                                classLocation = element[10]
+                                classLocation = element[10],
                             )
                         )
                     }
