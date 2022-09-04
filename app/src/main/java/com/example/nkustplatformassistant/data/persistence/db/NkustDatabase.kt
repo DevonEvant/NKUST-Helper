@@ -1,12 +1,12 @@
 package com.example.nkustplatformassistant.data.persistence.db
 
 import android.content.Context
-import androidx.room.Database
-import androidx.room.Room
-import androidx.room.RoomDatabase
+import androidx.room.*
 import com.example.nkustplatformassistant.data.persistence.db.dao.CalenderDao
+import com.example.nkustplatformassistant.data.persistence.db.dao.CourseDao
 import com.example.nkustplatformassistant.data.persistence.db.dao.ScoreDao
 import com.example.nkustplatformassistant.data.persistence.db.entity.Calender
+import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntity
 import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
 
 /* Reference:
@@ -18,14 +18,15 @@ import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
 // https://medium.com/androiddevelopers/7-steps-to-room-27a5fe5f99b2
 
 @Database(
-    entities = arrayOf(Calender::class, ScoreEntity::class),
+    entities = arrayOf(Calender::class, ScoreEntity::class, CourseEntity::class),
     version = 1,
     exportSchema = false
 )
 abstract class NkustDatabase : RoomDatabase() {
 
     abstract fun calenderDao(): CalenderDao
-    abstract fun ScoreDao(): ScoreDao
+    abstract fun scoreDao(): ScoreDao
+    abstract fun courseDao(): CourseDao
 
     companion object {
         // Singleton prevents multiple instances of database opening at the same time.
