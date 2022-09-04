@@ -11,22 +11,24 @@ enum class Weeks(val shortCode: Char, val cn: String, val shortCnCode: Char) {
     Sat('S', "星期六", '六'),
     Sun('S', "星期日", '日');
 
-    /**
-     * you can use operator '[ ]' to get the corresponding item from ordinal
-     */
-    operator fun get(ordinal: Int): Weeks {
-        return values()[ordinal]
-    }
-
-    /**
-     * get the corresponding item by weekShortCnCode(like '一','四','五','日')
-     */
-    fun getByShortCnCode(shortCnCode: Char): Weeks? {
-        for (v in values()) {
-            if (v.shortCnCode == shortCnCode)
-                return v
+    companion object {
+        /**
+         * you can use operator '[ ]' to get the corresponding item from ordinal
+         */
+        operator fun get(ordinal: Int): Weeks {
+            return values()[ordinal]
         }
-        return null
+
+        /**
+         * get the corresponding item by weekShortCnCode(like '一','四','五','日')
+         */
+        fun getByShortCnCode(shortCnCode: Char): Weeks? {
+            for (v in values()) {
+                if (v.shortCnCode == shortCnCode)
+                    return v
+            }
+            return null
+        }
     }
 }
 
@@ -43,13 +45,6 @@ enum class CurriculumTime(val id: Char, val startTime: String, val endTime: Stri
     _7('7', "15:30", "16:20"),
     _8('8', "16:30", "17:20"),
     _9('9', "17:30", "18:20");
-
-    /**
-     * you can use operator '[ ]' to get the corresponding item from ordinal
-     */
-    operator fun get(ordinal: Int): CurriculumTime {
-        return values()[ordinal]
-    }
 
     /**
      * you can use operator "rangeTo" (like 1..3) and return ClosedRange<CurriculumTime>
@@ -74,15 +69,24 @@ enum class CurriculumTime(val id: Char, val startTime: String, val endTime: Stri
         }
     }
 
-    /**
-     * get the corresponding item by CurriculumTimeId(like 'M','1','A','9')
-     */
-    fun getById(id: Char): CurriculumTime? {
-        for (v in values()) {
-            if (v.id == id)
-                return v
+    companion object {
+        /**
+         * you can use operator '[ ]' to get the corresponding item from ordinal
+         */
+        operator fun get(ordinal: Int): CurriculumTime {
+            return values()[ordinal]
         }
-        return null
+
+        /**
+         * get the corresponding item by CurriculumTimeId(like 'M','1','A','9')
+         */
+        fun getById(id: Char): CurriculumTime? {
+            for (v in values()) {
+                if (v.id == id)
+                    return v
+            }
+            return null
+        }
     }
 }
 
