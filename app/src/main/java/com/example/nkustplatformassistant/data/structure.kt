@@ -82,7 +82,7 @@ enum class CurriculumTime(val id: Char, val startTime: String, val endTime: Stri
          */
         fun getById(id: Char): CurriculumTime? {
             for (v in values()) {
-                if (v.id == id)
+                if (v.id == id.uppercaseChar())
                     return v
             }
             return null
@@ -100,6 +100,9 @@ sealed class Response<out R> {
     data class Success<out T>(val data: T) : Response<T>()
     data class Error(val exception: Exception) : Response<Exception>()
 }
+
+//class TimePicker()
+
 
 data class Score(
     val subjectName: String,
@@ -120,23 +123,26 @@ data class Score(
 //    var session: String,
 //    var professor: String,
 //    var classLocation: String
-//) {
-//    operator fun get(index: Int): String {
-//        return when (index) {
-//            1 -> id
-//            2 -> courseName
-//            3 -> className
-//            4 -> group
-//            5 -> credits
-//            6 -> teachingHours
-//            7 -> electiveSubject
-//            8 -> semesterType
-//            9 -> session
-//            10 -> instructor
-//            11 -> classroom
-//            else -> throw Error("The index is not exist.")
-//        }
-//    }
+//)
+
+interface OpenedRange<T> {
+
+    companion object {
+        /**
+         * INFINITY single
+         */
+        val noBound = null
+    }
+
+    public val start: T?
+
+    public val endInclusive: T?
+
+    public operator fun contains(value: T): Boolean
+
+}
+
+//enum class Day {
 //
 //    operator fun set(index: Int, value: Any) {
 //        when (index) {
@@ -157,11 +163,59 @@ data class Score(
 
 //}
 
-data class NkustEvent(
+class NkustEvent(
     val agency: String,
-    val time: String,
+    val time: OpenedRange<MonthAndDay>,
     val description: String,
-)
+) {
+
+
+    class MonthAndDay(month: Int?, day: Int?) {
+        companion object {
+            var noBound = MonthAndDay(null, null)
+        }
+
+        var month: Int? = month
+            get() = if (field == null || field in 0..11) field else throw Error("illegal value")
+
+        var day: Int? = day
+            get() = if (field == null || field in 1..31) field else throw Error("illegal value")
+
+        operator fun compareTo(other: MonthAndDay): Int {
+            if (month == null || day == null) throw Error("must be given a definite time")
+            if (other.month == null || other.day == null) throw Error("must be given a definite time")
+
+            if (month == other.month)
+                return day!! - other.day!!
+            return month!! - other.month!!
+        }
+
+        operator fun rangeTo(other: MonthAndDay): OpenedRange<MonthAndDay> {
+            return object : OpenedRange<MonthAndDay> {
+                override val start =
+                    if (month == null || day == null) null else this@MonthAndDay
+
+                override val endInclusive =
+                    if (other.month == null || other.day == null) null else other
+
+                override operator fun contains(value: MonthAndDay): Boolean {
+                    if (value.month == null || value.day == null)
+                        throw  Error("must be given a definite time")
+
+                    return when {
+                        (start == null) && (endInclusive == null) -> true
+                        (start == null) -> (value <= endInclusive!!)
+                        (endInclusive == null) -> (value >= start)
+
+                        else -> value >= start && value <= endInclusive
+                    }
+                }
+            }
+        }
+    }
+
+
+}
 
 enum class Agency {
     OfficeOfTheSecretariat,
