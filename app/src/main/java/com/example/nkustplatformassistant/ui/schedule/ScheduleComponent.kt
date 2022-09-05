@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialogDefaults.shape
@@ -34,6 +35,10 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.nkustplatformassistant.data.NkustEvent
+import com.example.nkustplatformassistant.ui.login.LoginParamsViewModel
 import com.example.nkustplatformassistant.ui.theme.Nkust_platform_assistantTheme
 import com.soywiz.klogger.AnsiEscape
 import com.soywiz.korio.async.launch
@@ -46,7 +51,9 @@ import kotlinx.coroutines.GlobalScope
     ExperimentalMaterialApi::class,
 )
 @Composable
-fun ScheduleContent() {
+fun ScheduleContent(scheduleViewModel: ScheduleViewModel) {
+    val schedules by scheduleViewModel.schedules.observeAsState()
+
 
     val bottomSheetScaffoldState = rememberBottomSheetScaffoldState()
 //    GlobalScope.launch {
@@ -78,13 +85,25 @@ fun ScheduleContent() {
             state = lazyListState,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+//                .padding(16.dp),
         ) {
-            (1..20).forEach { index ->
-                stickyHeader {
+            schedules?.forEach { index ->
+                stickyHeader(
+                ) {
                     Text(text = "manufacturer")
                 }
-                items(10) { Text("1") }
+                item {
+                    ListItem(
+                        headlineText = { Text("123") },
+                        leadingContent = {
+                            Icon(
+                                Icons.Filled.Palette,
+                                modifier = Modifier.size(36.dp),
+                                contentDescription = null,
+                            )
+                        }
+                    )
+                }
             }
         }
     }
@@ -93,16 +112,16 @@ fun ScheduleContent() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScheduleItem() {
-//    ListItem(
-//        headlineText = { DefaultText() },
-//        leadingContent = {
-//            Icon(
-//                Icons.Filled.Palette,
-//                modifier = Modifier.size(36.dp),
-//                contentDescription = null,
-//            )
-//        }
-//    )
+    ListItem(
+        headlineText = { Text("123") },
+        leadingContent = {
+            Icon(
+                Icons.Filled.Palette,
+                modifier = Modifier.size(36.dp),
+                contentDescription = null,
+            )
+        }
+    )
 
 }
 
@@ -122,11 +141,22 @@ fun HomeScreen() {
 
 }
 
+@Composable
+@Preview(showBackground = true)
+fun ScheduleItemPreview() {
+    ScheduleItem()
+
+}
 
 @Composable
 @Preview(showBackground = true)
 fun tPreview() {
-    ScheduleContent()
+    val viewModelStoreOwner = checkNotNull(LocalViewModelStoreOwner.current) {
+        throw Error("No ViewModelStoreOwner was provided via LocalViewModelStoreOwner")
+    }
+    val scheduleViewModel: ScheduleViewModel =
+        viewModel(viewModelStoreOwner = viewModelStoreOwner)
+    ScheduleContent(scheduleViewModel)
 
 }
 
