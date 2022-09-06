@@ -2,14 +2,11 @@ package com.example.nkustplatformassistant.ui.login
 
 import android.content.Context
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.example.nkustplatformassistant.data.persistence.DataRepository
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 // LoginParams State hosting
 class LoginParamsViewModel(private val dataRepository: DataRepository) : ViewModel() {
@@ -21,6 +18,8 @@ class LoginParamsViewModel(private val dataRepository: DataRepository) : ViewMod
     val pwd: LiveData<String> = _pwd
     val pwdVisibility: LiveData<Boolean> = _pwdVisibility
 
+    private val _loginState = MutableStateFlow(3)
+    val loginState: StateFlow<Int> = _loginState
 
     fun onUidChange(newUid: String) {
         _uid.value = newUid
@@ -36,13 +35,11 @@ class LoginParamsViewModel(private val dataRepository: DataRepository) : ViewMod
 
     private val _imageBitmap = MutableLiveData<ImageBitmap>()
     private val _etxtcode: MutableLiveData<String> = MutableLiveData()
-    private val _etxtIsLoading: MutableLiveData<Boolean> = MutableLiveData()
+    private val _etxtIsLoading: MutableLiveData<Boolean> = MutableLiveData(true)
 
     val etxtImageBitmap: LiveData<ImageBitmap> = _imageBitmap
     val etxtCode: LiveData<String> = _etxtcode
     val etxtIsLoading: LiveData<Boolean> = _etxtIsLoading
-
-    private var stateOfLogin: Boolean = false
 
     fun requestEtxtImageBitmap() {
         viewModelScope.launch {
@@ -61,15 +58,20 @@ class LoginParamsViewModel(private val dataRepository: DataRepository) : ViewMod
     }
 
     // TODO: rewrite it to other method of Coroutine scope
-    fun loginForResult(context: Context): Boolean {
-        viewModelScope.launch(Dispatchers.IO) {
-            stateOfLogin = DataRepository(context).userLogin(
+    fun loginForResult(context: Context) {
+        viewModelScope.launch {
+            val state = DataRepository(context).userLogin(
                 uid.value!!,
                 pwd.value!!,
                 etxtCode.value!!
             )
+            println("Login state: $state")
+
+            _loginState.emit(
+                if (state) 1 else 0
+            )
         }
-        println("Login State: $stateOfLogin")
-        return stateOfLogin
+
+
     }
 }
