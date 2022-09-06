@@ -2,7 +2,6 @@ package com.example.nkustplatformassistant.ui.login
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -24,20 +23,17 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.lifecycle.LiveData
+import androidx.lifecycle.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.navArgument
-import com.example.nkustplatformassistant.data.persistence.DataRepository
 import com.example.nkustplatformassistant.navigation.Screen
-import com.example.nkustplatformassistant.ui.home.HomeScreen
 
 @Composable
 fun LoginScreenBase(
@@ -47,7 +43,38 @@ fun LoginScreenBase(
     val uid: String by loginParamsViewModel.uid.observeAsState("")
     val pwd: String by loginParamsViewModel.pwd.observeAsState("")
     val pwdVisibility: Boolean by loginParamsViewModel.pwdVisibility.observeAsState(false)
-    // To pass viewmodel between composable, we use viewModelStoreOwner and
+
+    val context = LocalContext.current
+
+    // https://proandroiddev.com/how-to-collect-flows-lifecycle-aware-in-jetpack-compose-babd53582d0b
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val loginStateFlowLifecycleAware = remember(
+        loginParamsViewModel.loginState, lifecycleOwner
+    ) {
+        loginParamsViewModel.loginState.flowWithLifecycle(
+            lifecycleOwner.lifecycle,
+            Lifecycle.State.STARTED)
+    }
+
+    val loginState = loginStateFlowLifecycleAware.collectAsState(3)
+
+    LaunchedEffect(loginState.value) {
+        fun showToast(value: String) {
+            Toast.makeText(context, "Login state: $value", Toast.LENGTH_SHORT)
+                .show()
+        }
+
+        when (loginState.value) {
+            1 -> {
+                showToast("true")
+                navController.navigate(Screen.Home.route)
+            }
+            else -> showToast("false")
+        }
+    }
+
+
+    // To pass viewModel between composable, we use viewModelStoreOwner and
     // add a loginParamsViewModel4 to showDialogBase
     LoginForm(
         uid = uid, pwd = pwd, pwdVisibility = pwdVisibility,
@@ -56,7 +83,14 @@ fun LoginScreenBase(
         onPwdVisibilityReversed = { loginParamsViewModel.onPwdVisibilityReversed() },
         loginParamsViewModel = loginParamsViewModel,
         navController = navController,
+        lifecycleOwner = lifecycleOwner
     )
+
+    LaunchedEffect(Unit) {
+        Toast.makeText(context,
+            "It seems database is null, please re-login to get data from web again.",
+            Toast.LENGTH_LONG).show()
+    }
 }
 
 @Composable
@@ -70,21 +104,23 @@ fun LoginForm(
     onPwdVisibilityReversed: () -> Unit,
     loginParamsViewModel: LoginParamsViewModel,
     navController: NavController,
+    lifecycleOwner: LifecycleOwner,
 ) {
     val focusManager = LocalFocusManager.current
     val context = LocalContext.current
     val showDialog = remember { mutableStateOf(false) }
 
     ShowDialogBase(
-        showDialog,
+        showDialog = showDialog,
         loginParamsViewModel = loginParamsViewModel,
-        navController = navController
+        navController = navController,
+        lifecycleOwner = lifecycleOwner
     )
 
     // TODO(1. only put etxt to home screen and do login in HomeScreen - bad
     //      2. create data class to determinate is it okay to logon
     //         if it's OK, then direct put Home screen
-    //      3. use viewmodel to handling uid, pwd & etxt, then login in HomeScreen - meh)
+    //      3. use viewModel to handling uid, pwd & etxt, then login in HomeScreen - meh)
 
     Column(
         modifier = Modifier
@@ -190,6 +226,7 @@ fun ShowDialogBase(
     context: Context = LocalContext.current,
     loginParamsViewModel: LoginParamsViewModel,
     navController: NavController,
+    lifecycleOwner: LifecycleOwner,
 ) {
 
     val etxtCode: String by loginParamsViewModel.etxtCode.observeAsState("")
@@ -204,7 +241,9 @@ fun ShowDialogBase(
     fun onPositiveCallback() {
         when {
             etxtCode.length < 4 -> {
-                Toast.makeText(context, "Check validate code and enter again!", Toast.LENGTH_LONG)
+                Toast.makeText(context,
+                    "Check validate code and enter again!",
+                    Toast.LENGTH_LONG)
                     .show()
             }
             etxtCode.isEmpty() -> {
@@ -218,16 +257,21 @@ fun ShowDialogBase(
                 // TODO: Login! and start new intent
                 // Redirect to Home Page and Start fetching data to
                 // DB in HomeScreen
-                loginParamsViewModel.loginForResult(context).let {
-                    Toast.makeText(context, "Login result: $it", Toast.LENGTH_SHORT)
-                        .show()
-                    if (it) {
-                        /* Redirect to Home Page and Start fetching data to
-                           DB in HomeScreen */
-                        navController.navigate(Screen.Home.route)
-                        TODO("start fetching data (function in DataRepository.kt)")
-                    }
-                }
+
+                loginParamsViewModel.loginForResult(context)
+
+//                loginParamsViewModel.loginState.observe(lifecycleOwner) {
+//                    val state = when (it) {
+//                        1 -> true
+//                        else -> false
+//                    }
+//                    Toast.makeText(context, "Login result: $state", Toast.LENGTH_SHORT)
+//                        .show()
+//                    if (state) {
+//                        navController.navigate(Screen.Loading.route)
+//                    }
+//                }
+
                 showDialog.value = false
             }
         }
@@ -271,23 +315,27 @@ fun AlertDialogForEtxtCode(
 ) {
     val focusManager = LocalFocusManager.current
     // https://stackoverflow.com/questions/68639232/jetpack-compose-how-to-create-an-imagebitmap-with-specific-size-and-configuratio
+    val etxtIsLoadingValue = etxtIsLoading.value!!
     Dialog(onDismissRequest = {}) {
         OutlinedCard(
+            modifier = Modifier.aspectRatio(1.2F),
             elevation = CardDefaults.outlinedCardElevation(15.dp),
-            modifier = Modifier.aspectRatio(1F))
-        {
-            // 應該要交給observer處理
-            if (!etxtIsLoading.observeAsState(false).value) {
-                Column(
-                    modifier = Modifier.padding(8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center) {
-                    Text(
-                        text = "Please input validate code below:",
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    Spacer(modifier = Modifier.padding(10.dp))
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(8.dp)
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center) {
+                Text(
+                    text = "Please input validate code below:",
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Spacer(modifier = Modifier.padding(10.dp))
 
+                if (etxtIsLoadingValue) {
+                    CircularProgressIndicator()
+                } else {
                     Image(
                         bitmap = etxtImageBitmap,
                         contentDescription = null,
@@ -296,64 +344,55 @@ fun AlertDialogForEtxtCode(
                             .aspectRatio(5F)
                             .clickable { onImageClicked.invoke() },
                     )
-                    Spacer(modifier = Modifier.padding(5.dp))
-                    OutlinedTextField(
-                        value = etxtCode,
-                        onValueChange = { onEtxtCodeChange(it) },
-                        label = { Text(text = "Validate Code") },
-                        singleLine = true,
-                        leadingIcon = {
-                            Icon(imageVector = Icons.TwoTone.HowToReg,
-                                "")
-                        },
-                        shape = RoundedCornerShape(50),
-                        modifier = Modifier
-                            .focusTarget()
-                            .fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(
-                            imeAction = ImeAction.Done,
-                            keyboardType = KeyboardType.Password),
-                        keyboardActions = KeyboardActions(onDone = {
-                            focusManager.clearFocus()
-                            onPositiveClick.invoke()
-                        })
-                    )
-                    Spacer(modifier = Modifier.padding(5.dp))
-                    //button
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        OutlinedButton(onClick = {
-                            onNegativeClick.invoke()
-                        }) {
-                            Icon(imageVector = Icons.TwoTone.Cancel,
-                                modifier = Modifier.padding(end = 4.dp),
-                                contentDescription = null)
-                            Text(text = "Cancel")
-                        }
-                        Spacer(modifier = Modifier.width(4.dp))
-                        OutlinedButton(
-                            onClick = onPositiveClick,
-                            modifier = Modifier.padding(end = 4.dp)) {
-                            Icon(imageVector = Icons.TwoTone.Verified,
-                                contentDescription = null,
-                                modifier = Modifier.padding(end = 4.dp))
-                            Text(text = "Login")
-                        }
-                    }
                 }
-            } else {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                Spacer(modifier = Modifier.padding(5.dp))
+                OutlinedTextField(
+                    value = etxtCode,
+                    onValueChange = { onEtxtCodeChange(it) },
+                    label = { Text(text = "Validate Code") },
+                    singleLine = true,
+                    leadingIcon = {
+                        Icon(imageVector = Icons.TwoTone.HowToReg,
+                            "")
+                    },
+                    shape = RoundedCornerShape(50),
+                    modifier = Modifier
+                        .focusTarget()
+                        .fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Done,
+                        keyboardType = KeyboardType.Password),
+                    keyboardActions = KeyboardActions(onDone = {
+                        focusManager.clearFocus()
+                        onPositiveClick.invoke()
+                    })
+                )
+                Spacer(modifier = Modifier.padding(5.dp))
+                //button
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(text = "Please wait a while for EtxtCode...",
-                        fontSize = 20.sp)
-                    Box(modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                        // TODO: 讓他有用
+                    OutlinedButton(onClick = {
+                        onNegativeClick.invoke()
+                        focusManager.clearFocus()
+                    }) {
+                        Icon(imageVector = Icons.TwoTone.Cancel,
+                            modifier = Modifier.padding(end = 4.dp),
+                            contentDescription = null)
+                        Text(text = "Cancel")
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+                    OutlinedButton(
+                        onClick = {
+                            onPositiveClick.invoke()
+                            focusManager.clearFocus()
+                        },
+                        modifier = Modifier.padding(end = 4.dp)) {
+                        Icon(imageVector = Icons.TwoTone.Verified,
+                            contentDescription = null,
+                            modifier = Modifier.padding(end = 4.dp))
+                        Text(text = "Login")
                     }
                 }
             }

@@ -101,7 +101,7 @@ class DataRepository(context: Context) {
         return db.scoreDao().getSpecScoreList(year, semester)
     }
 
-    suspend fun getAllScore() {
+    suspend fun fetchAllScoreToDB() {
         fetchScoreDataToDB()
     }
 
@@ -136,9 +136,9 @@ class DataRepository(context: Context) {
     }
 
     //Course
-    suspend fun fetchCourseDataToDB(){
+    suspend fun fetchCourseDataToDB() {
         val listToInsert = getAllCourseToTypedCourseEntity(nkustAccessor)
-        listToInsert.forEach{
+        listToInsert.forEach {
             db.courseDao().insertCourse(it)
         }
 
@@ -186,6 +186,12 @@ suspend fun getAllScoreToTypedScoreEntity(nkustAccessor: NkustAccessor): List<Sc
                     )
                 }
         }
+    } catch (e: NoSuchElementException) {
+        // for allCourse.removeFirst()
+        println(
+            "Error when getting yearly score: $e\n" +
+                    "It maybe no data, but it's okay"
+        )
     } catch (e: IndexOutOfBoundsException) {
         println(
             "Error when getting yearly score: $e\n" +
@@ -207,7 +213,13 @@ suspend fun getAllCourseToTypedCourseEntity(nkustAccessor: NkustAccessor): List<
         listToGet.forEach { (semester, year, semDescription) ->
             courseEntityList.addAll(nkustAccessor.getSpecCurriculum(year, semester))
         }
-    }catch (e: IndexOutOfBoundsException){
+    } catch (e: IndexOutOfBoundsException) {
+        println(
+            "Error when getting yearly score: $e\n" +
+                    "It maybe no data, but it's okay"
+        )
+    } catch (e: NoSuchElementException) {
+        // for allCourse.removeFirst()
         println(
             "Error when getting yearly score: $e\n" +
                     "It maybe no data, but it's okay"

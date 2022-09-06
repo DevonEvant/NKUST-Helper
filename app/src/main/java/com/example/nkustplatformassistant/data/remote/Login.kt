@@ -22,11 +22,14 @@ import io.ktor.utils.io.*
  * About login to NKUST system.
  */
 open class NkustUser {
-    var client = HttpClient(CIO) {
-        install(HttpCookies) {
-            storage = AcceptAllCookiesStorage()
+    companion object {
+        val client = HttpClient(CIO) {
+            install(HttpCookies) {
+                storage = AcceptAllCookiesStorage()
+            }
         }
     }
+
 
     /**
      * Refresh Session if session unavailable.
@@ -59,26 +62,22 @@ open class NkustUser {
         pwd: String,
         etxtCode: String,
     ): Boolean {
-        val loginResponse = client.request(
-            url = Url(NKUST_ROUTES.WEBAP_LOGIN)) {
+        val url = NKUST_ROUTES.WEBAP_LOGIN
+        client.post(
+            url = Url(url)) {
             url {
                 parameters.append("uid", uid)
                 parameters.append("pwd", pwd)
                 parameters.append("etxt_code", etxtCode)
             }
-            method = HttpMethod.Post
+        }.let { httpResponse ->
+            if (!httpResponse.status.isSuccess()) return false
+
+            httpResponse.bodyAsText().let { perchkAsText ->
+                return !perchkAsText.contains("alert('")
+            }
         }
-
-        if (!loginResponse.status.isSuccess())
-            throw Error("Fetch URL Error. HttpStateCode is ${loginResponse.status} ")
-
-        if (loginResponse.bodyAsText().contains("驗證碼錯誤"))
-            return false
-
-        return true
     }
-
-
 
 
     /**
