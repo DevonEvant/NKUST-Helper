@@ -399,7 +399,7 @@ class NkustAccessor : NkustUser() {
         body.let { content ->
             val allCourse = parser.parseInput(content, url)
                 .select("form tr")
-            allCourse.removeFirst()
+            allCourse.removeFirst() // TODO: java.util.NoSuchElementException: List is empty.
 
             allCourse.forEach { processedAllCourses ->
                 processedAllCourses.select("td").let { oneCourse ->
@@ -453,13 +453,13 @@ fun paserNkustCalender(pdf: File): MutableList<NkustEvent> {
 
 //        println("=>> $agency | $time | $description")
 
-        nkustEvents.add(
-            NkustEvent(
-                agency = agency,
-                time = time,
-                description = description
-            )
-        )
+//        nkustEvents.add(
+//            NkustEvent(
+//                agency = agency,
+//                time = time,
+//                description = description
+//            )
+//        )
     }
     return nkustEvents
 }
