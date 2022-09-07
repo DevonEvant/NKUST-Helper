@@ -1,17 +1,16 @@
 package com.example.nkustplatformassistant.data.persistence.db.entity
 
 import androidx.annotation.NonNull
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.Ignore
-import androidx.room.PrimaryKey
+import androidx.room.*
 import com.example.nkustplatformassistant.data.CourseTime
+import org.hamcrest.Description
 
 @Entity(tableName = "course_table")
 data class CourseEntity(
     @NonNull @PrimaryKey @ColumnInfo val courseId: Int,
     @NonNull @ColumnInfo val year: Int,
     @NonNull @ColumnInfo val semester: Int,
+    @NonNull @ColumnInfo val semDescription: String,
     @ColumnInfo val professor: String,
     @ColumnInfo val courseName: String,
     @ColumnInfo val className: String,
@@ -21,6 +20,7 @@ data class CourseEntity(
     @ColumnInfo val credits: String,
     @ColumnInfo val teachingHours: String,
     @ColumnInfo val importance: Boolean,
-){
-    @Ignore val courseTime: List<CourseTime> = listOf()
+) {
+    @Ignore
+    var courseTime: List<CourseTime> = listOf()
 }

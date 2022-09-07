@@ -276,11 +276,7 @@ class NkustAccessor : NkustUser() {
 
             subject.forEachIndexed { index, _ ->
                 scoreList.add(
-                    index, Score(
-                        subject[index],
-                        midScore[index],
-                        finalScore[index]
-                    )
+                    Score(subject[index], midScore[index], finalScore[index])
                 )
             }
 
@@ -366,6 +362,7 @@ class NkustAccessor : NkustUser() {
     suspend fun getSpecCurriculum(
         year: String,
         semester: String,
+        semDescription: String,
     ): List<CourseEntity> {
 
         val url = NKUST_ROUTES.SCHOOL_TABLETIME
@@ -409,6 +406,7 @@ class NkustAccessor : NkustUser() {
                                 courseId = element[0].toInt(),
                                 year = year.toInt(),
                                 semester = semester.toInt(),
+                                semDescription = semDescription,
                                 courseName = element[1],
                                 className = element[2],
                                 classGroup = element[3],

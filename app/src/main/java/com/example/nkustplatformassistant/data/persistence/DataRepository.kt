@@ -2,10 +2,11 @@ package com.example.nkustplatformassistant.data.persistence
 
 import android.content.Context
 import androidx.compose.ui.graphics.ImageBitmap
+import com.example.nkustplatformassistant.data.DropDownParams
 import com.example.nkustplatformassistant.data.NkustEvent
+import com.example.nkustplatformassistant.data.Score
 import com.example.nkustplatformassistant.data.persistence.db.NkustDatabase
 import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntity
-import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreDropDownParams
 import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
 import com.example.nkustplatformassistant.data.remote.NkustAccessor
 import kotlinx.coroutines.Dispatchers
@@ -29,15 +30,21 @@ class DataRepository(context: Context) {
     private val nkustAccessor = NkustAccessor()
     private val db = NkustDatabase.getInstance(context)
 
-    // TODO: Check if score, subject, calender is null
+    // TODO: Check if calender_table is null
     suspend fun checkDataIsReady(): Boolean {
         val isDataReady = mutableListOf<Boolean>()
         withContext(Dispatchers.IO) {
-            isDataReady.add(
-                isScoreExist()
+            isDataReady.addAll(
+                listOf(isScoreExist(), isCourseExist())
             )
         }
         return !isDataReady.contains(false)
+    }
+
+    // TODO: Calendar Dao
+    suspend fun clearAllDB() {
+        db.scoreDao().emptyScoreTable()
+        db.courseDao().emptyCourseTable()
     }
 
     // Login...
@@ -69,13 +76,17 @@ class DataRepository(context: Context) {
     }
 
     // Score...
+    suspend fun fetchAllScoreToDB() {
+        fetchScoreDataToDB()
+    }
+
     private suspend fun fetchScoreDataToDB() {
         val listToInsert = getAllScoreToTypedScoreEntity(nkustAccessor)
         db.scoreDao().insertMultiScore(listToInsert)
     }
 
-    suspend fun getDropDownListFromDB(): List<ScoreDropDownParams> {
-        val dropDownList = mutableListOf<ScoreDropDownParams>()
+    suspend fun getDropDownListFromDB(): List<DropDownParams> {
+        val dropDownList = mutableListOf<DropDownParams>()
         withContext(Dispatchers.IO) {
             dropDownList.addAll(
                 db.scoreDao().getDropDownList()
@@ -87,10 +98,10 @@ class DataRepository(context: Context) {
 
     /**
      * By using [getLatestScoreParams], you can get latest year, semester, and semester description
-     * with a data class of [ScoreDropDownParams]
+     * with a data class of [DropDownParams]
      */
-    suspend fun getLatestScoreParams(): ScoreDropDownParams {
-        lateinit var latestScoreParams: ScoreDropDownParams
+    suspend fun getLatestScoreParams(): DropDownParams {
+        lateinit var latestScoreParams: DropDownParams
         withContext(Dispatchers.IO) {
             latestScoreParams = db.scoreDao().getLatestScoreList()
         }
@@ -101,18 +112,34 @@ class DataRepository(context: Context) {
         return db.scoreDao().getSpecScoreList(year, semester)
     }
 
-    suspend fun fetchAllScoreToDB() {
-        fetchScoreDataToDB()
-    }
 
     private suspend fun isScoreExist(): Boolean {
-        var scoreExist: Boolean
+        var exist: Boolean
         withContext(Dispatchers.IO) {
-            scoreExist = db.scoreDao().isExist()
+            exist = db.scoreDao().isExist()
         }
-        return scoreExist
+        return exist
     }
 
+    private suspend fun isCourseExist(): Boolean {
+        var exist: Boolean
+        withContext(Dispatchers.IO) {
+            exist = db.courseDao().isExist()
+        }
+        return exist
+    }
+
+    // Course
+    suspend fun fetchCourseDataToDB() {
+        db.courseDao().emptyCourseTable()
+        val listToInsert = getAllCourseToTypedCourseEntity(nkustAccessor)
+        listToInsert.forEach {
+            db.courseDao().insertCourse(it)
+        }
+
+    }
+
+    // Schedule
     suspend fun getSchedule(
         year: String,
         semester: String,
@@ -123,31 +150,8 @@ class DataRepository(context: Context) {
         }
     }
 
-    suspend fun getAllScores(
-        year: String,
-        semester: String,
-        reflash: Boolean = false,
-    ): List<ScoreEntity> {
-        throw Error("not complete")
-        withContext(Dispatchers.IO) {
-//            if (reflash)
-
-        }
-    }
-
-    //Course
-    suspend fun fetchCourseDataToDB() {
-        val listToInsert = getAllCourseToTypedCourseEntity(nkustAccessor)
-        listToInsert.forEach {
-            db.courseDao().insertCourse(it)
-        }
-
-    }
-
-
 }
 
-// TODO: Add listToGet into a brand new entity
 suspend fun allListToGet(nkustAccessor: NkustAccessor): List<List<String>> {
     val listToGet: MutableList<List<String>> = mutableListOf()
     nkustAccessor.getYearsOfDropDownListByMap()
@@ -169,37 +173,37 @@ suspend fun getAllScoreToTypedScoreEntity(nkustAccessor: NkustAccessor): List<Sc
     val listToGet = allListToGet(nkustAccessor)
 
     val scoreEntityList = mutableListOf<ScoreEntity>()
-    try {
-        listToGet.forEach { (semester, year, semDescription) ->
-            nkustAccessor.getYearlyScore(year, semester)
-                .forEach { (subjectName, midScore, finalScore) ->
-                    scoreEntityList.add(
-                        ScoreEntity(
-                            null,
-                            year.toInt(),
-                            semester.toInt(),
-                            semDescription,
-                            subjectName,
-                            midScore,
-                            finalScore
-                        )
-                    )
-                }
-        }
-    } catch (e: NoSuchElementException) {
-        // for allCourse.removeFirst()
-        println(
-            "Error when getting yearly score: $e\n" +
-                    "It maybe no data, but it's okay"
-        )
-    } catch (e: IndexOutOfBoundsException) {
-        println(
-            "Error when getting yearly score: $e\n" +
-                    "It maybe no data, but it's okay"
-        )
-    }
 
-//    println(scoreEntityList.size)
+    listToGet.forEach { (year, semester, semDescription) ->
+        try {
+            val listToAdd: List<Score> = nkustAccessor.getYearlyScore(year, semester)
+
+            listToAdd.forEach { (subjectName, midScore, finalScore) ->
+                scoreEntityList.add(
+                    ScoreEntity(
+                        year.toInt(),
+                        semester.toInt(),
+                        semDescription,
+                        subjectName,
+                        midScore,
+                        finalScore
+                    )
+                )
+            }
+        } catch (e: NoSuchElementException) {
+            // for allCourse.removeFirst()
+            println(
+                "Error when getting yearly score: $e\n" +
+                        "It maybe no data, but it's okay"
+            )
+
+        } catch (e: IndexOutOfBoundsException) {
+            println(
+                "Error when getting yearly score: $e\n" +
+                        "It maybe no data, but it's okay"
+            )
+        }
+    }
 
     return scoreEntityList
 }
@@ -209,21 +213,25 @@ suspend fun getAllCourseToTypedCourseEntity(nkustAccessor: NkustAccessor): List<
 
     val courseEntityList = mutableListOf<CourseEntity>()
 
-    try {
-        listToGet.forEach { (semester, year, semDescription) ->
-            courseEntityList.addAll(nkustAccessor.getSpecCurriculum(year, semester))
+
+    listToGet.forEach { (year, semester, semDescription) ->
+        try {
+            val listToAdd = nkustAccessor.getSpecCurriculum(year, semester, semDescription)
+            courseEntityList.addAll(listToAdd)
+
+        } catch (e: NoSuchElementException) {
+            // for allCourse.removeFirst()
+            println(
+                "Error when getting yearly score: $e\n" +
+                        "It maybe no data, but it's okay"
+            )
+
+        } catch (e: IndexOutOfBoundsException) {
+            println(
+                "Error when getting yearly score: $e\n" +
+                        "It maybe no data, but it's okay"
+            )
         }
-    } catch (e: IndexOutOfBoundsException) {
-        println(
-            "Error when getting yearly score: $e\n" +
-                    "It maybe no data, but it's okay"
-        )
-    } catch (e: NoSuchElementException) {
-        // for allCourse.removeFirst()
-        println(
-            "Error when getting yearly score: $e\n" +
-                    "It maybe no data, but it's okay"
-        )
     }
 
     return courseEntityList
