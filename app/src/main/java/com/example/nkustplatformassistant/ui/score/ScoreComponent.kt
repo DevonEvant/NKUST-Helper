@@ -1,8 +1,10 @@
 package com.example.nkustplatformassistant.ui.score
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CutCornerShape
@@ -35,18 +37,27 @@ import com.soywiz.klogger.AnsiEscape
 fun ScoreContent(scoreViewModel: ScoreViewModel) {
     val scores by scoreViewModel.scores.observeAsState()
 
-    Column() {
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
-            contentPadding = PaddingValues(
+    Column(
+        modifier = Modifier.padding(
+            PaddingValues(
                 start = 12.dp,
                 top = 16.dp,
                 end = 12.dp,
                 bottom = 16.dp
-            ),
-            modifier = Modifier
-                .clip(RoundedCornerShape(5))
-//                .background(Color.Red)
+            )
+        )
+    ) {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(3),
+//            contentPadding = PaddingValues(
+//                start = 12.dp,
+//                top = 16.dp,
+//                end = 12.dp,
+//                bottom = 16.dp
+//            ),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.fillMaxWidth()
+//                .border(1.dp, Color.Gray, RoundedCornerShape(4))
 
         ) {
             if (scores != null || scores!!.isNotEmpty()) {
@@ -61,8 +72,41 @@ fun ScoreContent(scoreViewModel: ScoreViewModel) {
                 item(3 * (index + 1) + 3) { scores?.finalScore?.let { Text(it) } }
             }
         }
+
+        Divider(
+            modifier = Modifier.padding(
+                PaddingValues(
+                    top = 16.dp,
+                    bottom = 16.dp
+                )
+            )
+        )
+
+        LazyColumn {
+            item {
+                Row {
+                    Text("123")
+                    Spacer(Modifier.weight(1f))
+                    Text("123")
+                    Spacer(Modifier.weight(1f))
+                    Text("123")
+                    Spacer(Modifier.weight(1f))
+                }
+            }
+            item {
+                Row {
+                    Text("123456")
+                    Spacer(Modifier.weight(1f))
+                    Text("123")
+                    Spacer(Modifier.weight(1f))
+                    Text("123")
+                    Spacer(Modifier.weight(1f))
+                }
+            }
+        }
     }
 }
+
 
 @Composable
 @Preview(showBackground = true)
