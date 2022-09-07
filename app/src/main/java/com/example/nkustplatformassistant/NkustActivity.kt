@@ -3,6 +3,7 @@ package com.example.nkustplatformassistant
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -27,6 +28,11 @@ class NkustActivity : ComponentActivity() {
             val navController = rememberNavController()
 
             Nkust_platform_assistantTheme {
+                LaunchedEffect(dataIsReady){
+                    if (dataIsReady.value!!){
+                        navController.navigate(Screen.Home.route)
+                    }
+                }
                 NavHost(
                     navController = navController,
                     startDestination =
