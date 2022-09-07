@@ -110,6 +110,12 @@ data class Score(
     val finalScore: String,
 )
 
+data class DropDownParams(
+    val year: Int,
+    val semester: Int,
+    val semDescription: String,
+)
+
 
 //data class Course(
 //    var id: String,
