@@ -17,8 +17,8 @@ class CurriculumViewModel : ViewModel() {
     val courses: LiveData<MutableList<CourseEntity>> = _courses
 
     init {
-        if (_courses.value!!.isEmpty())
-            updataCourses()
+//        if (_courses.value!!.isEmpty())
+//            updataCourses()
     }
 
     fun onTimeVisibilityChange() {
