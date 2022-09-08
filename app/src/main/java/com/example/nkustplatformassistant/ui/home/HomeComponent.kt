@@ -8,6 +8,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,8 +19,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.example.nkustplatformassistant.navigation.Screen
 
@@ -47,27 +50,74 @@ fun HomeBase(
     MyIndicator(homeViewModel.progress.value!!)
 
     Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
     ) {
+        Text("Today", fontWeight = FontWeight.Bold, fontSize = 44.sp)
+        Spacer(modifier = Modifier.padding(vertical = 15.dp))
 
-        Spacer(modifier = Modifier.padding(20.dp))
-        Text(text = "Hello, Welcome Home!")
-        Text(text = "Navigate To Login page!")
-
-        Button(onClick = {
-            // TODO: POP dialog to confirm user's choose
-            navController.navigate(Screen.Login.route)
-            homeViewModel.clearDB(true)
-        }) {
-            Text(text = "Press me to clear DB!")
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            item {
+                ElevatedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
+                ) {
+                    Column(Modifier.padding(16.dp)) {
+                        Text(text = "welcome", fontWeight = FontWeight.Bold, fontSize = 32.sp)
+                        Spacer(modifier = Modifier.padding(8.dp))
+                        Text(text = "Login for better service.", fontSize = 20.sp)
+                        Spacer(modifier = Modifier.padding(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            Button(onClick = {
+                                // TODO: POP dialog to confirm user's choose
+                                navController.navigate(Screen.Login.route)
+                                homeViewModel.clearDB(true)
+                            }) {
+                                Text(text = "Press me to clear DB!")
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         Spacer(modifier = Modifier.padding(vertical = 50.dp))
 
         Column() {
             LazyRow() {
+
+            }
+        }
+    }
+}
+
+@Composable
+fun Car() {
+    Dialog(onDismissRequest = {}) {
+        OutlinedCard(
+            modifier = Modifier.aspectRatio(1.2F),
+            elevation = CardDefaults.outlinedCardElevation(15.dp),
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(8.dp)
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "Please input validate code below:",
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Spacer(modifier = Modifier.padding(10.dp))
+
+
+                Spacer(modifier = Modifier.padding(5.dp))
+
 
             }
         }
@@ -106,9 +156,11 @@ fun CheckData(context: Context, navController: NavController) {
         Text(text = "Please wait a while...")
         // https://stackoverflow.com/questions/72701963/why-it-says-list-contains-no-element-matching-the-predicate-for-android-jetp
         LaunchedEffect(Unit) {
-            Toast.makeText(context,
+            Toast.makeText(
+                context,
                 "It seems database is null, please re-login to get data from web again.",
-                Toast.LENGTH_LONG).show()
+                Toast.LENGTH_LONG
+            ).show()
             navController.navigate(Screen.Login.route)
         }
     }
