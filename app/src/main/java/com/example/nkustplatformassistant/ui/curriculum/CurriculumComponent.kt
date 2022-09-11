@@ -68,6 +68,7 @@ fun CurriculumContext(curriculumViewModel: CurriculumViewModel) {
             columns = GridCells.Fixed(7),
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
+
             items(77) { index ->
                 if (index == 0) {
                 } else if (index < 7) {
@@ -79,16 +80,18 @@ fun CurriculumContext(curriculumViewModel: CurriculumViewModel) {
                 }
             }
 
-            courses?.forEachIndexed { index, courseEntity ->
+
+            courses?.forEachIndexed { index, course ->
                 val span: Int = 0
 
                 item(
-                    key = { index },
+                    key = { 8 },
                     span = {
                         GridItemSpan(span)
                     }
                 ) {
-                    CourseCard(courseEntity)
+                    println(course)
+                    CourseCard(course)
                 }
 
             }
@@ -189,6 +192,8 @@ fun LoginScreenPreview() {
     Nkust_platform_assistantTheme {
         val curriculumViewModel: CurriculumViewModel = viewModel()
         CurriculumContext(curriculumViewModel)
+        curriculumViewModel.t()
+
     }
 }
 
