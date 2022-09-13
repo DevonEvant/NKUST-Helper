@@ -104,8 +104,15 @@ dependencies {
     // Accompanist WebView
     implementation "com.google.accompanist:accompanist-webview:$accompanist_version"
 
+    // Accompanist Pager Layouts, Pager Indicators
+    implementation "com.google.accompanist:accompanist-pager:$accompanist_version"
+    implementation "com.google.accompanist:accompanist-pager-indicators:$accompanist_version"
+
     // Live Data
     implementation "androidx.compose.runtime:runtime-livedata:$compose_version"
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.6.0-alpha02"
+    // check android ktx
+
 
     // jsoup HTML parser library @ https://jsoup.org/
     implementation 'org.jsoup:jsoup:1.15.2'
@@ -121,6 +128,7 @@ dependencies {
 
     implementation "androidx.compose.material:material:1.2.1"
     implementation "androidx.compose.ui:ui-tooling-preview:1.2.1"
+    implementation "org.jetbrains.kotlin:kotlin-reflect:1.7.10"
 
     // implementation 'org.tensorflow:tensorflow-lite-support:0.1.0'
     // implementation 'org.tensorflow:tensorflow-lite-metadata:0.1.0'
