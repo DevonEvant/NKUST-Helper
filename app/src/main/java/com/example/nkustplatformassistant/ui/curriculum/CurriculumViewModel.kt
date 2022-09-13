@@ -3,6 +3,9 @@ package com.example.nkustplatformassistant.ui.curriculum
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.nkustplatformassistant.data.CourseTime
+import com.example.nkustplatformassistant.data.CurriculumTime
+import com.example.nkustplatformassistant.data.Weeks
 import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntity
 
 
@@ -17,8 +20,8 @@ class CurriculumViewModel : ViewModel() {
     val courses: LiveData<MutableList<CourseEntity>> = _courses
 
     init {
-        if (_courses.value!!.isEmpty())
-            updataCourses()
+//        if (_courses.value!!.isEmpty())
+//            updataCourses()
     }
 
     fun onTimeVisibilityChange() {
@@ -30,8 +33,33 @@ class CurriculumViewModel : ViewModel() {
     }
 
     fun updataCourses(refresh: Boolean = false) {
-        throw Error("not complete")
 //        _courses.value =
+    }
+
+    fun t() {
+        val a = CourseEntity(
+            1,
+            1,
+            1,
+            "1",
+            "1",
+            "1",
+            "1",
+            "1",
+            "1",
+            "1",
+            "1",
+            "1",
+            false
+        ).let {
+           it.courseTime = listOf(CourseTime(
+                week = Weeks.Wed,
+                curriculumTimeRange = CurriculumTime._2..CurriculumTime._8
+            ))
+            it
+        }
+        _courses.value?.add(a)
+
     }
 
 }

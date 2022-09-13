@@ -1,37 +1,17 @@
 package com.example.nkustplatformassistant.ui.score
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CutCornerShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.*
-import androidx.compose.material3.AlertDialogDefaults.shape
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
-import com.example.nkustplatformassistant.ui.curriculum.CurriculumContext
-import com.example.nkustplatformassistant.ui.curriculum.CurriculumTimeCard
-import com.example.nkustplatformassistant.ui.curriculum.CurriculumViewModel
-import com.example.nkustplatformassistant.ui.curriculum.WeeksCard
 import com.example.nkustplatformassistant.ui.theme.Nkust_platform_assistantTheme
-import com.soywiz.klogger.AnsiEscape
 
 @Composable
 fun ScoreContent(scoreViewModel: ScoreViewModel) {
@@ -118,84 +98,27 @@ fun LoginScreenPreview() {
                 ScoreEntity(
                     1,
                     2,
-                    3,
+                    "3",
                     "123",
                     "s1",
                     "m1",
-                    "f1",
-                ), ScoreEntity(
+                ),
+                ScoreEntity(
                     1,
                     2,
-                    3,
+                    "3",
                     "123",
-                    "s2",
-                    "m2",
-                    "f2",
-                ), ScoreEntity(
+                    "s1",
+                    "m1",
+                ),
+                ScoreEntity(
                     1,
                     2,
-                    3,
+                    "3",
                     "123",
-                    "s2",
-                    "m2",
-                    "f2",
-                ), ScoreEntity(
-                    1,
-                    2,
-                    3,
-                    "123",
-                    "s2",
-                    "m2",
-                    "f2",
-                ), ScoreEntity(
-                    1,
-                    2,
-                    3,
-                    "123",
-                    "s2",
-                    "m2",
-                    "f2",
-                ), ScoreEntity(
-                    1,
-                    2,
-                    3,
-                    "123",
-                    "s2",
-                    "m2",
-                    "f2",
-                ), ScoreEntity(
-                    1,
-                    2,
-                    3,
-                    "123",
-                    "s2",
-                    "m2",
-                    "f2",
-                ), ScoreEntity(
-                    1,
-                    2,
-                    3,
-                    "123",
-                    "s2",
-                    "m2",
-                    "f2",
-                ), ScoreEntity(
-                    1,
-                    2,
-                    3,
-                    "123",
-                    "s2",
-                    "m2",
-                    "f2",
-                ), ScoreEntity(
-                    1,
-                    2,
-                    3,
-                    "123",
-                    "s2",
-                    "m2",
-                    "f2",
-                )
+                    "s1",
+                    "m1",
+                ),
             )
         )
         ScoreContent(scoreViewModel)

@@ -19,11 +19,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
+
 import androidx.navigation.NavController
 import com.example.nkustplatformassistant.data.persistence.DataRepository
 import com.example.nkustplatformassistant.navigation.Screen
@@ -55,21 +57,39 @@ fun HomeBase(
     }
 
     Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
     ) {
+        Text("Today", fontWeight = FontWeight.Bold, fontSize = 44.sp)
+        Spacer(modifier = Modifier.padding(vertical = 15.dp))
 
-        Spacer(modifier = Modifier.padding(20.dp))
-        Text(text = "Hello, Welcome Home!")
-        Text(text = "Navigate To Login page!")
-
-        Button(onClick = {
-            // TODO: POP dialog to confirm user's choose
-            navController.navigate(Screen.Login.route)
-            homeViewModel.clearDB(true)
-        }) {
-            Text(text = "Press me to clear DB!")
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            item {
+                ElevatedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
+                ) {
+                    Column(Modifier.padding(16.dp)) {
+                        Text(text = "welcome", fontWeight = FontWeight.Bold, fontSize = 32.sp)
+                        Spacer(modifier = Modifier.padding(8.dp))
+                        Text(text = "Login for better service.", fontSize = 20.sp)
+                        Spacer(modifier = Modifier.padding(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            Button(onClick = {
+                                // TODO: POP dialog to confirm user's choose
+                                navController.navigate(Screen.Login.route)
+                                homeViewModel.clearDB(true)
+                            }) {
+                                Text(text = "Press me to clear DB!")
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         Spacer(modifier = Modifier.padding(vertical = 50.dp))
@@ -92,10 +112,12 @@ fun HomeBase(
 }
 
 @Composable
+
 fun MyIndicator(
     indicatorProgress: LiveData<Float>,
 //    lifecycleOwner: LifecycleOwner,
 ) {
+
     var progress by remember { mutableStateOf(0f) }
     val progressAnimDuration = 1500
 
@@ -263,9 +285,11 @@ fun CheckData(context: Context, navController: NavController) {
         Text(text = "Please wait a while...")
         // https://stackoverflow.com/questions/72701963/why-it-says-list-contains-no-element-matching-the-predicate-for-android-jetp
         LaunchedEffect(Unit) {
-            Toast.makeText(context,
+            Toast.makeText(
+                context,
                 "It seems database is null, please re-login to get data from web again.",
-                Toast.LENGTH_LONG).show()
+                Toast.LENGTH_LONG
+            ).show()
             navController.navigate(Screen.Login.route)
         }
     }

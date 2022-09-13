@@ -35,7 +35,7 @@ fun CurriculumContext(curriculumViewModel: CurriculumViewModel) {
     val state = rememberScrollState()
     LaunchedEffect(Unit) { state.animateScrollTo(0) }
 
-    Column {
+    Column(modifier = Modifier.padding(8.dp)) {
 //    -----DisplayOption-----
         Row(
             modifier = Modifier
@@ -61,17 +61,14 @@ fun CurriculumContext(curriculumViewModel: CurriculumViewModel) {
             ) { Text("Time Code") }
         }
 
+        Divider()
 //    -----CurriculumTable-----
         val itemsList = (0..80).toList()
         LazyVerticalGrid(
             columns = GridCells.Fixed(7),
-            contentPadding = PaddingValues(
-                start = 12.dp,
-//                top = 16.dp,
-                end = 12.dp,
-                bottom = 16.dp
-            )
+            contentPadding = PaddingValues(vertical = 8.dp)
         ) {
+
             items(77) { index ->
                 if (index == 0) {
                 } else if (index < 7) {
@@ -83,16 +80,18 @@ fun CurriculumContext(curriculumViewModel: CurriculumViewModel) {
                 }
             }
 
-            courses?.forEachIndexed { index, courseEntity ->
-                val span:Int = 0
+
+            courses?.forEachIndexed { index, course ->
+                val span: Int = 0
 
                 item(
-                    key = { index },
+                    key = { 8 },
                     span = {
                         GridItemSpan(span)
                     }
                 ) {
-                    CourseCard(courseEntity)
+                    println(course)
+                    CourseCard(course)
                 }
 
             }
@@ -187,21 +186,21 @@ fun CurriculumTimeCard(
 
 // ------------------
 
-//@Preview(showBackground = true)
-//@Composable
-//fun CurriculumTimeCardPreview() {
-//    CurriculumTimeCard(CurriculumTime[1])
-////    CurriculumTimeCard(CurriculumTime[2])
-//
-//}
-
-
 @Preview(showBackground = true)
 @Composable
 fun LoginScreenPreview() {
     Nkust_platform_assistantTheme {
         val curriculumViewModel: CurriculumViewModel = viewModel()
         CurriculumContext(curriculumViewModel)
+        curriculumViewModel.t()
+
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun CurriculumTimeCardPreview() {
+    Text("123")
+
 }
 
