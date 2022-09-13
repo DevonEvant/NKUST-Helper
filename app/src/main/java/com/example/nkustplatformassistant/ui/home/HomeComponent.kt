@@ -1,27 +1,34 @@
 package com.example.nkustplatformassistant.ui.home
 
 import android.content.Context
+import android.media.effect.Effect
 import android.widget.Toast
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
 import androidx.navigation.NavController
+import com.example.nkustplatformassistant.data.persistence.DataRepository
 import com.example.nkustplatformassistant.navigation.Screen
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.HorizontalPager
 
 @Composable
 fun HomeScreenBase(homeViewModel: HomeViewModel, navController: NavController) {
@@ -33,18 +40,19 @@ fun HomeScreenBase(homeViewModel: HomeViewModel, navController: NavController) {
 //    }
 }
 
+@OptIn(ExperimentalPagerApi::class)
 @Composable
 fun HomeBase(
     homeViewModel: HomeViewModel,
     navController: NavController,
 ) {
-    LaunchedEffect(Unit) {
-        if (!homeViewModel.checkDBHasData()) {
-            homeViewModel.startFetch(true)
-        }
-    }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    MyIndicator(homeViewModel.progress.value!!)
+    homeViewModel.dbHasData.value?.let {
+        if (!it)
+            MyIndicator(homeViewModel.startFetch(true))
+
+    }
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -66,30 +74,179 @@ fun HomeBase(
 
         Spacer(modifier = Modifier.padding(vertical = 50.dp))
 
-        Column() {
-            LazyRow() {
+        // https://google.github.io/accompanist/pager/
+        // TODO: when finish scraping, stop showing circular progress bar and show Pager
+        // loading with progress bar, when it reaches its end, show home page
 
+        HorizontalPager(
+            count = 3,
+            contentPadding = PaddingValues(horizontal = 32.dp)
+        ) { currentPage ->
+            when (currentPage) {
+                0 -> SubjectCard(homeViewModel.courseWidgetParams)
+                1 -> Text(text = "22")
+                2 -> Text(text = "33")
             }
         }
     }
 }
 
 @Composable
-fun MyIndicator(indicatorProgress: Float) {
+fun MyIndicator(
+    indicatorProgress: LiveData<Float>,
+//    lifecycleOwner: LifecycleOwner,
+) {
     var progress by remember { mutableStateOf(0f) }
     val progressAnimDuration = 1500
+
+//    indicatorProgress.observe(lifecycleOwner) {
+//        progress = it
+//    }
+
+    progress = indicatorProgress.observeAsState().value!!
+
     val progressAnimation by animateFloatAsState(
-        targetValue = indicatorProgress,
+        targetValue = progress,
         animationSpec = tween(durationMillis = progressAnimDuration, easing = FastOutSlowInEasing)
     )
+
     LinearProgressIndicator(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp)), // Rounded edges
+        modifier =
+        if (progress != 1F) {
+            Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(20.dp))
+        } else {
+            Modifier
+                .alpha(0F)
+        }, // Rounded edges
         progress = progressAnimation
     )
-    LaunchedEffect(indicatorProgress) {
-        progress = indicatorProgress
+}
+
+@Preview
+@Composable
+fun CardPreview() {
+    SubjectCard(
+        HomeViewModel(DataRepository(LocalContext.current))
+            .courseWidgetParams
+    )
+}
+
+// TODO: Observe data is fully loaded
+@Composable
+fun SubjectCard(
+    courseWidgetParams: LiveData<Map<HomeViewModel.SubjectWidgetEnum, String>>,
+) {
+    SubjectCardBase(courseWidgetParams)
+
+}
+
+@Composable
+fun SubjectCardBase(
+    courseWidgetParams: LiveData<Map<HomeViewModel.SubjectWidgetEnum, String>>,
+) {
+    // Given SubjectWidgetEnum and it'll return string
+    @Composable
+    fun textOut(field: HomeViewModel.SubjectWidgetEnum) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween) {
+
+            Text(text = courseWidgetParams.value!![field].toString())
+            Text(text = courseWidgetParams.value!![field].toString()) //TODO: detail of SubjectWidget in (maybe enum class needed)
+        }
+    }
+
+    Card {
+        Column(
+            modifier = Modifier
+                .size(width = 320.dp, height = 180.dp)
+                .padding(top = 10.dp, bottom = 10.dp),
+//            horizontalAlignment = Alignment.CenterHorizontally,
+//            verticalArrangement = Arrangement.Center
+        ) {
+            Row(
+                modifier = Modifier
+                    .weight(2F)
+                    .padding(bottom = 5.dp)
+                    .fillMaxSize(1F),
+                horizontalArrangement = Arrangement.SpaceEvenly) {
+
+                Row(
+                    modifier = Modifier.padding(horizontal = 5.dp)
+                ) {
+
+                    Box(
+                        modifier = Modifier
+                            .weight(0.75F)
+                            .fillMaxSize(1F)
+                            .clip(shape = RoundedCornerShape(15.dp))
+                            .background(color = Color.Blue)
+                    ) {
+                        textOut(field = HomeViewModel.SubjectWidgetEnum.CourseName)
+                    }
+                    Column(
+                        modifier = Modifier
+                            .weight(0.25F)) {
+                        for (item in listOf(HomeViewModel.SubjectWidgetEnum.StartTime,
+                            HomeViewModel.SubjectWidgetEnum.EndTime)) {
+                            Box(
+                                modifier = Modifier
+                                    .weight(1F)
+                                    .fillMaxSize()
+                                    .padding(6.dp)
+                                    .clip(shape = RoundedCornerShape(20.dp))
+                                    .background(brush = Brush.sweepGradient(
+                                        listOf(
+                                            MaterialTheme.colorScheme.primary,
+                                            MaterialTheme.colorScheme.primaryContainer
+                                        )
+                                    ))
+                            ) {
+                                textOut(item)
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            Row(
+                modifier = Modifier.weight(1F)
+            ) {
+                for (item in listOf(
+                    HomeViewModel.SubjectWidgetEnum.ClassName,
+                    HomeViewModel.SubjectWidgetEnum.ClassLocation,
+                    HomeViewModel.SubjectWidgetEnum.ClassGroup,
+                    HomeViewModel.SubjectWidgetEnum.ClassTime,
+                )) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1F)
+                            .fillMaxSize()
+                            .padding(horizontal = 5.dp)
+                            .clip(shape = RoundedCornerShape(3.dp))
+                            .background(brush = Brush.sweepGradient(
+                                listOf(
+                                    MaterialTheme.colorScheme.secondary,
+                                    MaterialTheme.colorScheme.secondaryContainer
+                                )
+                            ))
+                    ) {
+//                        when (item) {
+//                            1 -> Text(text = "1")
+//                            2 -> Text(text = "2")
+//                            3 -> Text(text = "3")
+//                            4 -> Text(text = "4")
+//                        }
+                        textOut(item)
+
+                    }
+                }
+            }
+        }
     }
 }
 
