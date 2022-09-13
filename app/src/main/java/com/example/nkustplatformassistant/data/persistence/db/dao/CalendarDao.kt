@@ -8,7 +8,7 @@ import com.example.nkustplatformassistant.data.persistence.db.entity.Calender
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface CalenderDao {
+interface CalendarDao {
     @Query("SELECT * FROM calender_table ORDER BY id ASC")
     fun getCalender(): Flow<List<Calender>>
 
