@@ -2,7 +2,7 @@ package com.example.nkustplatformassistant.data.persistence.db
 
 import android.content.Context
 import androidx.room.*
-import com.example.nkustplatformassistant.data.persistence.db.dao.CalenderDao
+import com.example.nkustplatformassistant.data.persistence.db.dao.CalendarDao
 import com.example.nkustplatformassistant.data.persistence.db.dao.CourseDao
 import com.example.nkustplatformassistant.data.persistence.db.dao.ScoreDao
 import com.example.nkustplatformassistant.data.persistence.db.entity.Calender
@@ -24,7 +24,7 @@ import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
 )
 abstract class NkustDatabase : RoomDatabase() {
 
-    abstract fun calenderDao(): CalenderDao
+    abstract fun calenderDao(): CalendarDao
     abstract fun scoreDao(): ScoreDao
     abstract fun courseDao(): CourseDao
 

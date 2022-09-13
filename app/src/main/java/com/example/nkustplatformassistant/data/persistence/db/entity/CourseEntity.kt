@@ -3,6 +3,7 @@ package com.example.nkustplatformassistant.data.persistence.db.entity
 import androidx.annotation.NonNull
 import androidx.room.*
 import com.example.nkustplatformassistant.data.CourseTime
+import com.example.nkustplatformassistant.data.persistence.db.dao.CourseDao
 import org.hamcrest.Description
 
 @Entity(tableName = "course_table")
@@ -22,5 +23,5 @@ data class CourseEntity(
     @ColumnInfo val importance: Boolean,
 ) {
     @Ignore
-    var courseTime: List<CourseTime> = listOf()
+    lateinit var courseTime: List<CourseTime>
 }

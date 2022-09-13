@@ -15,7 +15,7 @@ interface CourseDao {
     fun getDropDownList(): List<DropDownParams>
 
     @Query("SELECT DISTINCT year,semester,semDescription FROM course_table ORDER BY semester,year LIMIT 1")
-    fun getLatestCourseList(): List<DropDownParams>
+    suspend fun getLatestCourseParams(): DropDownParams
 
     @Query("SELECT COUNT(*) FROM course_table")
     fun sizeOfDB(): Int

@@ -2,6 +2,7 @@ package com.example.nkustplatformassistant.data.persistence
 
 import android.content.Context
 import androidx.compose.ui.graphics.ImageBitmap
+import com.example.nkustplatformassistant.data.CurriculumTime
 import com.example.nkustplatformassistant.data.DropDownParams
 import com.example.nkustplatformassistant.data.NkustEvent
 import com.example.nkustplatformassistant.data.Score
@@ -27,10 +28,11 @@ class DataRepository(context: Context) {
         }
     }
 
+
     private val nkustAccessor = NkustAccessor()
     private val db = NkustDatabase.getInstance(context)
 
-    // TODO: Check if calender_table is null
+    // TODO: Check if calender_table is null and add it to companion object (if can)
     suspend fun checkDataIsReady(): Boolean {
         val isDataReady = mutableListOf<Boolean>()
         withContext(Dispatchers.IO) {
@@ -136,7 +138,17 @@ class DataRepository(context: Context) {
         listToInsert.forEach {
             db.courseDao().insertCourse(it)
         }
+    }
 
+    internal suspend fun getLatestCourseParams(): DropDownParams {
+        return db.courseDao().getLatestCourseParams()
+    }
+
+    suspend fun getCurrentCourse(/*time: CurriculumTime*/):CourseEntity {
+        val todayCourseList = getLatestCourseParams()
+        val result = db.courseDao().getSpecCourseList(
+            todayCourseList.year, todayCourseList.semester)
+        return result[0]
     }
 
     // Schedule
