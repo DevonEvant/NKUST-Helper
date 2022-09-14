@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -22,23 +23,25 @@ class NkustActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val dataRepository = DataRepository.getInstance(applicationContext)
 
-        val dataIsReady = NkustViewModel(dataRepository).dataAvailability
+//        val dataIsReady = NkustViewModel(dataRepository).dataAvailability
         setContent {
 
             val navController = rememberNavController()
 
             Nkust_platform_assistantTheme {
-                LaunchedEffect(dataIsReady){
-                    if (dataIsReady.value!!){
-                        navController.navigate(Screen.Home.route)
-                    }
+//                LaunchedEffect(dataIsReady){
+//                    if (dataIsReady.value!!){
+//                        navController.navigate(Screen.Home.route)
+//                    }
+//                }
+                NkustViewModel(dataRepository).dataAvailability().observeAsState(false).let {
+                    if (it.value) navController.navigate(Screen.Home.route)
                 }
                 NavHost(
                     navController = navController,
-                    startDestination =
-                        if (dataIsReady.value!!) Screen.Home.route
-                        else Screen.Login.route
+                    startDestination = Screen.Login.route
                 ) {
+
                     composable(Screen.Home.route) {
                         HomeScreen(HomeViewModel(dataRepository), navController)
                     }

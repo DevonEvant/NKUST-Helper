@@ -1,13 +1,13 @@
 package com.example.nkustplatformassistant.ui.home
 
 import android.content.Context
-import android.media.effect.Effect
 import android.widget.Toast
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,15 +19,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.LifecycleOwner
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LiveData
-
 import androidx.navigation.NavController
-import com.example.nkustplatformassistant.data.persistence.DataRepository
 import com.example.nkustplatformassistant.navigation.Screen
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
@@ -98,12 +96,17 @@ fun HomeBase(
         // TODO: when finish scraping, stop showing circular progress bar and show Pager
         // loading with progress bar, when it reaches its end, show home page
 
+        var courseWidgetParams: Map<HomeViewModel.SubjectWidgetEnum, String> = remember { mapOf() }
+        homeViewModel.courseWidgetParams.observe(lifecycleOwner) {
+            courseWidgetParams = it
+        }
+
         HorizontalPager(
             count = 3,
             contentPadding = PaddingValues(horizontal = 32.dp)
         ) { currentPage ->
             when (currentPage) {
-                0 -> SubjectCard(homeViewModel.courseWidgetParams)
+                0 -> SubjectCard(courseWidgetParams)
                 1 -> Text(text = "22")
                 2 -> Text(text = "33")
             }
@@ -150,23 +153,15 @@ fun MyIndicator(
 @Composable
 fun CardPreview() {
     SubjectCard(
-        HomeViewModel(DataRepository(LocalContext.current))
-            .courseWidgetParams
+        mapOf()
     )
 }
 
 // TODO: Observe data is fully loaded
+
 @Composable
 fun SubjectCard(
-    courseWidgetParams: LiveData<Map<HomeViewModel.SubjectWidgetEnum, String>>,
-) {
-    SubjectCardBase(courseWidgetParams)
-
-}
-
-@Composable
-fun SubjectCardBase(
-    courseWidgetParams: LiveData<Map<HomeViewModel.SubjectWidgetEnum, String>>,
+    courseWidgetParams: Map<HomeViewModel.SubjectWidgetEnum, String>,
 ) {
     // Given SubjectWidgetEnum and it'll return string
     @Composable
@@ -174,10 +169,12 @@ fun SubjectCardBase(
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween) {
+            verticalArrangement = Arrangement.SpaceEvenly) {
 
-            Text(text = courseWidgetParams.value!![field].toString())
-            Text(text = courseWidgetParams.value!![field].toString()) //TODO: detail of SubjectWidget in (maybe enum class needed)
+            val content = if (courseWidgetParams[field].isNullOrBlank()) "Please Wait..." else courseWidgetParams[field]
+
+            Text(text = content!!)
+            Text(text = content!!) //TODO: detail of SubjectWidget in (maybe enum class needed)
         }
     }
 
