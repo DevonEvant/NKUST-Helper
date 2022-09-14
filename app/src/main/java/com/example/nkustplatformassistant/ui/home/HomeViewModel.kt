@@ -1,9 +1,12 @@
 package com.example.nkustplatformassistant.ui.home
 
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.lifecycle.*
 import kotlinx.coroutines.launch
 import com.example.nkustplatformassistant.data.persistence.DataRepository
+import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntity
 import com.soywiz.korma.geom.bezier.SegmentEmitter.emit
+import kotlinx.coroutines.Dispatchers
 
 class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
 
@@ -36,18 +39,23 @@ class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
     }
 
     val courseWidgetParams: LiveData<Map<SubjectWidgetEnum, String>> = liveData {
-        val courseEntity = dataRepository.getCurrentCourse()
-        emit(
-            mapOf(
-                SubjectWidgetEnum.CourseName to courseEntity.courseName,
-                SubjectWidgetEnum.ClassName to courseEntity.className,
-                SubjectWidgetEnum.ClassLocation to courseEntity.classLocation,
-                SubjectWidgetEnum.ClassTime to courseEntity.classTime,
-                SubjectWidgetEnum.ClassGroup to courseEntity.classGroup,
-                SubjectWidgetEnum.Professor to courseEntity.professor,
-                SubjectWidgetEnum.StartTime to courseEntity.courseTime[0].curriculumTimeRange.start.startTime,
-                SubjectWidgetEnum.EndTime to courseEntity.courseTime[1].curriculumTimeRange.endInclusive.endTime
+        lateinit var courseEntity: CourseEntity
+        viewModelScope.launch(Dispatchers.IO) {
+            courseEntity = dataRepository.getCurrentCourse()
+
+            emit(
+                mapOf(
+                    SubjectWidgetEnum.CourseName to courseEntity.courseName,
+                    SubjectWidgetEnum.ClassName to courseEntity.className,
+                    SubjectWidgetEnum.ClassLocation to courseEntity.classLocation,
+                    SubjectWidgetEnum.ClassTime to courseEntity.classTime,
+                    SubjectWidgetEnum.ClassGroup to courseEntity.classGroup,
+                    SubjectWidgetEnum.Professor to courseEntity.professor,
+                    SubjectWidgetEnum.StartTime to courseEntity.courseTime[0].curriculumTimeRange.start.startTime,
+                    SubjectWidgetEnum.EndTime to courseEntity.courseTime[1].curriculumTimeRange.endInclusive.endTime
+                )
             )
-        )
+        }
+
     }
 }

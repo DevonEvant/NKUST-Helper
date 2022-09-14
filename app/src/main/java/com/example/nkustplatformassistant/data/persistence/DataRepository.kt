@@ -10,7 +10,9 @@ import com.example.nkustplatformassistant.data.persistence.db.NkustDatabase
 import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntity
 import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
 import com.example.nkustplatformassistant.data.remote.NkustAccessor
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 
@@ -144,7 +146,7 @@ class DataRepository(context: Context) {
         return db.courseDao().getLatestCourseParams()
     }
 
-    suspend fun getCurrentCourse(/*time: CurriculumTime*/):CourseEntity {
+    suspend fun getCurrentCourse(/*time: CurriculumTime*/): CourseEntity {
         val todayCourseList = getLatestCourseParams()
         val result = db.courseDao().getSpecCourseList(
             todayCourseList.year, todayCourseList.semester)
