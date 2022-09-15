@@ -1,6 +1,5 @@
 package com.example.nkustplatformassistant.ui.home
 
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.lifecycle.*
 import kotlinx.coroutines.launch
 import com.example.nkustplatformassistant.data.persistence.DataRepository
@@ -51,8 +50,10 @@ class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
                     SubjectWidgetEnum.ClassTime to courseEntity.classTime,
                     SubjectWidgetEnum.ClassGroup to courseEntity.classGroup,
                     SubjectWidgetEnum.Professor to courseEntity.professor,
-                    SubjectWidgetEnum.StartTime to courseEntity.courseTime[0].curriculumTimeRange.start.startTime,
-                    SubjectWidgetEnum.EndTime to courseEntity.courseTime[1].curriculumTimeRange.endInclusive.endTime
+                    //                SubjectWidgetEnum.StartTime to courseEntity.courseTime[0].curriculumTimeRange.start.startTime,
+                    SubjectWidgetEnum.StartTime to courseEntity.courseTime[0].curriculumTimeRange.start.time.start.toIsoDescription(),
+//                SubjectWidgetEnum.EndTime to courseEntity.courseTime[1].curriculumTimeRange.endInclusive.endTime
+                    SubjectWidgetEnum.EndTime to courseEntity.courseTime[1].curriculumTimeRange.endInclusive.time.endInclusive.toIsoDescription()
                 )
             )
         }

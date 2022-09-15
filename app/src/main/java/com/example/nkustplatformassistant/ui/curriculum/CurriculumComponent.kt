@@ -168,9 +168,9 @@ fun CurriculumTimeCard(
             )
 
             if (timeVisibility)
-                Text(curriculumTime.startTime)
+                Text(curriculumTime.time.start.toIsoDescription())
             if (timeCodeVisibility)
-                Text(curriculumTime.endTime)
+                Text(curriculumTime.time.endInclusive.toIsoDescription())
         }
     }
 }
