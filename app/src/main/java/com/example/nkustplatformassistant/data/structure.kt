@@ -1,6 +1,8 @@
 package com.example.nkustplatformassistant.data
 
-import java.lang.Exception
+import android.os.Build
+import androidx.annotation.RequiresApi
+import java.time.LocalTime
 
 enum class Weeks(val shortCode: Char, val cn: String, val shortCnCode: Char) {
     Mon('M', "星期一", '一'),
@@ -32,19 +34,105 @@ enum class Weeks(val shortCode: Char, val cn: String, val shortCnCode: Char) {
     }
 }
 
+enum class CurriculumTime(
+    val id: Char,
+//    val startTime: String,
+//    val endTime: String,
+    val time: HourAndMinute.HourAndMinuteRange
+) {
+//    _M('M', "07:10", "08:00", HourAndMinute(7, 10)..HourAndMinute(8, 0)),
+//    _1('1', "08:10", "09:00", HourAndMinute(8, 10)..HourAndMinute(9, 0)),
+//    _2('2', "09:10", "10:00", HourAndMinute(9, 10)..HourAndMinute(10, 0)),
+//    _3('3', "10:10", "11:00", HourAndMinute(10, 10)..HourAndMinute(11, 0)),
+//    _4('4', "11:10", "12:00", HourAndMinute(11, 10)..HourAndMinute(12, 0)),
+//    _A('A', "12:30", "13:20", HourAndMinute(12, 30)..HourAndMinute(13, 20)),
+//    _5('5', "13:30", "14:20", HourAndMinute(13, 30)..HourAndMinute(14, 20)),
+//    _6('6', "14:30", "15:20", HourAndMinute(14, 30)..HourAndMinute(15, 20)),
+//    _7('7', "15:30", "16:20", HourAndMinute(15, 30)..HourAndMinute(16, 20)),
+//    _8('8', "16:30", "17:20", HourAndMinute(16, 30)..HourAndMinute(17, 20)),
+//    _9('9', "17:30", "18:20", HourAndMinute(17, 30)..HourAndMinute(18, 20));
 
-enum class CurriculumTime(val id: Char, val startTime: String, val endTime: String) {
-    _M('M', "07:10", "08:00"),
-    _1('1', "08:10", "09:00"),
-    _2('2', "09:10", "10:00"),
-    _3('3', "10:10", "11:00"),
-    _4('4', "11:10", "12:00"),
-    _A('A', "12:30", "13:20"),
-    _5('5', "13:30", "14:20"),
-    _6('6', "14:30", "15:20"),
-    _7('7', "15:30", "16:20"),
-    _8('8', "16:30", "17:20"),
-    _9('9', "17:30", "18:20");
+    _M('M', HourAndMinute(7, 10)..HourAndMinute(8, 0)),
+    _1('1', HourAndMinute(8, 10)..HourAndMinute(9, 0)),
+    _2('2', HourAndMinute(9, 10)..HourAndMinute(10, 0)),
+    _3('3', HourAndMinute(10, 10)..HourAndMinute(11, 0)),
+    _4('4', HourAndMinute(11, 10)..HourAndMinute(12, 0)),
+    _A('A', HourAndMinute(12, 30)..HourAndMinute(13, 20)),
+    _5('5', HourAndMinute(13, 30)..HourAndMinute(14, 20)),
+    _6('6', HourAndMinute(14, 30)..HourAndMinute(15, 20)),
+    _7('7', HourAndMinute(15, 30)..HourAndMinute(16, 20)),
+    _8('8', HourAndMinute(16, 30)..HourAndMinute(17, 20)),
+    _9('9', HourAndMinute(17, 30)..HourAndMinute(18, 20));
+
+    class HourAndMinute(hour: Int, minute: Int) : Comparable<HourAndMinute> {
+
+        // todo HourAndMinute("11:12") -> HourAndMinute(11,12)
+//        constructor(timeDescription: String) : this() {
+//            val (hr, min) = timeDescription.split(":", limit = 1).map { it.toInt() }
+//            HourAndMinute(hr, min)
+//        }
+
+        var hour: Int = hour
+            get() = if (field in 0 until 24) field else throw Error("illegal value")
+
+        var minute: Int = minute
+            get() = if (field in 0 until 60) field else throw Error("illegal value")
+
+        override operator fun compareTo(other: HourAndMinute): Int {
+            if (hour == other.hour)
+                return minute - other.minute
+            return hour - other.hour
+        }
+
+        /**
+         * declare type when you use operator rangeTo
+         */
+        abstract class HourAndMinuteRange : ClosedRange<HourAndMinute> {
+            abstract infix fun include(value: LocalTime): Boolean
+        }
+
+        operator fun rangeTo(other: HourAndMinute): HourAndMinuteRange {
+            return object : HourAndMinuteRange() {
+                override val start = this@HourAndMinute
+                override val endInclusive = other
+
+                /**
+                 * check if HourAndMinuteRange is include [value] (the [value]'s type is LocalTime)
+                 */
+                @RequiresApi(Build.VERSION_CODES.O)
+                override infix fun include(value: LocalTime): Boolean {
+                    if (value.hour in this.start.hour..this.endInclusive.hour) {
+                        if (value.hour == this.start.hour) {
+                            if (value.minute < this.start.minute)
+                                return false
+                            else if (value.minute > this.start.minute)
+                                return true
+                            return value.second >= 0
+                        } else if (value.hour == this.endInclusive.hour) {
+                            if (value.minute < this.endInclusive.minute)
+                                return true
+                            else if (value.minute > this.endInclusive.minute)
+                                return false
+                            return value.second <= 0
+                        }
+                        return true
+                    }
+                    return false
+                }
+            }
+        }
+
+        /**
+         * covert time of the object to Iso standard (HH:MM)
+         * if time less then two digits when [fill] is ture, I will fill string with 0
+         */
+        fun toIsoDescription(fill: Boolean = true): String {
+            if (fill)
+                return String.format("%02d:%02d", hour, minute)
+            return String.format("%d:%d", hour, minute)
+
+        }
+    }
 
     /**
      * you can use operator "rangeTo" (like 1..3) and return ClosedRange<CurriculumTime>
@@ -83,6 +171,14 @@ enum class CurriculumTime(val id: Char, val startTime: String, val endTime: Stri
         fun getById(id: Char): CurriculumTime? {
             for (v in values()) {
                 if (v.id == id.uppercaseChar())
+                    return v
+            }
+            return null
+        }
+
+        fun getByTime(time: LocalTime): CurriculumTime? {
+            for (v in values()) {
+                if (v.time include time)
                     return v
             }
             return null
