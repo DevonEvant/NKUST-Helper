@@ -295,7 +295,7 @@ class NkustAccessor : NkustUser() {
 
     //   todo rename Calender to schedule
     @OptIn(InternalAPI::class)
-    suspend fun getNkustCnCalenderPdf(year: String, semester: String, path: String?): File {
+    suspend fun getNkustCnCalenderPdf(year: String, semester: String, path: String? = "./"): File {
 
 
         // todo not complete. unable to find valid certification path to requested target
