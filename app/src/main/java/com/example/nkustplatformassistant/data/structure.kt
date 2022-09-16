@@ -4,6 +4,19 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import java.time.LocalTime
 
+// https://kotlinlang.org/docs/generics.html#type-projections
+// https://stackoverflow.com/questions/48051190/kotlin-one-type-argument-expected-for-class-for-abstract-generic-view-holder
+sealed class ResultOf<out T> {
+    data class Success<out R>(val value: R) : ResultOf<R>()
+    data class Error(val message: String?) : ResultOf<Nothing>()
+}
+
+//sealed class Response<out R> {
+//    data class Loading(val data: Nothing) : Response<Nothing>()
+//    data class Success<out T>(val data: T) : Response<T>()
+//    data class Error(val exception: Exception) : Response<Exception>()
+//}
+
 enum class Weeks(val shortCode: Char, val cn: String, val shortCnCode: Char) {
     Mon('M', "星期一", '一'),
     Tue('T', "星期二", '二'),
@@ -38,7 +51,7 @@ enum class CurriculumTime(
     val id: Char,
 //    val startTime: String,
 //    val endTime: String,
-    val time: HourAndMinute.HourAndMinuteRange
+    val time: HourAndMinute.HourAndMinuteRange,
 ) {
 //    _M('M', "07:10", "08:00", HourAndMinute(7, 10)..HourAndMinute(8, 0)),
 //    _1('1', "08:10", "09:00", HourAndMinute(8, 10)..HourAndMinute(9, 0)),
@@ -97,7 +110,7 @@ enum class CurriculumTime(
                 override val endInclusive = other
 
                 /**
-                 * check if HourAndMinuteRange is include [value] (the [value]'s type is LocalTime)
+                 * check if HourAndMinuteRange include [value] (the [value]'s type is [LocalTime])
                  */
                 @RequiresApi(Build.VERSION_CODES.O)
                 override infix fun include(value: LocalTime): Boolean {
@@ -188,14 +201,8 @@ enum class CurriculumTime(
 
 data class CourseTime(
     val week: Weeks?,
-    val curriculumTimeRange: ClosedRange<CurriculumTime>
+    val curriculumTimeRange: ClosedRange<CurriculumTime>,
 )
-
-sealed class Response<out R> {
-    data class Loading(val data: Nothing) : Response<Nothing>()
-    data class Success<out T>(val data: T) : Response<T>()
-    data class Error(val exception: Exception) : Response<Exception>()
-}
 
 //class TimePicker()
 
@@ -211,21 +218,6 @@ data class DropDownParams(
     val semester: Int,
     val semDescription: String,
 )
-
-
-//data class Course(
-//    var id: String,
-//    var courseName: String,
-//    var className: String,
-//    var classGroup: String,
-//    var credits: String,
-//    var teachingHours: String,
-//    var isElectiveSubject: Boolean,
-//    var semesterType: String,
-//    var session: String,
-//    var professor: String,
-//    var classLocation: String
-//)
 
 interface OpenedRange<T> {
 

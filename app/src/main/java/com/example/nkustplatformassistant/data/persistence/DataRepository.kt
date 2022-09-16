@@ -2,18 +2,19 @@ package com.example.nkustplatformassistant.data.persistence
 
 import android.content.Context
 import androidx.compose.ui.graphics.ImageBitmap
-import com.example.nkustplatformassistant.data.CurriculumTime
-import com.example.nkustplatformassistant.data.DropDownParams
-import com.example.nkustplatformassistant.data.NkustEvent
-import com.example.nkustplatformassistant.data.Score
+import com.example.nkustplatformassistant.data.*
 import com.example.nkustplatformassistant.data.persistence.db.NkustDatabase
 import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntity
 import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
 import com.example.nkustplatformassistant.data.remote.NkustAccessor
-import kotlinx.coroutines.CoroutineScope
+import com.example.nkustplatformassistant.ui.home.HomeViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.example.nkustplatformassistant.data.CurriculumTime
+import java.time.Duration
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.temporal.TemporalAmount
 
 
 class DataRepository(context: Context) {
@@ -146,11 +147,44 @@ class DataRepository(context: Context) {
         return db.courseDao().getLatestCourseParams()
     }
 
-    suspend fun getCurrentCourse(/*time: CurriculumTime*/): CourseEntity {
-        val todayCourseList = getLatestCourseParams()
-        val result = db.courseDao().getSpecCourseList(
-            todayCourseList.year, todayCourseList.semester)
-        return result[0]
+    /**
+     * Get only one course for currently in course's time range,
+     * By providing [TemporalAmount] e.g. can be [java.time.Duration] or [java.time.Period]
+     * E.g: it's 11:00 AM, and we don't specify the [minuteBefore], it'll return course
+     * that exist in the interval, it maybe null if user didn't have any course
+     * to learn that day.
+     */
+    suspend fun getCurrentCourse(minuteBefore: TemporalAmount = Duration.ofMinutes(0L)): ResultOf<Any> {
+        val latestCourseList = getLatestCourseParams()
+        val courseList = db.courseDao().getSpecCourseList(
+            latestCourseList.year, latestCourseList.semester)
+
+        val todayWeek = LocalDate.now().dayOfWeek.value
+        val currentTime = LocalTime.now()
+
+        courseList.forEach { eachCourseEntity ->
+            eachCourseEntity.courseTime.forEach { courseTime ->
+                if ((courseTime.week!!.ordinal + 1) == todayWeek) {
+                    CurriculumTime.getByTime(currentTime)?.time
+                        ?.let {
+                            if ((it include (currentTime - minuteBefore)))
+                                return ResultOf.Success(mapOf<HomeViewModel.SubjectWidgetEnum, String>(
+                                    HomeViewModel.SubjectWidgetEnum.CourseName to eachCourseEntity.courseName,
+                                    HomeViewModel.SubjectWidgetEnum.ClassName to eachCourseEntity.className,
+                                    HomeViewModel.SubjectWidgetEnum.ClassLocation to eachCourseEntity.classLocation,
+                                    HomeViewModel.SubjectWidgetEnum.ClassTime to eachCourseEntity.classTime,
+                                    HomeViewModel.SubjectWidgetEnum.ClassGroup to eachCourseEntity.classGroup,
+                                    HomeViewModel.SubjectWidgetEnum.Professor to eachCourseEntity.professor,
+                                    HomeViewModel.SubjectWidgetEnum.StartTime to courseTime.curriculumTimeRange.start.time.start.toIsoDescription(),
+                                    HomeViewModel.SubjectWidgetEnum.EndTime to courseTime.curriculumTimeRange.endInclusive.time.endInclusive.toIsoDescription()
+                                ))
+                        }
+
+                }
+            }
+        }
+
+        return ResultOf.Error("No data")
     }
 
     // Schedule

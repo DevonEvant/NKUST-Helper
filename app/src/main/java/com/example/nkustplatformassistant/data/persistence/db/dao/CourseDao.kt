@@ -9,7 +9,22 @@ import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntit
 interface CourseDao {
 
     @Query("SELECT * FROM course_table WHERE year = :year AND semester = :semester")
-    fun getSpecCourseList(year: Int, semester: Int): List<CourseEntity>
+    fun getSpecCourseListNotProcessed(year: Int, semester: Int): List<CourseEntity>
+
+    @TypeConverters(DataConverter::class)
+    @Query("")
+    fun getSpecCourseList(year: Int, semester: Int): List<CourseEntity> {
+        val result = mutableListOf<CourseEntity>()
+        getSpecCourseListNotProcessed(year, semester).forEach {
+            result.add(
+                it.apply {
+                    this.courseTime = DataConverter().strToTime(this.classTime)
+                }
+            )
+        }
+        return result
+    }
+
 
     @Query("SELECT DISTINCT year,semester,semDescription FROM course_table")
     fun getDropDownList(): List<DropDownParams>

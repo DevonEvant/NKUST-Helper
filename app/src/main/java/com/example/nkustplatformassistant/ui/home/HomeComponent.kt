@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LiveData
 import androidx.navigation.NavController
+import com.example.nkustplatformassistant.data.ResultOf
 import com.example.nkustplatformassistant.navigation.Screen
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
@@ -48,71 +49,98 @@ fun HomeBase(
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    homeViewModel.dbHasData.value?.let {
-        if (!it)
-            MyIndicator(homeViewModel.startFetch(true))
+    val displayIndicator = remember { mutableStateOf(false) }
 
+    val displayContent = remember { mutableStateOf(false) }
+
+    homeViewModel.dbHasData.observeAsState(null).let {
+        println("dbHasData: ${it.value}")
+        when (it.value) {
+            true -> displayContent.value = true
+            false -> displayIndicator.value = true
+            else -> {}
+        }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-    ) {
-        Text("Today", fontWeight = FontWeight.Bold, fontSize = 44.sp)
-        Spacer(modifier = Modifier.padding(vertical = 15.dp))
+    if (displayIndicator.value) {
+        MyIndicator(homeViewModel.startFetch(true))
+    }
 
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
-            item {
-                ElevatedCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.medium,
-                ) {
-                    Column(Modifier.padding(16.dp)) {
-                        Text(text = "welcome", fontWeight = FontWeight.Bold, fontSize = 32.sp)
-                        Spacer(modifier = Modifier.padding(8.dp))
-                        Text(text = "Login for better service.", fontSize = 20.sp)
-                        Spacer(modifier = Modifier.padding(8.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.End
-                        ) {
-                            Button(onClick = {
-                                // TODO: POP dialog to confirm user's choose
-                                navController.navigate(Screen.Login.route)
-                                homeViewModel.clearDB(true)
-                            }) {
-                                Text(text = "Press me to clear DB!")
-                            }
+    if (displayContent.value) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+        ) {
+            Text("Today's Highlight", fontWeight = FontWeight.Bold, fontSize = 44.sp)
+            Spacer(modifier = Modifier.padding(vertical = 15.dp))
+
+//            LazyColumn(modifier = Modifier.fillMaxSize()) {
+//                item {
+//
+//                }
+//            }
+
+            ElevatedCard(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.medium,
+            ) {
+                Column(Modifier.padding(16.dp)) {
+                    Text(text = "welcome",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 32.sp)
+                    Spacer(modifier = Modifier.padding(8.dp))
+                    Text(text = "Login for better service.", fontSize = 20.sp)
+                    Spacer(modifier = Modifier.padding(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        Button(onClick = {
+                            // TODO: POP dialog to confirm user's choose
+                            navController.navigate(Screen.Login.route)
+                            homeViewModel.clearDB(true)
+                        }) {
+                            Text(text = "Press me to clear DB!")
                         }
                     }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.padding(vertical = 50.dp))
+            Spacer(modifier = Modifier.padding(vertical = 50.dp))
 
-        // https://google.github.io/accompanist/pager/
-        // TODO: when finish scraping, stop showing circular progress bar and show Pager
-        // loading with progress bar, when it reaches its end, show home page
+            // https://google.github.io/accompanist/pager/
+            // TODO: when finish scraping, stop showing circular progress bar and show Pager
+            // loading with progress bar, when it reaches its end, show home page
 
-        var courseWidgetParams: Map<HomeViewModel.SubjectWidgetEnum, String> = remember { mapOf() }
-        homeViewModel.courseWidgetParams.observe(lifecycleOwner) {
-            courseWidgetParams = it
-        }
+            val courseWidgetParams = remember {
+                mutableMapOf<HomeViewModel.SubjectWidgetEnum, String>()
+            }
 
-        HorizontalPager(
-            count = 3,
-            contentPadding = PaddingValues(horizontal = 32.dp)
-        ) { currentPage ->
-            when (currentPage) {
-                0 -> SubjectCard(courseWidgetParams)
-                1 -> Text(text = "22")
-                2 -> Text(text = "33")
+            homeViewModel.courseWidgetParams.observeAsState().let {
+                when (it.value) {
+                    is ResultOf.Error -> {}
+                    is ResultOf.Success -> {
+                        courseWidgetParams.putAll((it.value as ResultOf.Success<*>).value as Map<HomeViewModel.SubjectWidgetEnum, String>)
+                    }
+                    else -> {}
+                }
+            }
+
+            HorizontalPager(
+                count = 3,
+                contentPadding = PaddingValues(horizontal = 32.dp)
+            ) { currentPage ->
+                when (currentPage) {
+                    0 -> SubjectCard(courseWidgetParams)
+                    1 -> Text(text = "22")
+                    2 -> Text(text = "33")
+                }
             }
         }
     }
 }
+
 
 @Composable
 
@@ -128,7 +156,7 @@ fun MyIndicator(
 //        progress = it
 //    }
 
-    progress = indicatorProgress.observeAsState().value!!
+    progress = indicatorProgress.observeAsState(0F).value!!
 
     val progressAnimation by animateFloatAsState(
         targetValue = progress,
@@ -171,7 +199,9 @@ fun SubjectCard(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceEvenly) {
 
-            val content = if (courseWidgetParams[field].isNullOrBlank()) "Please Wait..." else courseWidgetParams[field]
+            val content =
+                if (courseWidgetParams[field].isNullOrBlank()) "Please Wait..."
+                else courseWidgetParams[field]
 
             Text(text = content!!)
             Text(text = content!!) //TODO: detail of SubjectWidget in (maybe enum class needed)
@@ -202,7 +232,7 @@ fun SubjectCard(
                             .weight(0.75F)
                             .fillMaxSize(1F)
                             .clip(shape = RoundedCornerShape(15.dp))
-                            .background(color = Color.Blue)
+                            .background(color = MaterialTheme.colorScheme.primary)
                     ) {
                         textOut(field = HomeViewModel.SubjectWidgetEnum.CourseName)
                     }
@@ -217,12 +247,7 @@ fun SubjectCard(
                                     .fillMaxSize()
                                     .padding(6.dp)
                                     .clip(shape = RoundedCornerShape(20.dp))
-                                    .background(brush = Brush.sweepGradient(
-                                        listOf(
-                                            MaterialTheme.colorScheme.primary,
-                                            MaterialTheme.colorScheme.primaryContainer
-                                        )
-                                    ))
+                                    .background(color = MaterialTheme.colorScheme.primary)
                             ) {
                                 textOut(item)
                             }
@@ -230,7 +255,6 @@ fun SubjectCard(
                     }
                 }
             }
-
 
             Row(
                 modifier = Modifier.weight(1F)
@@ -247,21 +271,9 @@ fun SubjectCard(
                             .fillMaxSize()
                             .padding(horizontal = 5.dp)
                             .clip(shape = RoundedCornerShape(3.dp))
-                            .background(brush = Brush.sweepGradient(
-                                listOf(
-                                    MaterialTheme.colorScheme.secondary,
-                                    MaterialTheme.colorScheme.secondaryContainer
-                                )
-                            ))
+                            .background(color = MaterialTheme.colorScheme.secondary)
                     ) {
-//                        when (item) {
-//                            1 -> Text(text = "1")
-//                            2 -> Text(text = "2")
-//                            3 -> Text(text = "3")
-//                            4 -> Text(text = "4")
-//                        }
                         textOut(item)
-
                     }
                 }
             }
