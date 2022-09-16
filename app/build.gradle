@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId "com.example.nkust_platform_assistant"
-        minSdk 24 // Network Security Configuration file
+        minSdk 26 // Network Security Configuration file(24), LocalDate.now()
         targetSdk 33
         versionCode 1
         versionName "1.0"
