@@ -154,7 +154,7 @@ class DataRepository(context: Context) {
      * that exist in the interval, it maybe null if user didn't have any course
      * to learn that day.
      */
-    suspend fun getCurrentCourse(minuteBefore: TemporalAmount = Duration.ofMinutes(0L)): ResultOf<Any> {
+    suspend fun getCurrentCourse(minuteBefore: TemporalAmount = Duration.ofMinutes(0L)): Map<HomeViewModel.SubjectWidgetEnum, String> {
         val latestCourseList = getLatestCourseParams()
         val courseList = db.courseDao().getSpecCourseList(
             latestCourseList.year, latestCourseList.semester)
@@ -167,8 +167,8 @@ class DataRepository(context: Context) {
                 if ((courseTime.week!!.ordinal + 1) == todayWeek) {
                     CurriculumTime.getByTime(currentTime)?.time
                         ?.let {
-                            if ((it include (currentTime - minuteBefore)))
-                                return ResultOf.Success(mapOf<HomeViewModel.SubjectWidgetEnum, String>(
+                            if ((it include (currentTime - minuteBefore))) {
+                                val mapResult = mapOf<HomeViewModel.SubjectWidgetEnum, String>(
                                     HomeViewModel.SubjectWidgetEnum.CourseName to eachCourseEntity.courseName,
                                     HomeViewModel.SubjectWidgetEnum.ClassName to eachCourseEntity.className,
                                     HomeViewModel.SubjectWidgetEnum.ClassLocation to eachCourseEntity.classLocation,
@@ -177,14 +177,16 @@ class DataRepository(context: Context) {
                                     HomeViewModel.SubjectWidgetEnum.Professor to eachCourseEntity.professor,
                                     HomeViewModel.SubjectWidgetEnum.StartTime to courseTime.curriculumTimeRange.start.time.start.toIsoDescription(),
                                     HomeViewModel.SubjectWidgetEnum.EndTime to courseTime.curriculumTimeRange.endInclusive.time.endInclusive.toIsoDescription()
-                                ))
+                                )
+                                return mapResult
+                            }
                         }
 
                 }
             }
         }
 
-        return ResultOf.Error("No data")
+        return mapOf()
     }
 
     // Schedule

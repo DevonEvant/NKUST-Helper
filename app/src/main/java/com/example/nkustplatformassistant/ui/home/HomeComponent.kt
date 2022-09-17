@@ -7,7 +7,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,17 +15,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LiveData
 import androidx.navigation.NavController
-import com.example.nkustplatformassistant.data.ResultOf
 import com.example.nkustplatformassistant.navigation.Screen
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
@@ -63,7 +62,7 @@ fun HomeBase(
     }
 
     if (displayIndicator.value) {
-        MyIndicator(homeViewModel.startFetch(true))
+        MyIndicator(homeViewModel.startFetch(true), displayContent)
     }
 
     if (displayContent.value) {
@@ -74,12 +73,6 @@ fun HomeBase(
         ) {
             Text("Today's Highlight", fontWeight = FontWeight.Bold, fontSize = 44.sp)
             Spacer(modifier = Modifier.padding(vertical = 15.dp))
-
-//            LazyColumn(modifier = Modifier.fillMaxSize()) {
-//                item {
-//
-//                }
-//            }
 
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
@@ -117,13 +110,11 @@ fun HomeBase(
                 mutableMapOf<HomeViewModel.SubjectWidgetEnum, String>()
             }
 
-            homeViewModel.courseWidgetParams.observeAsState().let {
-                when (it.value) {
-                    is ResultOf.Error -> {}
-                    is ResultOf.Success -> {
-                        courseWidgetParams.putAll((it.value as ResultOf.Success<*>).value as Map<HomeViewModel.SubjectWidgetEnum, String>)
-                    }
-                    else -> {}
+            // TODO: NO DATA state 抓不到資料
+            // Text Color: https://m3.material.io/styles/color/dynamic-color/overview
+            homeViewModel.courseWidgetParams.observeAsState(mapOf()).value.let {
+                if (it.isNotEmpty()) {
+                    courseWidgetParams.putAll(it)
                 }
             }
 
@@ -132,9 +123,13 @@ fun HomeBase(
                 contentPadding = PaddingValues(horizontal = 32.dp)
             ) { currentPage ->
                 when (currentPage) {
-                    0 -> SubjectCard(courseWidgetParams)
-                    1 -> Text(text = "22")
-                    2 -> Text(text = "33")
+                    0 -> {
+                        if (courseWidgetParams.isNotEmpty())
+                            SubjectCard(courseWidgetParams)
+                        else NoSubjectCard()
+                    }
+                    1 -> Text(text = "22", color = MaterialTheme.colorScheme.onSurface)
+                    2 -> Text(text = "33", color = MaterialTheme.colorScheme.onSurface)
                 }
             }
         }
@@ -146,6 +141,7 @@ fun HomeBase(
 
 fun MyIndicator(
     indicatorProgress: LiveData<Float>,
+    displayContent: MutableState<Boolean>,
 //    lifecycleOwner: LifecycleOwner,
 ) {
 
@@ -156,7 +152,10 @@ fun MyIndicator(
 //        progress = it
 //    }
 
-    progress = indicatorProgress.observeAsState(0F).value!!
+    progress = indicatorProgress.observeAsState(0F).value.let {
+        if (it == 1F) displayContent.value = true
+        it
+    }
 
     val progressAnimation by animateFloatAsState(
         targetValue = progress,
@@ -165,14 +164,15 @@ fun MyIndicator(
 
     LinearProgressIndicator(
         modifier =
-        if (progress != 1F) {
+        if (progress < 1F) {
             Modifier
                 .fillMaxWidth()
+                .background(color = Color.Transparent)
                 .clip(RoundedCornerShape(20.dp))
         } else {
             Modifier
                 .alpha(0F)
-        }, // Rounded edges
+        },
         progress = progressAnimation
     )
 }
@@ -183,9 +183,35 @@ fun CardPreview() {
     SubjectCard(
         mapOf()
     )
+//    HomeBase(homeViewModel = HomeViewModel(DataRepository.getInstance(LocalContext.current)),
+//        navController = rememberNavController() )
 }
 
 // TODO: Observe data is fully loaded
+
+@Composable
+fun NoSubjectCard() {
+    OutlinedCard {
+        Column(
+            modifier = Modifier
+                .size(width = 340.dp, height = 200.dp)
+                .padding(10.dp),
+            verticalArrangement = Arrangement.SpaceEvenly
+        ) {
+            // TODO: 休息時間就不算了?
+            Text(text = "You don't have any course in ${0} minutes,\njust chill and take a break.")
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Button(onClick = {/* TODO: Navigate to course page*/ }) {
+                    Text(text = "See all courses")
+                }
+            }
+        }
+    }
+}
 
 @Composable
 fun SubjectCard(
@@ -194,6 +220,15 @@ fun SubjectCard(
     // Given SubjectWidgetEnum and it'll return string
     @Composable
     fun textOut(field: HomeViewModel.SubjectWidgetEnum) {
+        var textSize by remember { mutableStateOf<IntSize?>(null) }
+        val density = LocalDensity.current
+        val maxDimensionDp = remember(textSize) {
+            textSize?.let { textSize ->
+                with(density) {
+                    maxOf(textSize.width, textSize.height).toDp()
+                }
+            }
+        }
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -201,17 +236,24 @@ fun SubjectCard(
 
             val content =
                 if (courseWidgetParams[field].isNullOrBlank()) "Please Wait..."
-                else courseWidgetParams[field]
+                else courseWidgetParams[field].toString()
 
-            Text(text = content!!)
-            Text(text = content!!) //TODO: detail of SubjectWidget in (maybe enum class needed)
+            Text(text = field.name, color = MaterialTheme.colorScheme.onTertiary,
+                onTextLayout = {
+                    textSize = it.size
+                })
+            Text(text = content, color = MaterialTheme.colorScheme.onTertiary,
+                onTextLayout = {
+                    textSize = it.size
+                })
+            //TODO: detail of SubjectWidget in (maybe enum class needed)
         }
     }
 
     Card {
         Column(
             modifier = Modifier
-                .size(width = 320.dp, height = 180.dp)
+                .size(width = 340.dp, height = 200.dp)
                 .padding(top = 10.dp, bottom = 10.dp),
 //            horizontalAlignment = Alignment.CenterHorizontally,
 //            verticalArrangement = Arrangement.Center
