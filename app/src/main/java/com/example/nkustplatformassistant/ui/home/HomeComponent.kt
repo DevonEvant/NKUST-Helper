@@ -17,13 +17,14 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.distinctUntilChanged
 import androidx.navigation.NavController
 import com.example.nkustplatformassistant.navigation.Screen
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -73,12 +74,6 @@ fun HomeBase(
             Text("Today's Highlight", fontWeight = FontWeight.Bold, fontSize = 44.sp)
             Spacer(modifier = Modifier.padding(vertical = 15.dp))
 
-//            LazyColumn(modifier = Modifier.fillMaxSize()) {
-//                item {
-//
-//                }
-//            }
-
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.medium,
@@ -117,10 +112,10 @@ fun HomeBase(
 
             // TODO: NO DATA state 抓不到資料
             // Text Color: https://m3.material.io/styles/color/dynamic-color/overview
-            val mapState = homeViewModel.courseWidgetParams.distinctUntilChanged().observeAsState(mapOf())
-            var mapValue = mapState.value
-            if (mapValue.isNotEmpty()) {
-                courseWidgetParams.putAll(mapValue)
+            homeViewModel.courseWidgetParams.observeAsState(mapOf()).value.let {
+                if (it.isNotEmpty()) {
+                    courseWidgetParams.putAll(it)
+                }
             }
 
             HorizontalPager(
@@ -128,7 +123,11 @@ fun HomeBase(
                 contentPadding = PaddingValues(horizontal = 32.dp)
             ) { currentPage ->
                 when (currentPage) {
-                    0 -> SubjectCard(courseWidgetParams)
+                    0 -> {
+                        if (courseWidgetParams.isNotEmpty())
+                            SubjectCard(courseWidgetParams)
+                        else NoSubjectCard()
+                    }
                     1 -> Text(text = "22", color = MaterialTheme.colorScheme.onSurface)
                     2 -> Text(text = "33", color = MaterialTheme.colorScheme.onSurface)
                 }
@@ -184,9 +183,35 @@ fun CardPreview() {
     SubjectCard(
         mapOf()
     )
+//    HomeBase(homeViewModel = HomeViewModel(DataRepository.getInstance(LocalContext.current)),
+//        navController = rememberNavController() )
 }
 
 // TODO: Observe data is fully loaded
+
+@Composable
+fun NoSubjectCard() {
+    OutlinedCard {
+        Column(
+            modifier = Modifier
+                .size(width = 340.dp, height = 200.dp)
+                .padding(10.dp),
+            verticalArrangement = Arrangement.SpaceEvenly
+        ) {
+            // TODO: 休息時間就不算了?
+            Text(text = "You don't have any course in ${0} minutes,\njust chill and take a break.")
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Button(onClick = {/* TODO: Navigate to course page*/ }) {
+                    Text(text = "See all courses")
+                }
+            }
+        }
+    }
+}
 
 @Composable
 fun SubjectCard(
@@ -195,6 +220,15 @@ fun SubjectCard(
     // Given SubjectWidgetEnum and it'll return string
     @Composable
     fun textOut(field: HomeViewModel.SubjectWidgetEnum) {
+        var textSize by remember { mutableStateOf<IntSize?>(null) }
+        val density = LocalDensity.current
+        val maxDimensionDp = remember(textSize) {
+            textSize?.let { textSize ->
+                with(density) {
+                    maxOf(textSize.width, textSize.height).toDp()
+                }
+            }
+        }
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -202,18 +236,24 @@ fun SubjectCard(
 
             val content =
                 if (courseWidgetParams[field].isNullOrBlank()) "Please Wait..."
-                else courseWidgetParams[field]
+                else courseWidgetParams[field].toString()
 
-            Text(text = content!!, color = MaterialTheme.colorScheme.onTertiary)
-            Text(text = content!!,
-                color = MaterialTheme.colorScheme.onTertiary) //TODO: detail of SubjectWidget in (maybe enum class needed)
+            Text(text = field.name, color = MaterialTheme.colorScheme.onTertiary,
+                onTextLayout = {
+                    textSize = it.size
+                })
+            Text(text = content, color = MaterialTheme.colorScheme.onTertiary,
+                onTextLayout = {
+                    textSize = it.size
+                })
+            //TODO: detail of SubjectWidget in (maybe enum class needed)
         }
     }
 
     Card {
         Column(
             modifier = Modifier
-                .size(width = 320.dp, height = 180.dp)
+                .size(width = 340.dp, height = 200.dp)
                 .padding(top = 10.dp, bottom = 10.dp),
 //            horizontalAlignment = Alignment.CenterHorizontally,
 //            verticalArrangement = Arrangement.Center
