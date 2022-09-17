@@ -2,6 +2,7 @@ package com.example.nkustplatformassistant.data
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.core.util.rangeTo
 import java.time.LocalTime
 
 // https://kotlinlang.org/docs/generics.html#type-projections
@@ -114,23 +115,29 @@ enum class CurriculumTime(
                  */
                 @RequiresApi(Build.VERSION_CODES.O)
                 override infix fun include(value: LocalTime): Boolean {
-                    if (value.hour in this.start.hour..this.endInclusive.hour) {
-                        if (value.hour == this.start.hour) {
-                            if (value.minute < this.start.minute)
-                                return false
-                            else if (value.minute > this.start.minute)
-                                return true
-                            return value.second >= 0
-                        } else if (value.hour == this.endInclusive.hour) {
-                            if (value.minute < this.endInclusive.minute)
-                                return true
-                            else if (value.minute > this.endInclusive.minute)
-                                return false
-                            return value.second <= 0
-                        }
+                    if (value in LocalTime.of(this.start.hour, this.start.minute)
+                        rangeTo LocalTime.of(this.endInclusive.hour, this.endInclusive.minute)
+                    ) {
                         return true
                     }
                     return false
+//                    if (value.hour in this.start.hour..this.endInclusive.hour) {
+//                        if (value.hour == this.start.hour) {
+//                            if (value.minute < this.start.minute)
+//                                return false
+//                            else if (value.minute > this.start.minute)
+//                                return true
+//                            return value.second >= 0
+//                        } else if (value.hour == this.endInclusive.hour) {
+//                            if (value.minute < this.endInclusive.minute)
+//                                return true
+//                            else if (value.minute > this.endInclusive.minute)
+//                                return false
+//                            return value.second <= 0
+//                        }
+//                        return true
+//                    }
+//                    return false
                 }
             }
         }
