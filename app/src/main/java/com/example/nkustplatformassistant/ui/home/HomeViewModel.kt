@@ -49,12 +49,10 @@ class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
     }
 
     // ResultOf.Error 表示今天沒課
-    val courseWidgetParams: LiveData<ResultOf<*>> = liveData {
-        lateinit var courseEntity: CourseEntity
+    val courseWidgetParams: LiveData<Map<SubjectWidgetEnum, String>> = liveData {
         viewModelScope.launch(Dispatchers.IO) {
-            emit(
-                dataRepository.getCurrentCourse()
-            )
+            val currentCourse = dataRepository.getCurrentCourse()
+            emit(currentCourse)
         }
     }
 }
