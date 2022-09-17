@@ -7,7 +7,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -25,8 +23,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.distinctUntilChanged
 import androidx.navigation.NavController
-import com.example.nkustplatformassistant.data.ResultOf
 import com.example.nkustplatformassistant.navigation.Screen
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
@@ -63,7 +61,7 @@ fun HomeBase(
     }
 
     if (displayIndicator.value) {
-        MyIndicator(homeViewModel.startFetch(true))
+        MyIndicator(homeViewModel.startFetch(true), displayContent)
     }
 
     if (displayContent.value) {
@@ -117,14 +115,12 @@ fun HomeBase(
                 mutableMapOf<HomeViewModel.SubjectWidgetEnum, String>()
             }
 
-            homeViewModel.courseWidgetParams.observeAsState().let {
-                when (it.value) {
-                    is ResultOf.Error -> {}
-                    is ResultOf.Success -> {
-                        courseWidgetParams.putAll((it.value as ResultOf.Success<*>).value as Map<HomeViewModel.SubjectWidgetEnum, String>)
-                    }
-                    else -> {}
-                }
+            // TODO: NO DATA state 抓不到資料
+            // Text Color: https://m3.material.io/styles/color/dynamic-color/overview
+            val mapState = homeViewModel.courseWidgetParams.distinctUntilChanged().observeAsState(mapOf())
+            var mapValue = mapState.value
+            if (mapValue.isNotEmpty()) {
+                courseWidgetParams.putAll(mapValue)
             }
 
             HorizontalPager(
@@ -133,8 +129,8 @@ fun HomeBase(
             ) { currentPage ->
                 when (currentPage) {
                     0 -> SubjectCard(courseWidgetParams)
-                    1 -> Text(text = "22")
-                    2 -> Text(text = "33")
+                    1 -> Text(text = "22", color = MaterialTheme.colorScheme.onSurface)
+                    2 -> Text(text = "33", color = MaterialTheme.colorScheme.onSurface)
                 }
             }
         }
@@ -146,6 +142,7 @@ fun HomeBase(
 
 fun MyIndicator(
     indicatorProgress: LiveData<Float>,
+    displayContent: MutableState<Boolean>,
 //    lifecycleOwner: LifecycleOwner,
 ) {
 
@@ -156,7 +153,10 @@ fun MyIndicator(
 //        progress = it
 //    }
 
-    progress = indicatorProgress.observeAsState(0F).value!!
+    progress = indicatorProgress.observeAsState(0F).value.let {
+        if (it == 1F) displayContent.value = true
+        it
+    }
 
     val progressAnimation by animateFloatAsState(
         targetValue = progress,
@@ -165,14 +165,15 @@ fun MyIndicator(
 
     LinearProgressIndicator(
         modifier =
-        if (progress != 1F) {
+        if (progress < 1F) {
             Modifier
                 .fillMaxWidth()
+                .background(color = Color.Transparent)
                 .clip(RoundedCornerShape(20.dp))
         } else {
             Modifier
                 .alpha(0F)
-        }, // Rounded edges
+        },
         progress = progressAnimation
     )
 }
@@ -203,8 +204,9 @@ fun SubjectCard(
                 if (courseWidgetParams[field].isNullOrBlank()) "Please Wait..."
                 else courseWidgetParams[field]
 
-            Text(text = content!!)
-            Text(text = content!!) //TODO: detail of SubjectWidget in (maybe enum class needed)
+            Text(text = content!!, color = MaterialTheme.colorScheme.onTertiary)
+            Text(text = content!!,
+                color = MaterialTheme.colorScheme.onTertiary) //TODO: detail of SubjectWidget in (maybe enum class needed)
         }
     }
 
