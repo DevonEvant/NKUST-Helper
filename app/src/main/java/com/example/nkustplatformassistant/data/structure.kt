@@ -155,13 +155,20 @@ enum class CurriculumTime(
     }
 
     /**
+     * declare type when you use operator rangeTo
+     */
+    abstract class CurriculumTimeRange : ClosedRange<CurriculumTime> {
+        abstract infix fun include(value: LocalTime): Boolean
+    }
+
+    /**
      * you can use operator "rangeTo" (like 1..3) and return ClosedRange<CurriculumTime>
      */
-    operator fun rangeTo(end: CurriculumTime): ClosedRange<CurriculumTime> {
+    operator fun rangeTo(end: CurriculumTime): CurriculumTimeRange {
         if (this@CurriculumTime.ordinal > end.ordinal)
             throw Error("start cannot bigger then end")
 
-        return object : ClosedRange<CurriculumTime> {
+        return object : CurriculumTimeRange() {
             override val start: CurriculumTime = this@CurriculumTime
             override val endInclusive: CurriculumTime = end
 
@@ -174,6 +181,21 @@ enum class CurriculumTime(
 
             override fun isEmpty(): Boolean = start.ordinal > endInclusive.ordinal
 
+            @RequiresApi(Build.VERSION_CODES.O)
+            override infix fun include(value: LocalTime): Boolean {
+                if (value in LocalTime.of(
+                        this.start.time.start.hour,
+                        this.start.time.start.minute
+                    )
+                    rangeTo LocalTime.of(
+                        this.endInclusive.time.endInclusive.hour,
+                        this.endInclusive.time.endInclusive.minute
+                    )
+                ) {
+                    return true
+                }
+                return false
+            }
         }
     }
 
