@@ -18,15 +18,12 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAmount
 import java.util.*
 import java.util.concurrent.Flow
-
 class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
 
 
     // https://stackoverflow.com/questions/71709590/how-to-initialize-a-field-in-viewmodel-with-suspend-method
 
-    val dbHasData: LiveData<Boolean> = liveData {
-        emit(dataRepository.checkDataIsReady())
-    }
+    val dbHasData: MutableLiveData<Boolean> = MutableLiveData(false)
 
     fun startFetch(force: Boolean): LiveData<Float> = liveData {
         if (force) {
@@ -57,14 +54,18 @@ class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
         StartTime("上課時間"), EndTime("下課時間"),
     }
 
-    private val _courseWidgetParams: MutableLiveData<Map<SubjectWidgetEnum, String>> = MutableLiveData()
+    private val _courseWidgetParams: MutableLiveData<Map<SubjectWidgetEnum, String>> =
+        MutableLiveData()
     val courseWidgetParams: LiveData<Map<SubjectWidgetEnum, String>> = _courseWidgetParams
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
-            _courseWidgetParams.postValue(
-                dataRepository.getCurrentCourse()
-            )
+            dbHasData.postValue(dataRepository.checkDataIsReady())
+
+            if (dbHasData.value!!)
+                _courseWidgetParams.postValue(
+                    dataRepository.getCurrentCourse()
+                )
         }
     }
 
@@ -77,3 +78,4 @@ class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
 //        }
 //    }
 }
+
