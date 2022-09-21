@@ -3,13 +3,14 @@ package com.example.nkustplatformassistant
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.nkustplatformassistant.data.persistence.DataRepository
 import com.example.nkustplatformassistant.navigation.Screen
+import com.example.nkustplatformassistant.ui.curriculum.CurriculumScreen
+import com.example.nkustplatformassistant.ui.curriculum.CurriculumViewModel
 import com.example.nkustplatformassistant.ui.home.HomeScreen
 import com.example.nkustplatformassistant.ui.home.HomeViewModel
 import com.example.nkustplatformassistant.ui.login.LoginParamsViewModel
@@ -47,6 +48,9 @@ class NkustActivity : ComponentActivity() {
                     }
                     composable(Screen.Login.route) {
                         LoginScreen(LoginParamsViewModel(dataRepository), navController)
+                    }
+                    composable(Screen.Curriculum.route){
+                        CurriculumScreen(CurriculumViewModel(dataRepository), navController)
                     }
                 }
             }
