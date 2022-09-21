@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.LiveData
 import androidx.navigation.NavController
 import com.example.nkustplatformassistant.navigation.Screen
@@ -71,7 +72,7 @@ fun HomeBase(
                 .fillMaxSize()
                 .padding(16.dp),
         ) {
-            Text("Today's Highlight", fontWeight = FontWeight.Bold, fontSize = 44.sp)
+            Text("Recent Highlight", fontWeight = FontWeight.Bold, fontSize = 44.sp)
             Spacer(modifier = Modifier.padding(vertical = 15.dp))
 
             ElevatedCard(
@@ -79,22 +80,43 @@ fun HomeBase(
                 shape = MaterialTheme.shapes.medium,
             ) {
                 Column(Modifier.padding(16.dp)) {
-                    Text(text = "welcome",
+                    val showConfirmDialog = remember { mutableStateOf(false) }
+                    Text(text = "Welcome!",
                         fontWeight = FontWeight.Bold,
                         fontSize = 32.sp)
                     Spacer(modifier = Modifier.padding(8.dp))
-                    Text(text = "Login for better service.", fontSize = 20.sp)
+                    Text(text = "If you faced data missing, \n" +
+                            "don't hesitate to login again refresh database.",
+                        fontSize = 20.sp)
                     Spacer(modifier = Modifier.padding(8.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.End
                     ) {
                         Button(onClick = {
-                            // TODO: POP dialog to confirm user's choose
-                            navController.navigate(Screen.Login.route)
-                            homeViewModel.clearDB(true)
+                            showConfirmDialog.value = true
                         }) {
-                            Text(text = "Press me to clear DB!")
+                            Text(text = "Press me to refresh!")
+                        }
+                    }
+                    // Confirm Dialog
+                    if (showConfirmDialog.value) {
+                        Dialog(onDismissRequest = { showConfirmDialog.value = false }) {
+                            Card {
+                                Column(modifier = Modifier.padding(10.dp),
+                                    verticalArrangement = Arrangement.SpaceEvenly) {
+                                    Text(text = "Are you sure to refresh database and login again?")
+                                    Button(onClick = { showConfirmDialog.value = false }) {
+                                        Text(text = "No")
+                                    }
+                                    Button(onClick = {
+                                        navController.navigate(Screen.Login.route)
+                                        homeViewModel.clearDB(true)
+                                    }) {
+                                        Text(text = "Yes")
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -126,7 +148,7 @@ fun HomeBase(
                     0 -> {
                         if (courseWidgetParams.isNotEmpty())
                             SubjectCard(courseWidgetParams)
-                        else NoSubjectCard()
+                        else NoSubjectCard(navController)
                     }
                     1 -> Text(text = "22", color = MaterialTheme.colorScheme.onSurface)
                     2 -> Text(text = "33", color = MaterialTheme.colorScheme.onSurface)
@@ -190,7 +212,9 @@ fun CardPreview() {
 // TODO: Observe data is fully loaded
 
 @Composable
-fun NoSubjectCard() {
+fun NoSubjectCard(
+    navController: NavController,
+) {
     OutlinedCard {
         Column(
             modifier = Modifier
@@ -205,7 +229,9 @@ fun NoSubjectCard() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                Button(onClick = {/* TODO: Navigate to course page*/ }) {
+                Button(onClick = {
+                    navController.navigate(Screen.Curriculum.route)
+                }) {
                     Text(text = "See all courses")
                 }
             }
