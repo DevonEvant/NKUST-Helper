@@ -1,23 +1,12 @@
 package com.example.nkustplatformassistant.ui.home
 
 import androidx.lifecycle.*
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.nkustplatformassistant.data.CourseTime
-import com.example.nkustplatformassistant.data.CurriculumTime
-import com.example.nkustplatformassistant.data.ResultOf
 import kotlinx.coroutines.launch
 import com.example.nkustplatformassistant.data.persistence.DataRepository
-import com.example.nkustplatformassistant.data.persistence.db.entity.Calender
-import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntity
-import com.soywiz.korma.geom.bezier.SegmentEmitter.emit
 import kotlinx.coroutines.Dispatchers
-import java.time.DayOfWeek
 import java.time.Duration
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAmount
-import java.util.*
-import java.util.concurrent.Flow
+
 class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
 
 
@@ -26,7 +15,7 @@ class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
     val dbHasData: MutableLiveData<Boolean> = MutableLiveData(false)
 
     fun startFetch(force: Boolean): LiveData<Float> = liveData {
-        if (force) {
+        if (force && DataRepository.loginState) {
             dataRepository.fetchAllScoreToDB()
             emit(0.33F)
             dataRepository.fetchCourseDataToDB()
@@ -62,10 +51,11 @@ class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             dbHasData.postValue(dataRepository.checkDataIsReady())
 
-            if (dbHasData.value!!)
+            if (dbHasData.value!!) {
                 _courseWidgetParams.postValue(
                     dataRepository.getCurrentCourse()
                 )
+            }
         }
     }
 

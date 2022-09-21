@@ -75,6 +75,11 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
     implementation 'androidx.activity:activity-compose:1.5.1'
 
+    // Constraint layout
+    implementation "androidx.constraintlayout:constraintlayout:2.1.4"
+    // To use constraintlayout in compose
+    implementation "androidx.constraintlayout:constraintlayout-compose:1.0.1"
+
     // Material Icon
     implementation "androidx.compose.material:material-icons-extended:$compose_version"
 

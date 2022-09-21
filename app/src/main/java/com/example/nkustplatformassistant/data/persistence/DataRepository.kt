@@ -21,6 +21,7 @@ class DataRepository(context: Context) {
     companion object {
         @Volatile
         private var INSTANCE: DataRepository? = null
+        var loginState = false
 
         fun getInstance(context: Context): DataRepository {
             INSTANCE ?: synchronized(this) {
@@ -30,7 +31,6 @@ class DataRepository(context: Context) {
             return INSTANCE as DataRepository
         }
     }
-
 
     private val nkustAccessor = NkustAccessor()
     private val db = NkustDatabase.getInstance(context)
@@ -54,7 +54,8 @@ class DataRepository(context: Context) {
 
     // Login...
     suspend fun userLogin(uid: String, pwd: String, etxtCode: String): Boolean {
-        return nkustAccessor.loginWebap(uid, pwd, etxtCode)
+        loginState = nkustAccessor.loginWebap(uid, pwd, etxtCode)
+        return loginState
     }
 
     suspend fun userLogin(
@@ -143,7 +144,7 @@ class DataRepository(context: Context) {
         }
     }
 
-    internal suspend fun getLatestCourseParams(): DropDownParams {
+    private suspend fun getLatestCourseParams(): DropDownParams {
         return db.courseDao().getLatestCourseParams()
     }
 
@@ -165,28 +166,29 @@ class DataRepository(context: Context) {
         courseList.forEach { eachCourseEntity ->
             eachCourseEntity.courseTime.forEach { courseTime ->
                 if ((courseTime.week!!.ordinal + 1) == todayWeek) {
-                    CurriculumTime.getByTime(currentTime)?.time
-                        ?.let {
-                            if ((it include (currentTime - minuteBefore))) {
-                                val mapResult = mapOf<HomeViewModel.SubjectWidgetEnum, String>(
-                                    HomeViewModel.SubjectWidgetEnum.CourseName to eachCourseEntity.courseName,
-                                    HomeViewModel.SubjectWidgetEnum.ClassName to eachCourseEntity.className,
-                                    HomeViewModel.SubjectWidgetEnum.ClassLocation to eachCourseEntity.classLocation,
-                                    HomeViewModel.SubjectWidgetEnum.ClassTime to eachCourseEntity.classTime,
-                                    HomeViewModel.SubjectWidgetEnum.ClassGroup to eachCourseEntity.classGroup,
-                                    HomeViewModel.SubjectWidgetEnum.Professor to eachCourseEntity.professor,
-                                    HomeViewModel.SubjectWidgetEnum.StartTime to courseTime.curriculumTimeRange.start.time.start.toIsoDescription(),
-                                    HomeViewModel.SubjectWidgetEnum.EndTime to courseTime.curriculumTimeRange.endInclusive.time.endInclusive.toIsoDescription()
-                                )
-                                return mapResult
-                            }
+                    CurriculumTime.getByTime(currentTime)?.time?.let {
+                        if ((it include (currentTime - minuteBefore))) {
+                            return mapOf(
+                                HomeViewModel.SubjectWidgetEnum.CourseName to eachCourseEntity.courseName,
+                                HomeViewModel.SubjectWidgetEnum.ClassName to eachCourseEntity.className,
+                                HomeViewModel.SubjectWidgetEnum.ClassLocation to eachCourseEntity.classLocation,
+                                HomeViewModel.SubjectWidgetEnum.ClassTime to eachCourseEntity.classTime,
+                                HomeViewModel.SubjectWidgetEnum.ClassGroup to eachCourseEntity.classGroup,
+                                HomeViewModel.SubjectWidgetEnum.Professor to eachCourseEntity.professor,
+                                HomeViewModel.SubjectWidgetEnum.StartTime to courseTime.curriculumTimeRange.start.time.start.toIsoDescription(),
+                                HomeViewModel.SubjectWidgetEnum.EndTime to courseTime.curriculumTimeRange.endInclusive.time.endInclusive.toIsoDescription()
+                            )
                         }
-
+                    }
                 }
             }
         }
 
         return mapOf()
+    }
+
+    suspend fun getSpecCurriculumCourse(year: Int, semester: Int): List<CourseEntity> {
+        return db.courseDao().getSpecCourseList(year, semester)
     }
 
     // Schedule
@@ -202,7 +204,7 @@ class DataRepository(context: Context) {
 
 }
 
-suspend fun allListToGet(nkustAccessor: NkustAccessor): List<List<String>> {
+private suspend fun allListToGet(nkustAccessor: NkustAccessor): List<List<String>> {
     val listToGet: MutableList<List<String>> = mutableListOf()
     nkustAccessor.getYearsOfDropDownListByMap()
         .forEach { (yearSemester, Description) ->
@@ -218,7 +220,7 @@ suspend fun allListToGet(nkustAccessor: NkustAccessor): List<List<String>> {
  * By using this function, you'll get a [List]<[ScoreEntity]>
  * including all score from the year you enrolled to the latest (now)
  */
-suspend fun getAllScoreToTypedScoreEntity(nkustAccessor: NkustAccessor): List<ScoreEntity> {
+private suspend fun getAllScoreToTypedScoreEntity(nkustAccessor: NkustAccessor): List<ScoreEntity> {
 
     val listToGet = allListToGet(nkustAccessor)
 
@@ -258,7 +260,7 @@ suspend fun getAllScoreToTypedScoreEntity(nkustAccessor: NkustAccessor): List<Sc
     return scoreEntityList
 }
 
-suspend fun getAllCourseToTypedCourseEntity(nkustAccessor: NkustAccessor): List<CourseEntity> {
+private suspend fun getAllCourseToTypedCourseEntity(nkustAccessor: NkustAccessor): List<CourseEntity> {
     val listToGet = allListToGet(nkustAccessor)
 
     val courseEntityList = mutableListOf<CourseEntity>()

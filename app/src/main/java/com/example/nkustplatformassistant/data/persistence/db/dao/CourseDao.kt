@@ -13,7 +13,7 @@ interface CourseDao {
 
     @TypeConverters(DataConverter::class)
     @Query("")
-    fun getSpecCourseList(year: Int, semester: Int): List<CourseEntity> {
+    suspend fun getSpecCourseList(year: Int, semester: Int): List<CourseEntity> {
         val result = mutableListOf<CourseEntity>()
         getSpecCourseListNotProcessed(year, semester).forEach {
             result.add(
