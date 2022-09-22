@@ -12,14 +12,14 @@ import kotlinx.coroutines.launch
 
 
 class CurriculumViewModel(private val dataRepository: DataRepository) : ViewModel() {
-    private val _timeVisibility = MutableLiveData(false)
-    private val _timeCodeVisibility = MutableLiveData(false)
+    private val _timeVisibility = MutableLiveData(true)
+    private val _timeCodeVisibility = MutableLiveData(true)
     private val _courses = MutableLiveData(listOf<CourseEntity>())
 
 
-    val timeVisibility: LiveData<Boolean> = _timeVisibility
-    val timeCodeVisibility: LiveData<Boolean> = _timeCodeVisibility
-    val courses: LiveData<List<CourseEntity>> = _courses
+    val timeVisibility: LiveData<Boolean> get() = _timeVisibility
+    val timeCodeVisibility: LiveData<Boolean> get() = _timeCodeVisibility
+    val courses: LiveData<List<CourseEntity>> get() = _courses
 
     fun onTimeVisibilityChange() {
         _timeVisibility.value = !_timeVisibility.value!!

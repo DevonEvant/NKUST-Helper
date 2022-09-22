@@ -15,12 +15,13 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.nkustplatformassistant.data.CurriculumTime
 import com.example.nkustplatformassistant.data.DropDownParams
 import com.example.nkustplatformassistant.data.Weeks
+import com.example.nkustplatformassistant.data.curriculumParams
 import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntity
 
 
@@ -31,6 +32,7 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
 
     val dropDownParams by curriculumViewModel.dropDownParams.observeAsState(listOf())
     val courses by curriculumViewModel.courses.observeAsState(listOf())
+    var showCurriculumTable by remember { mutableStateOf(false) }
 
     LaunchedEffect(dropDownParams) {
         if (dropDownParams.isNotEmpty()) {
@@ -38,6 +40,10 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
                 dropDownParams[0].year, dropDownParams[0].semester
             )
         }
+    }
+
+    LaunchedEffect(courses) {
+        showCurriculumTable = courses.isNotEmpty()
     }
 
     val state = rememberScrollState()
@@ -75,8 +81,8 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
 //    -----CurriculumTable-----
 //        val itemsList = (0..80).toList()
 
-        if (courses.isNotEmpty()) {
-            CurriculumTable(timeVisibility, timeCodeVisibility, courses)
+        if (showCurriculumTable) {
+            CurriculumTable(timeCodeVisibility, timeVisibility, courses)
         } else {
             Column(modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -92,8 +98,8 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
 
 @Composable
 fun CurriculumTable(
-    timeVisibility: Boolean,
     timeCodeVisibility: Boolean,
+    timeVisibility: Boolean,
     courses: List<CourseEntity>,
 ) {
     val itemToPlace: MutableMap<Weeks, List<CourseEntity>> = mutableMapOf()
@@ -109,6 +115,7 @@ fun CurriculumTable(
         }
         itemToPlace[week] = thisWeekCourseList
     }
+
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(7),
@@ -127,34 +134,25 @@ fun CurriculumTable(
                     CurriculumTimeCard(curriculumTime, timeVisibility, timeCodeVisibility)
                 }
             }
-//            index.let {
-//                courses.forEach { eachCourse ->
-//                    eachCourse.courseTime.forEach { courseTime ->
-//                        when (courseTime.week) {
-//                            Weeks.Mon -> {
-//                                curriculumParams[Weeks.Mon]
-//
-//                            }
-//                        }
-//                        if ((courseTime.curriculumTimeRange.start.ordinal) == week)
-//                    }
-//                }
-//            }
-        }
 
-        courses.forEachIndexed { index, course ->
-            val span: Int = 0
-
-            item(
-//                key = { 8 },
-//                span = {
-//                    GridItemSpan(span)
-//                }
-            ) {
-                println(course)
-                CourseCard(course)
+            for (week in Weeks.values()) {
+                curriculumParams[week]?.apply {
+                    for (gridIndex in this) {
+                        if (index == gridIndex) {
+                            itemToPlace[week]?.forEach { eachCourse ->
+                                eachCourse.courseTime.forEach {
+                                    if (curriculumParams[week]!!.indexOf(gridIndex) in
+                                        it.curriculumTimeRange.start.ordinal..
+                                        it.curriculumTimeRange.endInclusive.ordinal
+                                    ) {
+                                        CurriculumCard(courseName = eachCourse.courseName)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
-
         }
     }
 }
@@ -264,18 +262,40 @@ fun CurriculumTimeCard(
                 .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                curriculumTime.id.toString(),
-                modifier = Modifier
-                    .clip(shape)
-                    .background(Color.LightGray)
-                    .padding(2.dp)
-            )
+            Column(modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if (timeCodeVisibility) {
+                    Text(
+                        text = curriculumTime.id.toString(),
+                        modifier = Modifier
+                            .clip(shape)
+                            .background(MaterialTheme.colorScheme.onBackground)
+                            .padding(2.dp),
+                        style = TextStyle(
+                            color = MaterialTheme.colorScheme.background
+                        )
+                    )
+                }
+                if (timeVisibility) {
+                    Text(curriculumTime.time.start.toIsoDescription())
+                    Text(curriculumTime.time.endInclusive.toIsoDescription())
+                }
+            }
+        }
+    }
+}
 
-            if (timeVisibility)
-                Text(curriculumTime.time.start.toIsoDescription())
-            if (timeCodeVisibility)
-                Text(curriculumTime.time.endInclusive.toIsoDescription())
+@Composable
+fun CurriculumCard(courseName: String) {
+    Card(
+        modifier = Modifier.padding(2.dp)
+    ) {
+        Column(modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center) {
+            Text(text = courseName)
         }
     }
 }
