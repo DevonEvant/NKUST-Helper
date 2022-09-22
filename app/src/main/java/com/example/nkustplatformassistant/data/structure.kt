@@ -48,15 +48,15 @@ enum class Weeks(val shortCode: Char, val cn: String, val shortCnCode: Char) {
     }
 }
 
-//val curriculumParams: Map<Weeks, List<Int>> = mapOf(
-//    Weeks.Mon to listOf(8, 15, 22, 29, 36, 43, 50, 57, 64, 71, 78),
-//    Weeks.Tue to listOf(9, 16, 23, 30, 37, 44, 51, 58, 65, 72, 79),
-//    Weeks.Wed to listOf(10, 17, 24, 31, 38, 45, 52, 59, 66, 73, 80),
-//    Weeks.Thu to listOf(11, 18, 25, 32, 39, 46, 53, 60, 67, 74, 81),
-//    Weeks.Fri to listOf(12, 19, 26, 33, 40, 47, 54, 61, 68, 75, 82),
-//    Weeks.Sat to listOf(13, 20, 27, 34, 41, 48, 55, 62, 69, 76, 83),
+val curriculumParams: Map<Weeks, List<Int>> = mapOf(
+    Weeks.Mon to listOf(8, 15, 22, 29, 36, 43, 50, 57, 64, 71, 78),
+    Weeks.Tue to listOf(9, 16, 23, 30, 37, 44, 51, 58, 65, 72, 79),
+    Weeks.Wed to listOf(10, 17, 24, 31, 38, 45, 52, 59, 66, 73, 80),
+    Weeks.Thu to listOf(11, 18, 25, 32, 39, 46, 53, 60, 67, 74, 81),
+    Weeks.Fri to listOf(12, 19, 26, 33, 40, 47, 54, 61, 68, 75, 82),
+    Weeks.Sat to listOf(13, 20, 27, 34, 41, 48, 55, 62, 69, 76, 83),
 //    Weeks.Sun to listOf(),
-//)
+)
 //
 //fun getPos(totalItems: Int, week: Weeks): List<Int> {
 //    val result = mutableListOf<Int>()
