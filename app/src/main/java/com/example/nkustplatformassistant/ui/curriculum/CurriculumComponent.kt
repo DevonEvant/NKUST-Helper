@@ -74,7 +74,13 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
             ) { Text("End Time") }
 
             // TODO: Debug usage here
+//            val dropDownParams = listOf(
+//                DropDownParams(110,1,"110-1"),
+//                DropDownParams(110,2,"110-2"),
+//                DropDownParams(110,3,"110-3"),
+//            )
             SemesterSelector(curriculumViewModel.dropDownParams.value!!)
+//            SemesterSelector(semesterList = dropDownParams)
         }
 
         Divider()
@@ -187,7 +193,7 @@ fun SemesterSelector(semesterList: List<DropDownParams>) {
         onExpandedChange = { expanded = !expanded },
         modifier = Modifier.padding(start = 8.dp)
     ) {
-        ChipCell(state = true, onClick = { expanded = true }) {
+        ChipCell(state = true, onClick = { expanded = !expanded }) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceEvenly) {
@@ -233,7 +239,11 @@ fun WeeksCard(week: Weeks) {
 @Composable
 fun CourseCard(courseName: String) {
     Card(
-        modifier = Modifier.padding(2.dp)
+        modifier = Modifier
+            .padding(2.dp)
+            .size(
+                height = LocalDensity.current.run { gridHeight.toDp() },
+                width = LocalDensity.current.run { gridWidth.toDp() })
     ) {
         Column(modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -250,11 +260,7 @@ fun CurriculumTimeCard(
     endTimeVisibility: Boolean = true,
 ) {
     Card(
-        modifier = Modifier
-            .padding(2.dp)
-            .size(
-                height = LocalDensity.current.run { gridHeight.toDp() },
-                width = LocalDensity.current.run { gridWidth.toDp() })
+        modifier = Modifier.padding(2.dp)
     ) {
         Column(
             modifier = Modifier
