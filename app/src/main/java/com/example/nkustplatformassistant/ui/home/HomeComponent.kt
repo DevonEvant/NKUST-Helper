@@ -5,9 +5,12 @@ import android.widget.Toast
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.twotone.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -15,11 +18,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -102,20 +108,32 @@ fun HomeBase(
                     // Confirm Dialog
                     if (showConfirmDialog.value) {
                         Dialog(onDismissRequest = { showConfirmDialog.value = false }) {
-                            Card {
-                                Column(modifier = Modifier.padding(10.dp),
-                                    verticalArrangement = Arrangement.SpaceEvenly) {
-                                    Text(text = "Are you sure to refresh database and login again?")
-                                    Button(onClick = { showConfirmDialog.value = false }) {
-                                        Text(text = "No")
-                                    }
-                                    Button(onClick = {
-                                        navController.navigate(Screen.Login.route)
-                                        homeViewModel.clearDB(true)
-                                    }) {
-                                        Text(text = "Yes")
+                            Card(modifier = Modifier.padding(8.dp)) {
+                                Column(
+                                    modifier = Modifier.padding(horizontal = 8.dp,
+                                        vertical = 20.dp),
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(text = "Are you sure to refresh database and login again?",
+                                        textAlign = TextAlign.Center)
+                                    Spacer(modifier = Modifier.padding(bottom = 20.dp))
+                                    Icon(imageVector = Icons.TwoTone.Warning,
+                                        contentDescription = null, modifier = Modifier.scale(2F))
+                                    Spacer(modifier = Modifier.padding(bottom = 20.dp))
+                                    Row(modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceAround) {
+                                        Button(onClick = { showConfirmDialog.value = false }) {
+                                            Text(text = "No")
+                                        }
+                                        Button(modifier = Modifier.padding(end = 4.dp), onClick = {
+                                            navController.navigate(Screen.Login.route)
+                                            homeViewModel.clearDB(true)
+                                        }) {
+                                            Text(text = "Yes")
+                                        }
                                     }
                                 }
+
                             }
                         }
                     }

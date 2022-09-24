@@ -1,6 +1,5 @@
 package com.example.nkustplatformassistant.ui.login
 
-import android.content.Context
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.*
 import com.example.nkustplatformassistant.data.persistence.DataRepository
@@ -58,9 +57,9 @@ class LoginParamsViewModel(private val dataRepository: DataRepository) : ViewMod
     }
 
     // TODO: rewrite it to other method of Coroutine scope
-    fun loginForResult(context: Context) {
+    fun loginForResult() {
         viewModelScope.launch {
-            val state = DataRepository(context).userLogin(
+            val state = dataRepository.userLogin(
                 uid.value!!,
                 pwd.value!!,
                 etxtCode.value!!
