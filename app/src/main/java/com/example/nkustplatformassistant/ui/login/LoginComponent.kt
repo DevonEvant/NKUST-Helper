@@ -7,9 +7,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.*
 import androidx.compose.material3.*
@@ -17,10 +19,12 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -258,19 +262,7 @@ fun ShowDialogBase(
                 // Redirect to Home Page and Start fetching data to
                 // DB in HomeScreen
 
-                loginParamsViewModel.loginForResult(context)
-
-//                loginParamsViewModel.loginState.observe(lifecycleOwner) {
-//                    val state = when (it) {
-//                        1 -> true
-//                        else -> false
-//                    }
-//                    Toast.makeText(context, "Login result: $state", Toast.LENGTH_SHORT)
-//                        .show()
-//                    if (state) {
-//                        navController.navigate(Screen.Loading.route)
-//                    }
-//                }
+                loginParamsViewModel.loginForResult()
 
                 showDialog.value = false
             }
@@ -318,13 +310,12 @@ fun AlertDialogForEtxtCode(
     val etxtIsLoadingValue = etxtIsLoading.value!!
     Dialog(onDismissRequest = {}) {
         OutlinedCard(
-            modifier = Modifier.aspectRatio(1.2F),
             elevation = CardDefaults.outlinedCardElevation(15.dp),
         ) {
             Column(
                 modifier = Modifier
                     .padding(8.dp)
-                    .fillMaxSize(),
+                    .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center) {
                 Text(
@@ -341,10 +332,12 @@ fun AlertDialogForEtxtCode(
                         contentDescription = null,
                         alignment = Alignment.Center,
                         modifier = Modifier
-                            .aspectRatio(5F)
+                            .fillMaxWidth()
                             .clickable { onImageClicked.invoke() },
+                        contentScale = ContentScale.FillWidth
                     )
                 }
+
                 Spacer(modifier = Modifier.padding(5.dp))
                 OutlinedTextField(
                     value = etxtCode,
