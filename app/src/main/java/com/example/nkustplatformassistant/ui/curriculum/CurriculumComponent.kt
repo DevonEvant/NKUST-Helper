@@ -15,8 +15,12 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import com.example.nkustplatformassistant.data.CurriculumTime
 import com.example.nkustplatformassistant.data.DropDownParams
@@ -24,15 +28,15 @@ import com.example.nkustplatformassistant.data.Weeks
 import com.example.nkustplatformassistant.data.curriculumParams
 import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntity
 
+private var gridHeight = 50
+private var gridWidth = 50
 
 @Composable
 fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: NavController) {
-    val timeVisibility by curriculumViewModel.timeVisibility.observeAsState(true)
-    val timeCodeVisibility by curriculumViewModel.timeCodeVisibility.observeAsState(true)
+    val timeVisibility by curriculumViewModel.startTimeVisibility.observeAsState(true)
+    val timeCodeVisibility by curriculumViewModel.endTimeVisibility.observeAsState(true)
 
     val dropDownParams by curriculumViewModel.dropDownParams.observeAsState(listOf())
-    val courses by curriculumViewModel.courses.observeAsState(listOf())
-    var showCurriculumTable by remember { mutableStateOf(false) }
 
     LaunchedEffect(dropDownParams) {
         if (dropDownParams.isNotEmpty()) {
@@ -40,10 +44,6 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
                 dropDownParams[0].year, dropDownParams[0].semester
             )
         }
-    }
-
-    LaunchedEffect(courses) {
-        showCurriculumTable = courses.isNotEmpty()
     }
 
     val state = rememberScrollState()
@@ -65,13 +65,13 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
 
             ChipCell(
                 timeVisibility,
-                { curriculumViewModel.onTimeVisibilityChange() }
-            ) { Text("Time") }
+                { curriculumViewModel.onStartTimeVisibilityChange() }
+            ) { Text("Start Time") }
 
             ChipCell(
                 timeCodeVisibility,
-                { curriculumViewModel.onTimeCodeVisibilityChange() }
-            ) { Text("Time Code") }
+                { curriculumViewModel.onEndTimeVisibilityChange() }
+            ) { Text("End Time") }
 
             // TODO: Debug usage here
             SemesterSelector(curriculumViewModel.dropDownParams.value!!)
@@ -80,8 +80,9 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
         Divider()
 //    -----CurriculumTable-----
 //        val itemsList = (0..80).toList()
+        val courses by curriculumViewModel.courses.observeAsState(listOf())
 
-        if (showCurriculumTable) {
+        if (courses.isNotEmpty()) {
             CurriculumTable(timeCodeVisibility, timeVisibility, courses)
         } else {
             Column(modifier = Modifier.fillMaxSize(),
@@ -92,14 +93,13 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
                 CircularProgressIndicator()
             }
         }
-
     }
 }
 
 @Composable
 fun CurriculumTable(
-    timeCodeVisibility: Boolean,
-    timeVisibility: Boolean,
+    startTimeVisibility: Boolean,
+    endTimeVisibility: Boolean,
     courses: List<CourseEntity>,
 ) {
     val itemToPlace: MutableMap<Weeks, List<CourseEntity>> = mutableMapOf()
@@ -131,7 +131,7 @@ fun CurriculumTable(
                 }
                 index % 7 == 0 -> {
                     val curriculumTime = CurriculumTime[(index / 7) - 1]
-                    CurriculumTimeCard(curriculumTime, timeVisibility, timeCodeVisibility)
+                    CurriculumTimeCard(curriculumTime, endTimeVisibility, startTimeVisibility)
                 }
             }
 
@@ -145,7 +145,7 @@ fun CurriculumTable(
                                         it.curriculumTimeRange.start.ordinal..
                                         it.curriculumTimeRange.endInclusive.ordinal
                                     ) {
-                                        CurriculumCard(courseName = eachCourse.courseName)
+                                        CourseCard(courseName = eachCourse.courseName)
                                     }
                                 }
                             }
@@ -231,64 +231,7 @@ fun WeeksCard(week: Weeks) {
 }
 
 @Composable
-fun CourseCard(course: CourseEntity) {
-    Card(
-        modifier = Modifier.padding(2.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(12.dp),
-        ) {
-//            todo option
-
-            Text(course.courseName)
-//            Text(course.professor)
-            Text(course.classLocation)
-        }
-    }
-}
-
-@Composable
-fun CurriculumTimeCard(
-    curriculumTime: CurriculumTime,
-    timeVisibility: Boolean = true,
-    timeCodeVisibility: Boolean = true,
-) {
-    Card(
-        modifier = Modifier.padding(2.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Column(modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                if (timeCodeVisibility) {
-                    Text(
-                        text = curriculumTime.id.toString(),
-                        modifier = Modifier
-                            .clip(shape)
-                            .background(MaterialTheme.colorScheme.onBackground)
-                            .padding(2.dp),
-                        style = TextStyle(
-                            color = MaterialTheme.colorScheme.background
-                        )
-                    )
-                }
-                if (timeVisibility) {
-                    Text(curriculumTime.time.start.toIsoDescription())
-                    Text(curriculumTime.time.endInclusive.toIsoDescription())
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun CurriculumCard(courseName: String) {
+fun CourseCard(courseName: String) {
     Card(
         modifier = Modifier.padding(2.dp)
     ) {
@@ -299,6 +242,54 @@ fun CurriculumCard(courseName: String) {
         }
     }
 }
+
+@Composable
+fun CurriculumTimeCard(
+    curriculumTime: CurriculumTime,
+    startTimeVisibility: Boolean = true,
+    endTimeVisibility: Boolean = true,
+) {
+    Card(
+        modifier = Modifier
+            .padding(2.dp)
+            .size(
+                height = LocalDensity.current.run { gridHeight.toDp() },
+                width = LocalDensity.current.run { gridWidth.toDp() })
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp)
+                .onGloballyPositioned {
+                    gridHeight = it.size.height
+                    gridWidth = it.size.width
+                },
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Column(modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+
+                Text(
+                    text = curriculumTime.id.toString(),
+                    modifier = Modifier
+                        .clip(shape)
+                        .background(MaterialTheme.colorScheme.onBackground)
+                        .padding(2.dp),
+                    style = TextStyle(
+                        color = MaterialTheme.colorScheme.background
+                    )
+                )
+                when {
+                    startTimeVisibility -> Text(curriculumTime.time.start.toIsoDescription())
+                    endTimeVisibility -> Text(curriculumTime.time.endInclusive.toIsoDescription())
+                }
+            }
+        }
+    }
+}
+
 
 //{ //top
 //    item(span = { GridItemSpan(6) }) { TopInfo() } //一行2個
