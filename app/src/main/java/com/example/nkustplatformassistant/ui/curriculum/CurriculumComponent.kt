@@ -17,8 +17,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import com.example.nkustplatformassistant.data.CurriculumTime
 import com.example.nkustplatformassistant.data.DropDownParams
@@ -31,15 +33,10 @@ private var gridWidth = 50
 
 @Composable
 fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: NavController) {
-    val timeVisibility by curriculumViewModel.startTimeVisibility.observeAsState(true)
-    val timeCodeVisibility by curriculumViewModel.endTimeVisibility.observeAsState(true)
+    val startTimeVisibility by curriculumViewModel.startTimeVisibility.observeAsState(true)
+    val endTimeVisibility by curriculumViewModel.endTimeVisibility.observeAsState(true)
+
     val dropDownParams by curriculumViewModel.dropDownParams.observeAsState(listOf())
-    val courses by curriculumViewModel.courses.observeAsState(listOf())
-
-
-
-//    val state = rememberScrollState()
-//    LaunchedEffect(Unit) { state.animateScrollTo(0) }
 
     LaunchedEffect(dropDownParams) {
         if (dropDownParams.isNotEmpty()) {
@@ -49,10 +46,13 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
         }
     }
 
+    val state = rememberScrollState()
+    LaunchedEffect(Unit) { state.animateScrollTo(0) }
+
     Column(modifier = Modifier.padding(8.dp)) {
 //    -----DisplayOption-----
         Row(
-//            modifier = Modifier.horizontalScroll(state),
+            modifier = Modifier.horizontalScroll(state),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -64,12 +64,12 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
             Text(text = "Display:")
 
             ChipCell(
-                timeVisibility,
+                startTimeVisibility,
                 { curriculumViewModel.onStartTimeVisibilityChange() }
             ) { Text("Start Time") }
 
             ChipCell(
-                timeCodeVisibility,
+                endTimeVisibility,
                 { curriculumViewModel.onEndTimeVisibilityChange() }
             ) { Text("End Time") }
 
@@ -87,13 +87,16 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
         Divider()
 //    -----CurriculumTable-----
 //        val itemsList = (0..80).toList()
+        val courses by curriculumViewModel.courses.observeAsState(listOf())
 
         if (courses.isNotEmpty()) {
-            CurriculumTable(timeCodeVisibility, timeVisibility, courses)
+            CurriculumTable( startTimeVisibility,endTimeVisibility, courses)
         } else {
-            Column(modifier = Modifier.fillMaxSize(),
+            Column(
+                modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center) {
+                verticalArrangement = Arrangement.Center
+            ) {
                 Text(text = "Please wait a while...")
                 Spacer(modifier = Modifier.padding(bottom = 20.dp))
                 CircularProgressIndicator()
@@ -125,7 +128,9 @@ fun CurriculumTable(
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(7),
-        contentPadding = PaddingValues(vertical = 8.dp)
+        contentPadding = PaddingValues(vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
 
         items(83) { index ->
@@ -137,7 +142,7 @@ fun CurriculumTable(
                 }
                 index % 7 == 0 -> {
                     val curriculumTime = CurriculumTime[(index / 7) - 1]
-                    CurriculumTimeCard(curriculumTime, endTimeVisibility, startTimeVisibility)
+                    CurriculumTimeCard(curriculumTime,startTimeVisibility, endTimeVisibility)
                 }
             }
 
@@ -187,7 +192,6 @@ fun SemesterSelector(
 
     var expanded by remember { mutableStateOf(false) }
 
-
     // TODO: wait until all data is ready and display
     var selectedOption by remember {
         mutableStateOf(
@@ -207,10 +211,13 @@ fun SemesterSelector(
         ChipCell(state = true, onClick = { expanded = !expanded }) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceEvenly) {
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
                 Text(text = selectedOption)
-                Icon(imageVector = if (expanded) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown,
-                    contentDescription = null)
+                Icon(
+                    imageVector = if (expanded) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown,
+                    contentDescription = null
+                )
             }
         }
 
@@ -236,7 +243,7 @@ fun SemesterSelector(
 @Composable
 fun WeeksCard(week: Weeks) {
     Card(
-        modifier = Modifier.padding(2.dp),
+//        modifier = Modifier.padding(2.dp),
     ) {
         Column(
             modifier = Modifier
@@ -253,14 +260,20 @@ fun WeeksCard(week: Weeks) {
 fun CourseCard(courseName: String) {
     Card(
         modifier = Modifier
-            .padding(2.dp)
-            .size(
-                height = LocalDensity.current.run { gridHeight.toDp() },
-                width = LocalDensity.current.run { gridWidth.toDp() })
+//            .padding(2.dp)
+//            .size(
+//                height = LocalDensity.current.run { gridHeight.toDp() },
+//                width = LocalDensity.current.run { gridWidth.toDp() })
     ) {
-        Column(modifier = Modifier.fillMaxSize(),
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .size(
+                    height = LocalDensity.current.run { gridHeight.toDp() },
+                    width = LocalDensity.current.run { gridWidth.toDp() }),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center) {
+            verticalArrangement = Arrangement.Center
+        ) {
             Text(text = courseName)
         }
     }
@@ -273,19 +286,20 @@ fun CurriculumTimeCard(
     endTimeVisibility: Boolean = true,
 ) {
     Card(
-        modifier = Modifier.padding(2.dp)
+//        modifier = Modifier.padding(2.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp)
                 .onGloballyPositioned {
                     gridHeight = it.size.height
                     gridWidth = it.size.width
-                },
+                }
+                .padding(vertical = 5.dp, horizontal = 2.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(modifier = Modifier.fillMaxSize(),
+            Column(
+                modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -300,10 +314,8 @@ fun CurriculumTimeCard(
                         color = MaterialTheme.colorScheme.background
                     )
                 )
-                when {
-                    startTimeVisibility -> Text(curriculumTime.time.start.toIsoDescription())
-                    endTimeVisibility -> Text(curriculumTime.time.endInclusive.toIsoDescription())
-                }
+                if (startTimeVisibility) Text(curriculumTime.time.start.toIsoDescription())
+                if (endTimeVisibility) Text(curriculumTime.time.endInclusive.toIsoDescription())
             }
         }
     }
