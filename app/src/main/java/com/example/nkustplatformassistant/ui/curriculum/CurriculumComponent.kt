@@ -22,10 +22,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
-import com.example.nkustplatformassistant.data.CurriculumTime
-import com.example.nkustplatformassistant.data.DropDownParams
-import com.example.nkustplatformassistant.data.Weeks
-import com.example.nkustplatformassistant.data.curriculumParams
+import com.example.nkustplatformassistant.data.*
 import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntity
 
 private var gridHeight = 50
@@ -33,8 +30,8 @@ private var gridWidth = 50
 
 @Composable
 fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: NavController) {
-    val timeVisibility by curriculumViewModel.startTimeVisibility.observeAsState(true)
-    val timeCodeVisibility by curriculumViewModel.endTimeVisibility.observeAsState(true)
+    val startTimeVisibility by curriculumViewModel.startTimeVisibility.observeAsState(true)
+    val endTimeVisibility by curriculumViewModel.endTimeVisibility.observeAsState(true)
 
     val dropDownParams by curriculumViewModel.dropDownParams.observeAsState(listOf())
 
@@ -64,12 +61,12 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
             Text(text = "Display:")
 
             ChipCell(
-                timeVisibility,
+                startTimeVisibility,
                 { curriculumViewModel.onStartTimeVisibilityChange() }
             ) { Text("Start Time") }
 
             ChipCell(
-                timeCodeVisibility,
+                endTimeVisibility,
                 { curriculumViewModel.onEndTimeVisibilityChange() }
             ) { Text("End Time") }
 
@@ -85,15 +82,39 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
 
         Divider()
 //    -----CurriculumTable-----
-//        val itemsList = (0..80).toList()
-        val courses by curriculumViewModel.courses.observeAsState(listOf())
+//        val a = CourseEntity(
+//            1111,
+//            1,
+//            1,
+//            "123",
+//            "123",
+//            "123",
+//            "123",
+//            "123",
+//            "123",
+//            "123",
+//            "123",
+//            "123",
+//            true
+//        )
+//        a.courseTime = listOf<CourseTime>(
+//            CourseTime(
+//                Weeks.Wed,
+//                CurriculumTime._3..CurriculumTime._5,
+//            )
+//        )
+
+//        val courses by curriculumViewModel.courses.observeAsState(listOf(a))
+            val courses by curriculumViewModel.courses.observeAsState(listOf())
 
         if (courses.isNotEmpty()) {
-            CurriculumTable(timeCodeVisibility, timeVisibility, courses)
+            CurriculumTable( startTimeVisibility,endTimeVisibility, courses)
         } else {
-            Column(modifier = Modifier.fillMaxSize(),
+            Column(
+                modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center) {
+                verticalArrangement = Arrangement.Center
+            ) {
                 Text(text = "Please wait a while...")
                 Spacer(modifier = Modifier.padding(bottom = 20.dp))
                 CircularProgressIndicator()
@@ -125,7 +146,9 @@ fun CurriculumTable(
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(7),
-        contentPadding = PaddingValues(vertical = 8.dp)
+        contentPadding = PaddingValues(vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
 
         items(83) { index ->
@@ -137,7 +160,7 @@ fun CurriculumTable(
                 }
                 index % 7 == 0 -> {
                     val curriculumTime = CurriculumTime[(index / 7) - 1]
-                    CurriculumTimeCard(curriculumTime, endTimeVisibility, startTimeVisibility)
+                    CurriculumTimeCard(curriculumTime,startTimeVisibility, endTimeVisibility)
                 }
             }
 
@@ -196,10 +219,13 @@ fun SemesterSelector(semesterList: List<DropDownParams>) {
         ChipCell(state = true, onClick = { expanded = !expanded }) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceEvenly) {
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
                 Text(text = selectedOption)
-                Icon(imageVector = if (expanded) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown,
-                    contentDescription = null)
+                Icon(
+                    imageVector = if (expanded) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown,
+                    contentDescription = null
+                )
             }
         }
 
@@ -223,7 +249,7 @@ fun SemesterSelector(semesterList: List<DropDownParams>) {
 @Composable
 fun WeeksCard(week: Weeks) {
     Card(
-        modifier = Modifier.padding(2.dp),
+//        modifier = Modifier.padding(2.dp),
     ) {
         Column(
             modifier = Modifier
@@ -240,14 +266,20 @@ fun WeeksCard(week: Weeks) {
 fun CourseCard(courseName: String) {
     Card(
         modifier = Modifier
-            .padding(2.dp)
-            .size(
-                height = LocalDensity.current.run { gridHeight.toDp() },
-                width = LocalDensity.current.run { gridWidth.toDp() })
+//            .padding(2.dp)
+//            .size(
+//                height = LocalDensity.current.run { gridHeight.toDp() },
+//                width = LocalDensity.current.run { gridWidth.toDp() })
     ) {
-        Column(modifier = Modifier.fillMaxSize(),
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .size(
+                    height = LocalDensity.current.run { gridHeight.toDp() },
+                    width = LocalDensity.current.run { gridWidth.toDp() }),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center) {
+            verticalArrangement = Arrangement.Center
+        ) {
             Text(text = courseName)
         }
     }
@@ -260,19 +292,20 @@ fun CurriculumTimeCard(
     endTimeVisibility: Boolean = true,
 ) {
     Card(
-        modifier = Modifier.padding(2.dp)
+//        modifier = Modifier.padding(2.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp)
                 .onGloballyPositioned {
                     gridHeight = it.size.height
                     gridWidth = it.size.width
-                },
+                }
+                .padding(vertical = 5.dp, horizontal = 2.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(modifier = Modifier.fillMaxSize(),
+            Column(
+                modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -287,10 +320,8 @@ fun CurriculumTimeCard(
                         color = MaterialTheme.colorScheme.background
                     )
                 )
-                when {
-                    startTimeVisibility -> Text(curriculumTime.time.start.toIsoDescription())
-                    endTimeVisibility -> Text(curriculumTime.time.endInclusive.toIsoDescription())
-                }
+                if (startTimeVisibility) Text(curriculumTime.time.start.toIsoDescription())
+                if (endTimeVisibility) Text(curriculumTime.time.endInclusive.toIsoDescription())
             }
         }
     }
