@@ -17,10 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import com.example.nkustplatformassistant.data.CurriculumTime
 import com.example.nkustplatformassistant.data.DropDownParams
@@ -35,8 +33,13 @@ private var gridWidth = 50
 fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: NavController) {
     val timeVisibility by curriculumViewModel.startTimeVisibility.observeAsState(true)
     val timeCodeVisibility by curriculumViewModel.endTimeVisibility.observeAsState(true)
-
     val dropDownParams by curriculumViewModel.dropDownParams.observeAsState(listOf())
+    val courses by curriculumViewModel.courses.observeAsState(listOf())
+
+
+
+//    val state = rememberScrollState()
+//    LaunchedEffect(Unit) { state.animateScrollTo(0) }
 
     LaunchedEffect(dropDownParams) {
         if (dropDownParams.isNotEmpty()) {
@@ -46,13 +49,10 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
         }
     }
 
-    val state = rememberScrollState()
-    LaunchedEffect(Unit) { state.animateScrollTo(0) }
-
     Column(modifier = Modifier.padding(8.dp)) {
 //    -----DisplayOption-----
         Row(
-            modifier = Modifier.horizontalScroll(state),
+//            modifier = Modifier.horizontalScroll(state),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -79,14 +79,14 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
 //                DropDownParams(110,2,"110-2"),
 //                DropDownParams(110,3,"110-3"),
 //            )
-            SemesterSelector(curriculumViewModel.dropDownParams.value!!)
-//            SemesterSelector(semesterList = dropDownParams)
+            SemesterSelector(dropDownParams) {
+                curriculumViewModel.onSelectDropDownChange(it)
+            }
         }
 
         Divider()
 //    -----CurriculumTable-----
 //        val itemsList = (0..80).toList()
-        val courses by curriculumViewModel.courses.observeAsState(listOf())
 
         if (courses.isNotEmpty()) {
             CurriculumTable(timeCodeVisibility, timeVisibility, courses)
@@ -181,12 +181,23 @@ fun ChipCell(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SemesterSelector(semesterList: List<DropDownParams>) {
+fun SemesterSelector(
+    dropDownList: List<DropDownParams>,
+    onSelectDropDownChange:(DropDownParams) -> Unit) {
+
     var expanded by remember { mutableStateOf(false) }
 
+
     // TODO: wait until all data is ready and display
-    var selectedOption: String =
-        if (semesterList.isNotEmpty()) semesterList.first().semDescription else "Null"
+    var selectedOption by remember {
+        mutableStateOf(
+            if (dropDownList.isNotEmpty()) {
+                dropDownList.first().semDescription
+            } else {
+                "null"
+            }
+        )
+    }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -207,13 +218,15 @@ fun SemesterSelector(semesterList: List<DropDownParams>) {
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            semesterList.forEach {
+            dropDownList.forEach {
                 DropdownMenuItem(
                     text = { Text(text = it.semDescription) },
                     onClick = {
+                        onSelectDropDownChange.invoke(it)
                         selectedOption = it.semDescription
                         expanded = false
-                    })
+                    }
+                )
             }
         }
     }
