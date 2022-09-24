@@ -13,7 +13,7 @@ interface ScoreDao {
     @Query("SELECT * FROM score_table WHERE year = :year AND semester = :semester")
     fun getSpecScoreList(year: Int, semester: Int): List<ScoreEntity>
 
-    @Query("SELECT DISTINCT year,semester,semDescription FROM SCORE_TABLE ORDER BY YEAR, SEMESTER DESC")
+    @Query("SELECT DISTINCT year,semester,semDescription FROM SCORE_TABLE ORDER BY YEAR DESC, SEMESTER DESC")
     fun getDropDownList(): List<DropDownParams>
 
     @Query("SELECT DISTINCT year,semester,semDescription FROM SCORE_TABLE ORDER BY semester,year LIMIT 1")
