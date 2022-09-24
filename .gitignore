@@ -88,3 +88,7 @@ lint/tmp/
 etxt.jpg
 /.idea/discord.xml
 /.idea/deploymentTargetDropDown.xml
+
+
+codeStyleConfig.xml
+Project.xml
