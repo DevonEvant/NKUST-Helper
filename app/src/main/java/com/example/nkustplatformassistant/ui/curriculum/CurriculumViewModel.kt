@@ -52,31 +52,6 @@ class CurriculumViewModel(private val dataRepository: DataRepository) : ViewMode
         }
     }
 
-//    fun t() {
-//        val a = CourseEntity(
-//            1,
-//            1,
-//            1,
-//            "1",
-//            "1",
-//            "1",
-//            "1",
-//            "1",
-//            "1",
-//            "1",
-//            "1",
-//            "1",
-//            false
-//        ).let {
-//            it.courseTime = listOf(CourseTime(
-//                week = Weeks.Wed,
-//                curriculumTimeRange = CurriculumTime._2..CurriculumTime._8
-//            ))
-//            it
-//        }
-//        _courses.postValue(listOf(a))
-//    }
-
 }
 
 
