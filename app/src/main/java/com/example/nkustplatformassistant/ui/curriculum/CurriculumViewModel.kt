@@ -16,14 +16,11 @@ class CurriculumViewModel(private val dataRepository: DataRepository) : ViewMode
     private val _endTimeVisibility = MutableLiveData(true)
     private val _courses = MutableLiveData(listOf<CourseEntity>())
     private val _dropDownParams = MutableLiveData(listOf<DropDownParams>())
-    private val _currSelectDropDown = MutableLiveData(
-        DropDownParams(-1, -1, ""))
 
     val startTimeVisibility: LiveData<Boolean> get() = _startTimeVisibility
     val endTimeVisibility: LiveData<Boolean> get() = _endTimeVisibility
     val courses: LiveData<List<CourseEntity>> get() = _courses
     val dropDownParams: LiveData<List<DropDownParams>> = _dropDownParams
-    val currSelectDropDown: LiveData<DropDownParams> get() = _currSelectDropDown
 
     fun onStartTimeVisibilityChange() {
         _startTimeVisibility.value = !_startTimeVisibility.value!!
@@ -33,19 +30,15 @@ class CurriculumViewModel(private val dataRepository: DataRepository) : ViewMode
         _endTimeVisibility.value = !_endTimeVisibility.value!!
     }
 
-    fun updataCourses(refresh: Boolean = false) {
-//        _courses.value =
-    }
-
     // TODO: check before display and show circular progress bar
     init {
         viewModelScope.launch(Dispatchers.IO) {
             dataRepository.getDropDownListFromDB().let {
                 _dropDownParams.postValue(it)
-                _currSelectDropDown.postValue(it[0])
             }
         }
     }
+
 
     suspend fun getCourse(year: Int, semester: Int) {
         viewModelScope.launch(Dispatchers.IO) {
