@@ -1,13 +1,18 @@
 package com.example.nkustplatformassistant.ui.curriculum
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.twotone.Person
 import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialogDefaults.shape
 import androidx.compose.runtime.*
@@ -17,12 +22,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.LifecycleOwner
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.distinctUntilChanged
 import androidx.navigation.NavController
-import com.example.nkustplatformassistant.data.*
+import com.example.nkustplatformassistant.data.CurriculumTime
+import com.example.nkustplatformassistant.data.DropDownParams
+import com.example.nkustplatformassistant.data.Weeks
+import com.example.nkustplatformassistant.data.curriculumParams
 import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntity
 
 private var gridHeight = 50
@@ -32,19 +45,18 @@ private var gridWidth = 50
 fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: NavController) {
     val startTimeVisibility by curriculumViewModel.startTimeVisibility.observeAsState(true)
     val endTimeVisibility by curriculumViewModel.endTimeVisibility.observeAsState(true)
-
     val dropDownParams by curriculumViewModel.dropDownParams.observeAsState(listOf())
+    val courses by curriculumViewModel.courses.distinctUntilChanged().observeAsState(listOf())
+    val state = rememberScrollState(0)
 
-    LaunchedEffect(dropDownParams) {
+
+    LaunchedEffect(dropDownParams, courses) {
         if (dropDownParams.isNotEmpty()) {
             curriculumViewModel.getCourse(
                 dropDownParams[0].year, dropDownParams[0].semester
             )
         }
     }
-
-    val state = rememberScrollState()
-    LaunchedEffect(Unit) { state.animateScrollTo(0) }
 
     Column(modifier = Modifier.padding(8.dp)) {
 //    -----DisplayOption-----
@@ -76,39 +88,17 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
 //                DropDownParams(110,2,"110-2"),
 //                DropDownParams(110,3,"110-3"),
 //            )
-            SemesterSelector(curriculumViewModel.dropDownParams.value!!)
-//            SemesterSelector(semesterList = dropDownParams)
+            SemesterSelector(dropDownParams) {
+                curriculumViewModel.onSelectDropDownChange(it)
+            }
         }
 
         Divider()
 //    -----CurriculumTable-----
-//        val a = CourseEntity(
-//            1111,
-//            1,
-//            1,
-//            "123",
-//            "123",
-//            "123",
-//            "123",
-//            "123",
-//            "123",
-//            "123",
-//            "123",
-//            "123",
-//            true
-//        )
-//        a.courseTime = listOf<CourseTime>(
-//            CourseTime(
-//                Weeks.Wed,
-//                CurriculumTime._3..CurriculumTime._5,
-//            )
-//        )
-
-//        val courses by curriculumViewModel.courses.observeAsState(listOf(a))
-            val courses by curriculumViewModel.courses.observeAsState(listOf())
+//        val itemsList = (0..80).toList()
 
         if (courses.isNotEmpty()) {
-            CurriculumTable( startTimeVisibility,endTimeVisibility, courses)
+            CurriculumTable(startTimeVisibility, endTimeVisibility, courses)
         } else {
             Column(
                 modifier = Modifier.fillMaxSize(),
@@ -145,6 +135,7 @@ fun CurriculumTable(
 
 
     LazyVerticalGrid(
+        modifier = Modifier.animateContentSize(),
         columns = GridCells.Fixed(7),
         contentPadding = PaddingValues(vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -160,7 +151,7 @@ fun CurriculumTable(
                 }
                 index % 7 == 0 -> {
                     val curriculumTime = CurriculumTime[(index / 7) - 1]
-                    CurriculumTimeCard(curriculumTime,startTimeVisibility, endTimeVisibility)
+                    CurriculumTimeCard(curriculumTime, startTimeVisibility, endTimeVisibility)
                 }
             }
 
@@ -174,7 +165,7 @@ fun CurriculumTable(
                                         it.curriculumTimeRange.start.ordinal..
                                         it.curriculumTimeRange.endInclusive.ordinal
                                     ) {
-                                        CourseCard(courseName = eachCourse.courseName)
+                                        CourseCard(course = eachCourse)
                                     }
                                 }
                             }
@@ -204,12 +195,23 @@ fun ChipCell(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SemesterSelector(semesterList: List<DropDownParams>) {
+fun SemesterSelector(
+    dropDownList: List<DropDownParams>,
+    onSelectDropDownChange: (DropDownParams) -> Unit,
+) {
+
     var expanded by remember { mutableStateOf(false) }
 
     // TODO: wait until all data is ready and display
-    var selectedOption: String =
-        if (semesterList.isNotEmpty()) semesterList.first().semDescription else "Null"
+    var selectedOption by remember {
+        mutableStateOf(
+            if (dropDownList.isNotEmpty()) {
+                dropDownList.first().semDescription
+            } else {
+                "null"
+            }
+        )
+    }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -233,13 +235,15 @@ fun SemesterSelector(semesterList: List<DropDownParams>) {
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            semesterList.forEach {
+            dropDownList.forEach {
                 DropdownMenuItem(
                     text = { Text(text = it.semDescription) },
                     onClick = {
+                        onSelectDropDownChange.invoke(it)
                         selectedOption = it.semDescription
                         expanded = false
-                    })
+                    }
+                )
             }
         }
     }
@@ -263,9 +267,10 @@ fun WeeksCard(week: Weeks) {
 }
 
 @Composable
-fun CourseCard(courseName: String) {
+fun CourseCard(course: CourseEntity) {
+    var showCourseDetail by remember { mutableStateOf(false) }
+
     Card(
-        modifier = Modifier
 //            .padding(2.dp)
 //            .size(
 //                height = LocalDensity.current.run { gridHeight.toDp() },
@@ -276,11 +281,39 @@ fun CourseCard(courseName: String) {
                 .fillMaxSize()
                 .size(
                     height = LocalDensity.current.run { gridHeight.toDp() },
-                    width = LocalDensity.current.run { gridWidth.toDp() }),
+                    width = LocalDensity.current.run { gridWidth.toDp() })
+                .animateContentSize()
+                .clickable { showCourseDetail = true },
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(text = courseName)
+            Text(text = course.courseName)
+        }
+    }
+
+    if (showCourseDetail) {
+        Dialog(onDismissRequest = { showCourseDetail = false }) {
+            CourseDetail(course = course)
+        }
+    }
+}
+
+@Composable
+fun CourseDetail(course: CourseEntity) {
+    OutlinedCard {
+        Column(modifier = Modifier.padding(8.dp)) {
+            Text(text = buildAnnotatedString {
+                appendInlineContent("course")
+                append("課程名稱")
+            }, inlineContent = mapOf(
+                Pair("course", InlineTextContent(
+                    Placeholder( 1.7.em, height = 23.sp, placeholderVerticalAlign = PlaceholderVerticalAlign.TextTop)
+                ){
+                    Icon(imageVector = Icons.TwoTone.Person, contentDescription = null)
+                })
+            ))
+
+
         }
     }
 }
@@ -293,6 +326,9 @@ fun CurriculumTimeCard(
 ) {
     Card(
 //        modifier = Modifier.padding(2.dp)
+        modifier = Modifier
+            .fillMaxSize()
+            .animateContentSize(),
     ) {
         Column(
             modifier = Modifier
