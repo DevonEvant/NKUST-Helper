@@ -78,7 +78,12 @@ fun HomeBase(
                 .fillMaxSize()
                 .padding(16.dp),
         ) {
-            Text("Recent Highlight", fontWeight = FontWeight.Bold, fontSize = 44.sp)
+            Text(
+                "Recent Highlight",
+                fontWeight = FontWeight.Bold,
+                fontSize = 44.sp,
+                lineHeight = 40.sp
+            )
             Spacer(modifier = Modifier.padding(vertical = 15.dp))
 
             ElevatedCard(
@@ -87,13 +92,16 @@ fun HomeBase(
             ) {
                 Column(Modifier.padding(16.dp)) {
                     val showConfirmDialog = remember { mutableStateOf(false) }
-                    Text(text = "Welcome!",
+                    Text(
+                        text = "Welcome!",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 32.sp)
+                        fontSize = 32.sp
+                    )
                     Spacer(modifier = Modifier.padding(8.dp))
-                    Text(text = "If you faced data missing, \n" +
-                            "don't hesitate to login again refresh database.",
-                        fontSize = 20.sp)
+                    Text(
+                        text = "If you faced data missing, don't hesitate to login again refresh database.",
+                        fontSize = 20.sp
+                    )
                     Spacer(modifier = Modifier.padding(8.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -110,18 +118,27 @@ fun HomeBase(
                         Dialog(onDismissRequest = { showConfirmDialog.value = false }) {
                             Card(modifier = Modifier.padding(8.dp)) {
                                 Column(
-                                    modifier = Modifier.padding(horizontal = 8.dp,
-                                        vertical = 20.dp),
+                                    modifier = Modifier.padding(
+                                        horizontal = 8.dp,
+                                        vertical = 20.dp
+                                    ),
                                     verticalArrangement = Arrangement.Center,
-                                    horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text(text = "Are you sure to refresh database and login again?",
-                                        textAlign = TextAlign.Center)
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = "Are you sure to refresh database and login again?",
+                                        textAlign = TextAlign.Center
+                                    )
                                     Spacer(modifier = Modifier.padding(bottom = 20.dp))
-                                    Icon(imageVector = Icons.TwoTone.Warning,
-                                        contentDescription = null, modifier = Modifier.scale(2F))
+                                    Icon(
+                                        imageVector = Icons.TwoTone.Warning,
+                                        contentDescription = null, modifier = Modifier.scale(2F)
+                                    )
                                     Spacer(modifier = Modifier.padding(bottom = 20.dp))
-                                    Row(modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceAround) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceAround
+                                    ) {
                                         Button(onClick = { showConfirmDialog.value = false }) {
                                             Text(text = "No")
                                         }
@@ -140,7 +157,7 @@ fun HomeBase(
                 }
             }
 
-            Spacer(modifier = Modifier.padding(vertical = 50.dp))
+            Spacer(modifier = Modifier.padding(vertical = 20.dp))
 
             // https://google.github.io/accompanist/pager/
             // TODO: when finish scraping, stop showing circular progress bar and show Pager
@@ -160,7 +177,7 @@ fun HomeBase(
 
             HorizontalPager(
                 count = 3,
-                contentPadding = PaddingValues(horizontal = 32.dp)
+//                contentPadding = PaddingValues(horizontal = 0.dp)
             ) { currentPage ->
                 when (currentPage) {
                     0 -> {
@@ -236,12 +253,20 @@ fun NoSubjectCard(
     OutlinedCard {
         Column(
             modifier = Modifier
-                .size(width = 340.dp, height = 200.dp)
-                .padding(10.dp),
+//                .size(width = 340.dp, height = 200.dp)
+                .padding(16.dp),
             verticalArrangement = Arrangement.SpaceEvenly
         ) {
             // TODO: 休息時間就不算了?
-            Text(text = "You don't have any course in ${0} minutes,\njust chill and take a break.")
+
+            Text(
+                text = "Subject",
+                fontWeight = FontWeight.Bold,
+                fontSize = 32.sp
+            )
+            Spacer(modifier = Modifier.padding(8.dp))
+            Text(text = "You don't have any course in ${0} minutes, just chill and take a break.")
+            Spacer(modifier = Modifier.padding(bottom = 20.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -276,7 +301,8 @@ fun SubjectCard(
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceEvenly) {
+            verticalArrangement = Arrangement.SpaceEvenly
+        ) {
 
             val content =
                 if (courseWidgetParams[field].isNullOrBlank()) "Please Wait..."
@@ -297,7 +323,8 @@ fun SubjectCard(
     Card {
         Column(
             modifier = Modifier
-                .size(width = 340.dp, height = 200.dp)
+                .heightIn(0.dp, 200.dp)
+//                .size(width = 350.dp, height = 200.dp)
                 .padding(top = 10.dp, bottom = 10.dp),
 //            horizontalAlignment = Alignment.CenterHorizontally,
 //            verticalArrangement = Arrangement.Center
@@ -307,7 +334,8 @@ fun SubjectCard(
                     .weight(2F)
                     .padding(bottom = 5.dp)
                     .fillMaxSize(1F),
-                horizontalArrangement = Arrangement.SpaceEvenly) {
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
 
                 Row(
                     modifier = Modifier.padding(horizontal = 5.dp)
@@ -324,9 +352,12 @@ fun SubjectCard(
                     }
                     Column(
                         modifier = Modifier
-                            .weight(0.25F)) {
-                        for (item in listOf(HomeViewModel.SubjectWidgetEnum.StartTime,
-                            HomeViewModel.SubjectWidgetEnum.EndTime)) {
+                            .weight(0.25F)
+                    ) {
+                        for (item in listOf(
+                            HomeViewModel.SubjectWidgetEnum.StartTime,
+                            HomeViewModel.SubjectWidgetEnum.EndTime
+                        )) {
                             Box(
                                 modifier = Modifier
                                     .weight(1F)
