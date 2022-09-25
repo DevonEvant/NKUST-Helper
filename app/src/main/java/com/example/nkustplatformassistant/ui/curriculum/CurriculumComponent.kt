@@ -1,6 +1,8 @@
 package com.example.nkustplatformassistant.ui.curriculum
 
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -12,7 +14,7 @@ import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.twotone.Person
+import androidx.compose.material.icons.twotone.*
 import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialogDefaults.shape
 import androidx.compose.runtime.*
@@ -20,6 +22,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.Placeholder
@@ -30,7 +33,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.lifecycle.distinctUntilChanged
 import androidx.navigation.NavController
 import com.example.nkustplatformassistant.data.CurriculumTime
 import com.example.nkustplatformassistant.data.DropDownParams
@@ -45,18 +47,11 @@ private var gridWidth = 50
 fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: NavController) {
     val startTimeVisibility by curriculumViewModel.startTimeVisibility.observeAsState(true)
     val endTimeVisibility by curriculumViewModel.endTimeVisibility.observeAsState(true)
+
     val dropDownParams by curriculumViewModel.dropDownParams.observeAsState(listOf())
-    val courses by curriculumViewModel.courses.distinctUntilChanged().observeAsState(listOf())
+    val courses by curriculumViewModel.courses.observeAsState(listOf())
+
     val state = rememberScrollState(0)
-
-
-    LaunchedEffect(dropDownParams, courses) {
-        if (dropDownParams.isNotEmpty()) {
-            curriculumViewModel.getCourse(
-                dropDownParams[0].year, dropDownParams[0].semester
-            )
-        }
-    }
 
     Column(modifier = Modifier.padding(8.dp)) {
 //    -----DisplayOption-----
@@ -100,6 +95,15 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
         if (courses.isNotEmpty()) {
             CurriculumTable(startTimeVisibility, endTimeVisibility, courses)
         } else {
+
+            LaunchedEffect(Unit) {
+                if (dropDownParams.isNotEmpty()) {
+                    curriculumViewModel.getCourse(
+                        dropDownParams[0].year, dropDownParams[0].semester
+                    )
+                }
+            }
+
             Column(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -113,6 +117,7 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
     }
 }
 
+// 2
 @Composable
 fun CurriculumTable(
     startTimeVisibility: Boolean,
@@ -193,24 +198,22 @@ fun ChipCell(
     )
 }
 
+// 1
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SemesterSelector(
     dropDownList: List<DropDownParams>,
     onSelectDropDownChange: (DropDownParams) -> Unit,
 ) {
-
     var expanded by remember { mutableStateOf(false) }
 
     // TODO: wait until all data is ready and display
-    var selectedOption by remember {
-        mutableStateOf(
-            if (dropDownList.isNotEmpty()) {
-                dropDownList.first().semDescription
-            } else {
-                "null"
-            }
-        )
+    var selectedOption by remember { mutableStateOf("null") }
+
+    LaunchedEffect(dropDownList) {
+        if (dropDownList.isNotEmpty()) {
+            selectedOption = dropDownList.first().semDescription
+        }
     }
 
     ExposedDropdownMenuBox(
@@ -218,7 +221,7 @@ fun SemesterSelector(
         onExpandedChange = { expanded = !expanded },
         modifier = Modifier.padding(start = 8.dp)
     ) {
-        ChipCell(state = true, onClick = { expanded = !expanded }) {
+        ChipCell(state = true, onClick = { expanded = true }) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceEvenly
@@ -301,18 +304,28 @@ fun CourseCard(course: CourseEntity) {
 @Composable
 fun CourseDetail(course: CourseEntity) {
     OutlinedCard {
-        Column(modifier = Modifier.padding(8.dp)) {
-            Text(text = buildAnnotatedString {
-                appendInlineContent("course")
-                append("課程名稱")
-            }, inlineContent = mapOf(
-                Pair("course", InlineTextContent(
-                    Placeholder( 1.7.em, height = 23.sp, placeholderVerticalAlign = PlaceholderVerticalAlign.TextTop)
-                ){
-                    Icon(imageVector = Icons.TwoTone.Person, contentDescription = null)
-                })
-            ))
-
+        val itemListToDisplay = listOf(
+            listOf(Icons.TwoTone.MenuOpen, "課程名稱", course.courseName),
+            listOf(Icons.TwoTone.EmojiPeople, "指導教授", course.professor),
+            listOf(Icons.TwoTone.LocationOn, "上課地點", course.classLocation),
+            listOf(Icons.TwoTone.AssistantPhoto, "學分數", course.credits)
+        )
+        Column(modifier = Modifier.padding(10.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)) {
+            for (item in itemListToDisplay) {
+                Text(text = buildAnnotatedString {
+                    appendInlineContent("course")
+                    append("${item[1]}:\t${item[2]}")
+                }, inlineContent = mapOf(
+                    Pair("course", InlineTextContent(
+                        Placeholder(1.7.em,
+                            height = 23.sp,
+                            placeholderVerticalAlign = PlaceholderVerticalAlign.TextTop)
+                    ) {
+                        Icon(imageVector = item[0] as ImageVector, contentDescription = null)
+                    })
+                ))
+            }
 
         }
     }
@@ -328,7 +341,9 @@ fun CurriculumTimeCard(
 //        modifier = Modifier.padding(2.dp)
         modifier = Modifier
             .fillMaxSize()
-            .animateContentSize(),
+            .animateContentSize(
+                animationSpec = tween(durationMillis = 300,
+                easing = LinearOutSlowInEasing)),
     ) {
         Column(
             modifier = Modifier
