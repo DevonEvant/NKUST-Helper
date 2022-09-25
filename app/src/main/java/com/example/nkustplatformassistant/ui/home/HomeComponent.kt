@@ -1,11 +1,12 @@
 package com.example.nkustplatformassistant.ui.home
 
+import android.app.Activity
 import android.content.Context
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,7 +24,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,12 +39,39 @@ import com.google.accompanist.pager.HorizontalPager
 
 @Composable
 fun HomeScreenBase(homeViewModel: HomeViewModel, navController: NavController) {
-    val context = LocalContext.current
-//    if (homeViewModel.isDataReady.observeAsState(false).value) {
+    val showBackCard = remember { mutableStateOf(false) }
     HomeBase(homeViewModel, navController)
-//    } else {
-//        CheckData(context, navController)
-//    }
+    if (showBackCard.value) {
+        BackCard(showBackCard = showBackCard)
+    }
+    BackHandler(enabled = true) {
+        showBackCard.value = true
+    }
+}
+
+@Composable
+fun BackCard(showBackCard: MutableState<Boolean>) {
+    val activity = LocalContext.current as Activity
+    Dialog(onDismissRequest = { showBackCard.value = false }) {
+        Card(modifier = Modifier.padding(20.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(text = "Are you sure to leave?")
+                Row(modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly) {
+                    Button(onClick = { showBackCard.value = false }) {
+                        Text(text = "No")
+                    }
+                    Button(onClick = {
+                        showBackCard.value = false
+                        activity.finish()
+                    }) {
+                        Text(text = "Yes")
+                    }
+                }
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalPagerApi::class)
