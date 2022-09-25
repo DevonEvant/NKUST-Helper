@@ -36,7 +36,9 @@ class NkustActivity : ComponentActivity() {
 //                    }
 //                }
                 NkustViewModel(dataRepository).dataAvailability().observeAsState(false).let {
-                    if (it.value) navController.navigate(Screen.Home.route)
+                    if (it.value) navController.navigate(Screen.Home.route) {
+                        popUpTo(0)
+                    }
                 }
                 NavHost(
                     navController = navController,
@@ -49,7 +51,7 @@ class NkustActivity : ComponentActivity() {
                     composable(Screen.Login.route) {
                         LoginScreen(LoginParamsViewModel(dataRepository), navController)
                     }
-                    composable(Screen.Curriculum.route){
+                    composable(Screen.Curriculum.route) {
                         CurriculumScreen(CurriculumViewModel(dataRepository), navController)
                     }
                 }
