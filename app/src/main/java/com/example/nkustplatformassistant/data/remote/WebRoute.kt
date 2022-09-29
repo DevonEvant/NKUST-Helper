@@ -12,6 +12,7 @@ object NKUST_ROUTES {
     val WEBAP_RIGHT_PANEL = "$WEBAP_BASE/nkust/f_right.jsp"
     val SCHOOL_TABLETIME = "$WEBAP_BASE/nkust/ag_pro/ag222.jsp"
     val WEBAP_FNC = "$WEBAP_BASE/nkust/fnc.jsp"
+    val ALL_PDF_ID_PAGE = "https://acad.nkust.edu.tw/p/412-1004-1588.php?Lang=zh-tw"
 
     /**
      * return calendar Url
@@ -35,6 +36,6 @@ object NKUST_ROUTES {
             throw Error("illegal parameter -> 'semester' must is '1' or '2'")
 
         _semester = semester
-        return "http://acad.nkust.edu.tw/var/file/4/1004/img/273/cal$_year-$_semester.pdf"
+        return "https://acad.nkust.edu.tw/var/file/4/1004/img/273/cal$_year-$_semester.pdf"
     }
 }
