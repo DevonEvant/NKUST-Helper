@@ -192,10 +192,9 @@ class DataRepository(context: Context) {
     }
 
     // Schedule
-    suspend fun getSchedule(
+    suspend fun getScheduleToDB(
         year: String,
         semester: String,
-        refresh: Boolean = false,
     ): List<NkustEvent> {
         throw Error("not complete")
         withContext(Dispatchers.IO) {
