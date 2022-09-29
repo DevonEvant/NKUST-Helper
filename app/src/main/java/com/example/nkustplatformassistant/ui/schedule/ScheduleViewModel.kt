@@ -1,4 +1,4 @@
-package com.example.nkustplatformassistant.ui.score
+package com.example.nkustplatformassistant.ui.schedule
 
 import android.content.res.Configuration
 import android.graphics.Bitmap
@@ -29,6 +29,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nkustplatformassistant.data.NkustEvent
+import com.example.nkustplatformassistant.data.persistence.DataRepository
 import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
 import com.example.nkustplatformassistant.data.remote.NkustUser
 import kotlinx.coroutines.Dispatchers
@@ -36,31 +37,11 @@ import kotlinx.coroutines.GlobalScope
 import java.io.File
 
 
-class ScheduleViewModel : ViewModel() {
+class ScheduleViewModel(private val dataRepository: DataRepository) : ViewModel() {
 
     private val _schedules = MutableLiveData(mutableListOf<NkustEvent?>())
     val schedules: LiveData<MutableList<NkustEvent?>> = _schedules
-//
-//    val timeVisibility: LiveData<Boolean> = _timeVisibility
-//    val timeCodeVisibility: LiveData<Boolean> = _timeCodeVisibility
-//    val courses: LiveData<MutableList<Course>> = _courses
-//
-//    init {
-//        if (_courses.value!!.isEmpty())
-//            updataCourses()
-//    }
-//
-//    fun onTimeVisibilityChange() {
-//        _timeVisibility.value = !_timeVisibility.value!!
-//    }
-//
-//    fun onTimeCodeVisibilityChange() {
-//        _timeCodeVisibility.value = !_timeCodeVisibility.value!!
-//    }
-//
-//    fun updataCourses(refresh: Boolean = false) {
-//        throw Error("not complete")
-////        _courses.value =
-//    }
+
+
 
 }
