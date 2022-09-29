@@ -135,6 +135,11 @@ dependencies {
     implementation "androidx.compose.ui:ui-tooling-preview:1.2.1"
     implementation "org.jetbrains.kotlin:kotlin-reflect:1.7.10"
 
+    // https://devlibrary.withgoogle.com/products/android/repos/hi-manshu-kalendar
+    // https://github.com/hi-manshu/Kalendar
+    implementation "com.himanshoe:kalendar:1.1.0"
+
+
     // implementation 'org.tensorflow:tensorflow-lite-support:0.1.0'
     // implementation 'org.tensorflow:tensorflow-lite-metadata:0.1.0'
     // implementation 'org.tensorflow:tensorflow-lite-gpu:2.3.0'
