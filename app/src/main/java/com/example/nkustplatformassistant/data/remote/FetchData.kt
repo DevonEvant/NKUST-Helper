@@ -7,7 +7,10 @@ import androidx.compose.ui.graphics.asImageBitmap
 import com.example.nkustplatformassistant.data.NkustEvent
 import com.example.nkustplatformassistant.data.Score
 import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntity
+import io.ktor.client.*
 import io.ktor.client.call.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -18,6 +21,7 @@ import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.text.PDFTextStripper
 import org.jsoup.parser.*
 import java.io.File
+import kotlin.random.Random
 
 // TODO Timeout handling
 
@@ -293,25 +297,57 @@ class NkustAccessor : NkustUser() {
     }
 
 
+    suspend fun getAvailableSemesterPdf() {
+        val privClient = HttpClient(CIO) {
+            install(HttpCookies) {
+                storage = AcceptAllCookiesStorage()
+            }
+        }
+
+
+        val url = NKUST_ROUTES.ALL_PDF_ID_PAGE
+        val response = privClient.get(url).bodyAsText().let {
+            it
+            parser.parseInput(it, url)
+        }
+
+    }
+
+
     //   todo rename Calender to schedule
+    /**
+     * Providing an cache location, and it'll store pdf in there named
+     * @param year
+     * @param semester
+     * @param file
+     */
     @OptIn(InternalAPI::class)
-    suspend fun getNkustCnCalenderPdf(year: String, semester: String, path: String? = "./"): File {
+    suspend fun getNkustCnCalenderPdf(
+        year: String,
+        semester: String,
+        file: File = File("./", "${year}-${semester}.pdf"),
+    ): File {
 
-
-        // todo not complete. unable to find valid certification path to requested target
+        // TODO: insecurity trusted all https
+        // https://stackoverflow.com/questions/4690228/how-to-save-downloaded-files-in-cache-android
+        // https://developer.android.com/training/connectivity/avoid-unoptimized-downloads
+        val client = HttpClient(CIO) {
+            install(HttpCookies) {
+                storage = AcceptAllCookiesStorage()
+            }
+        }
 
         val res = client.get {
             url(NKUST_ROUTES.getCnCalendarUrl(year, semester))
-//            url("http://acad.nkust.edu.tw/var/file/4/1004/img/273/cal110-2.pdf")
+//            url("https://acad.nkust.edu.tw/var/file/4/1004/img/273/cal110-2.pdf")
         }
 
         if (!res.status.isSuccess())
             throw Error("Fetch URL Error. HttpStateCode is ${res.status} ")
 
-        val calenderPdf = File(path)
-        res.content.copyAndClose(calenderPdf.writeChannel())
-        throw Error("not complete")
-        return calenderPdf
+//        val calenderPdf = File(path)
+        res.content.copyAndClose(file.writeChannel())
+        return file
     }
 
     /**
