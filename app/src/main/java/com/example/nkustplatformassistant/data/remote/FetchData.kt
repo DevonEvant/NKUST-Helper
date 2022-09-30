@@ -32,7 +32,7 @@ import kotlin.random.Random
 /**
  * Before using this section, you must logged in.
  */
-class NkustAccessor : NkustUser() {
+class NkustAccessor(client: HttpClient) : NkustUser(client) {
 
     /**
      * Parser to parse HTML into a "org.jsoup.nodes.Document"
