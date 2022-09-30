@@ -24,17 +24,10 @@ class NkustActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val dataRepository = DataRepository.getInstance(applicationContext)
 
-//        val dataIsReady = NkustViewModel(dataRepository).dataAvailability
         setContent {
-
             val navController = rememberNavController()
 
             Nkust_platform_assistantTheme {
-//                LaunchedEffect(dataIsReady){
-//                    if (dataIsReady.value!!){
-//                        navController.navigate(Screen.Home.route)
-//                    }
-//                }
                 NkustViewModel(dataRepository).dataAvailability().observeAsState(false).let {
                     if (it.value) navController.navigate(Screen.Home.route) {
                         popUpTo(0)

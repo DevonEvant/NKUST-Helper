@@ -9,6 +9,8 @@ import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.network.selector.*
+import io.ktor.network.sockets.*
 import io.ktor.util.*
 import io.ktor.util.cio.*
 import io.ktor.utils.io.*
@@ -21,14 +23,14 @@ import io.ktor.utils.io.*
 /**
  * About login to NKUST system.
  */
-open class NkustUser {
-    companion object {
-        val client = HttpClient(CIO) {
-            install(HttpCookies) {
-                storage = AcceptAllCookiesStorage()
-            }
-        }
-    }
+open class NkustUser(val client: HttpClient) {
+//    companion object {
+//        val client = HttpClient(CIO) {
+//            install(HttpCookies) {
+//                storage = AcceptAllCookiesStorage()
+//            }
+//        }
+//    }
 
 
     /**
@@ -166,4 +168,3 @@ private fun etxtPaser(imgBitmap: Bitmap): IntArray {
 
     return ans
 }
-

@@ -31,7 +31,6 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.lifecycle.LiveData
 import androidx.navigation.NavController
 import com.example.nkustplatformassistant.navigation.Screen
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -96,7 +95,15 @@ fun HomeBase(
     }
 
     if (displayIndicator.value) {
-        MyIndicator(homeViewModel.startFetch(true), displayContent)
+        LaunchedEffect(Unit) {
+            homeViewModel.startFetch(true)
+        }
+
+        val fetchingProgress by homeViewModel.fetchingProgress.observeAsState(0F)
+        if (fetchingProgress < 1F)
+            MyIndicator(fetchingProgress)
+        else
+            displayContent.value = true
     }
 
     if (displayContent.value) {
@@ -224,22 +231,18 @@ fun HomeBase(
 @Composable
 
 fun MyIndicator(
-    indicatorProgress: LiveData<Float>,
-    displayContent: MutableState<Boolean>,
-//    lifecycleOwner: LifecycleOwner,
+    indicatorProgress: Float,
 ) {
 
-    var progress by remember { mutableStateOf(0f) }
+    val progress by remember { mutableStateOf(indicatorProgress) }
     val progressAnimDuration = 1500
 
-//    indicatorProgress.observe(lifecycleOwner) {
-//        progress = it
+//    progress = indicatorProgress.observeAsState(0F).value.let {
+//        if (it == 1F) {
+//            displayContent.value = true
+//        }
+//        it
 //    }
-
-    progress = indicatorProgress.observeAsState(0F).value.let {
-        if (it == 1F) displayContent.value = true
-        it
-    }
 
     val progressAnimation by animateFloatAsState(
         targetValue = progress,

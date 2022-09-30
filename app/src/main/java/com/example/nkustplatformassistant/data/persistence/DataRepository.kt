@@ -11,6 +11,7 @@ import com.example.nkustplatformassistant.ui.home.HomeViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.example.nkustplatformassistant.data.CurriculumTime
+import com.example.nkustplatformassistant.data.remote.NkustClient
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalTime
@@ -31,8 +32,8 @@ class DataRepository(context: Context) {
             return INSTANCE as DataRepository
         }
     }
-
-    private val nkustAccessor = NkustAccessor()
+    private val nkustClient = NkustClient.getInstance(context)
+    private val nkustAccessor = NkustAccessor(nkustClient)
     private val db = NkustDatabase.getInstance(context)
 
     // TODO: Check if calender_table is null and add it to companion object (if can)
@@ -192,10 +193,9 @@ class DataRepository(context: Context) {
     }
 
     // Schedule
-    suspend fun getSchedule(
+    suspend fun getScheduleToDB(
         year: String,
         semester: String,
-        refresh: Boolean = false,
     ): List<NkustEvent> {
         throw Error("not complete")
         withContext(Dispatchers.IO) {

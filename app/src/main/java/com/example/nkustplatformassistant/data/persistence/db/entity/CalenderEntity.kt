@@ -6,7 +6,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "calender_table")
-class Calender(
+data class Calender(
     @PrimaryKey(autoGenerate = true) val id: Int? = 0,
     @ColumnInfo(name = "unit") val unit: String,
     @NonNull @ColumnInfo(name = "start_date") val startDate: String,
