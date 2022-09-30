@@ -14,6 +14,9 @@ class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
 
     val dbHasData: MutableLiveData<Boolean> = MutableLiveData(false)
 
+    private val _fetchingProgress = MutableLiveData(0F)
+    val fetchingProgress: LiveData<Float> get() = _fetchingProgress
+
     private val _minuteBefore: MutableLiveData<TemporalAmount> =
         MutableLiveData(Duration.ofMinutes(0L))
     val minuteBefore = _minuteBefore
@@ -28,14 +31,16 @@ class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
         MutableLiveData()
     val courseWidgetParams: LiveData<Map<SubjectWidgetEnum, String>> = _courseWidgetParams
 
-    fun startFetch(force: Boolean): LiveData<Float> = liveData {
+    fun startFetch(force: Boolean) {
         if (force && DataRepository.loginState) {
-            dataRepository.fetchAllScoreToDB()
-            emit(0.33F)
-            dataRepository.fetchCourseDataToDB()
-            emit(0.67F)
-            // TODO: fetch Schedule to DB, progress didn't change
-            emit(1F)
+            viewModelScope.launch(Dispatchers.IO) {
+                dataRepository.fetchAllScoreToDB()
+                _fetchingProgress.postValue(0.33F)
+                dataRepository.fetchCourseDataToDB()
+                _fetchingProgress.postValue(0.67F)
+                // TODO: fetch Schedule to DB, progress didn't change
+                _fetchingProgress.postValue(1F)
+            }
         }
     }
 
