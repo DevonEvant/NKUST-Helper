@@ -3,13 +3,10 @@ package com.example.nkustplatformassistant.ui.curriculum
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material.icons.Icons
@@ -51,12 +48,12 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
     val dropDownParams by curriculumViewModel.dropDownParams.observeAsState(listOf())
     val courses by curriculumViewModel.courses.observeAsState(listOf())
 
-    val state = rememberScrollState(0)
+    val scrollState = rememberScrollState(0)
 
     Column(modifier = Modifier.padding(8.dp)) {
 //    -----DisplayOption-----
         Row(
-            modifier = Modifier.horizontalScroll(state),
+            modifier = Modifier.horizontalScroll(scrollState),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -343,7 +340,7 @@ fun CurriculumTimeCard(
             .fillMaxSize()
             .animateContentSize(
                 animationSpec = tween(durationMillis = 300,
-                easing = LinearOutSlowInEasing)),
+                    easing = LinearOutSlowInEasing)),
     ) {
         Column(
             modifier = Modifier
