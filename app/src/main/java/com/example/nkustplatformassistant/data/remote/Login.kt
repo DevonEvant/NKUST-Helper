@@ -9,14 +9,11 @@ import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.network.selector.*
+import io.ktor.network.sockets.*
 import io.ktor.util.*
 import io.ktor.util.cio.*
 import io.ktor.utils.io.*
-import java.security.cert.X509Certificate
-import java.util.Date
-import javax.net.ssl.X509TrustManager
-import javax.security.cert.CertificateExpiredException
-import javax.security.cert.CertificateNotYetValidException
 
 /**
  * Declare current data's state
@@ -26,38 +23,14 @@ import javax.security.cert.CertificateNotYetValidException
 /**
  * About login to NKUST system.
  */
-open class NkustUser {
-
-    companion object {
-        val client = HttpClient(CIO) {
-            install(HttpCookies) {
-                storage = AcceptAllCookiesStorage()
-            }
-//            engine {
-//                https {
-//                    // TODO: insecure network traffic for trusting all ssl
-//
-//                    trustManager = object : X509TrustManager {
-//                        override fun checkClientTrusted(
-//                            chain: Array<out X509Certificate>?,
-//                            authType: String?,
-//                        ) {
-//                        }
-//
-//                        override fun checkServerTrusted(
-//                            chain: Array<out X509Certificate>?,
-//                            authType: String?,
-//                        ) {
-//                        }
-//
-//                        override fun getAcceptedIssuers(): Array<X509Certificate> {
-//                            return emptyArray()
-//                        }
-//                    }
-//                }
+open class NkustUser(val client: HttpClient) {
+//    companion object {
+//        val client = HttpClient(CIO) {
+//            install(HttpCookies) {
+//                storage = AcceptAllCookiesStorage()
 //            }
-        }
-    }
+//        }
+//    }
 
 
     /**
@@ -195,4 +168,3 @@ private fun etxtPaser(imgBitmap: Bitmap): IntArray {
 
     return ans
 }
-
