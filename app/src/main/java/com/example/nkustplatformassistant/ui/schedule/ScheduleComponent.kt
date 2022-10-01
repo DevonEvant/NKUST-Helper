@@ -14,10 +14,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.nkustplatformassistant.data.persistence.DataRepository
 import com.himanshoe.kalendar.Kalendar
 import com.himanshoe.kalendar.model.KalendarEvent
 import com.himanshoe.kalendar.model.KalendarType
@@ -46,7 +48,7 @@ fun ScheduleContent(scheduleViewModel: ScheduleViewModel, navController: NavCont
         )
 
         var eventDescription by remember { mutableStateOf("no event") }
-        Kalendar(kalendarType = KalendarType.Firey,
+        Kalendar(kalendarType = KalendarType.Oceanic,
             kalendarEvents = events,
             onCurrentDayClick = { kalendarDay, kalendarEvents ->
                 for (event in kalendarEvents) {
@@ -149,9 +151,7 @@ fun SchedulePreview() {
     val viewModelStoreOwner = checkNotNull(LocalViewModelStoreOwner.current) {
         throw Error("No ViewModelStoreOwner was provided via LocalViewModelStoreOwner")
     }
-    val scheduleViewModel: ScheduleViewModel =
-        viewModel(viewModelStoreOwner = viewModelStoreOwner)
-    ScheduleContent(scheduleViewModel, rememberNavController())
+    ScheduleContent(ScheduleViewModel(DataRepository(LocalContext.current)), rememberNavController())
 
 }
 

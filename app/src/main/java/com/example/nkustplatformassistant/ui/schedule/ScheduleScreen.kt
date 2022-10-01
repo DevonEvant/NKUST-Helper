@@ -11,8 +11,8 @@ import com.example.nkustplatformassistant.data.persistence.DataRepository
 
 
 @Composable
-fun ScheduleScreen(scheduleViewModel: ScheduleViewModel, nacController: NavController) {
-    ScheduleContent(scheduleViewModel, nacController)
+fun ScheduleScreen(scheduleViewModel: ScheduleViewModel, navController: NavController) {
+    ScheduleContent(scheduleViewModel, navController)
 }
 
 @Preview(showBackground = true)
@@ -20,7 +20,7 @@ fun ScheduleScreen(scheduleViewModel: ScheduleViewModel, nacController: NavContr
 fun ScheduleScreenPreview() {
     ScheduleScreen(
         scheduleViewModel = ScheduleViewModel(DataRepository(LocalContext.current)),
-        nacController = rememberNavController()
+        navController = rememberNavController()
     )
 }
 
