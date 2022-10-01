@@ -5,11 +5,12 @@ import com.example.nkustplatformassistant.R
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.cookies.*
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 import java.security.KeyStore
+import java.security.Security
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509TrustManager
-import kotlin.text.toCharArray
 
 class NkustClient {
     companion object {
@@ -32,6 +33,7 @@ class NkustClient {
 
     class SslSettings(val context: Context) {
         fun getKeyStore(): KeyStore {
+            Security.addProvider(BouncyCastleProvider())
             val keyStoreFile = context.resources.openRawResource(R.raw.nkustcertchain)
             val keyStorePassword = "NKUSTCertPass".toCharArray()
             val keyStore: KeyStore = KeyStore.getInstance("BKS")
