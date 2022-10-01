@@ -19,6 +19,8 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
@@ -202,6 +204,7 @@ fun SemesterSelector(
     dropDownList: List<DropDownParams>,
     onSelectDropDownChange: (DropDownParams) -> Unit,
 ) {
+    val focusRequester = remember { FocusRequester() }
     var expanded by remember { mutableStateOf(false) }
 
     // TODO: wait until all data is ready and display
@@ -233,7 +236,8 @@ fun SemesterSelector(
 
         ExposedDropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.clickable { focusRequester.requestFocus() }
         ) {
             dropDownList.forEach {
                 DropdownMenuItem(
