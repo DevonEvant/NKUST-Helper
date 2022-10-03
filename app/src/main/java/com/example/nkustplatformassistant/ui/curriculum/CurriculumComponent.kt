@@ -19,8 +19,6 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
@@ -28,6 +26,7 @@ import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
@@ -38,9 +37,6 @@ import com.example.nkustplatformassistant.data.DropDownParams
 import com.example.nkustplatformassistant.data.Weeks
 import com.example.nkustplatformassistant.data.curriculumParams
 import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntity
-
-private var gridHeight = 50
-private var gridWidth = 50
 
 @Composable
 fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: NavController) {
@@ -68,12 +64,14 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
 
             ChipCell(
                 startTimeVisibility,
-                { curriculumViewModel.onStartTimeVisibilityChange() }
+                { curriculumViewModel.onStartTimeVisibilityChange() },
+//                focusRequester
             ) { Text("Start Time") }
 
             ChipCell(
                 endTimeVisibility,
-                { curriculumViewModel.onEndTimeVisibilityChange() }
+                { curriculumViewModel.onEndTimeVisibilityChange() },
+//                focusRequester
             ) { Text("End Time") }
 
             // TODO: Debug usage here
@@ -94,7 +92,6 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
         if (courses.isNotEmpty()) {
             CurriculumTable(startTimeVisibility, endTimeVisibility, courses)
         } else {
-
             LaunchedEffect(Unit) {
                 if (dropDownParams.isNotEmpty()) {
                     curriculumViewModel.getCourse(
@@ -116,7 +113,59 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
     }
 }
 
-// 2
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ChipCell(
+    state: Boolean,
+    onClick: (() -> Unit),
+    content: @Composable () -> Unit,
+) {
+    FilterChip(
+        selected = state,
+        onClick = onClick,
+        label = content,
+        modifier = Modifier.padding(2.dp)
+    )
+}
+
+@Composable
+fun SemesterSelector(
+    dropDownList: List<DropDownParams>,
+    onSelectDropDownChange: (DropDownParams) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    var currentSelectDropDownText by remember { mutableStateOf("Please wait...") }
+
+    LaunchedEffect(dropDownList) {
+        currentSelectDropDownText =
+            if (dropDownList.isNotEmpty()) dropDownList.first().semDescription else "Please wait..."
+    }
+
+    ChipCell(state = true, onClick = { expanded = true }) {
+        Box(modifier = Modifier.wrapContentSize()) {
+            Text(text = currentSelectDropDownText)
+            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                if (dropDownList.isEmpty()) {
+                    DropdownMenuItem(text = { Text(text = currentSelectDropDownText) },
+                        onClick = { })
+                } else {
+                    dropDownList.forEach {
+                        DropdownMenuItem(
+                            text = { Text(text = it.semDescription) },
+                            onClick = {
+                                currentSelectDropDownText = it.semDescription
+                                onSelectDropDownChange(it)
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+}
+
 @Composable
 fun CurriculumTable(
     startTimeVisibility: Boolean,
@@ -124,6 +173,13 @@ fun CurriculumTable(
     courses: List<CourseEntity>,
 ) {
     val itemToPlace: MutableMap<Weeks, List<CourseEntity>> = mutableMapOf()
+
+    // int multiply this and add .dp will transfer to dp
+    val localDensity = LocalDensity.current
+
+    var gridMinHeight by remember {
+        mutableStateOf(50)
+    }
 
     for (week in Weeks.values()) {
         val thisWeekCourseList = mutableListOf<CourseEntity>()
@@ -137,6 +193,128 @@ fun CurriculumTable(
         itemToPlace[week] = thisWeekCourseList
     }
 
+    @Composable
+    fun WeeksCard(week: Weeks) {
+        Card {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(week.shortCode.toString())
+            }
+        }
+    }
+
+    @Composable
+    fun CurriculumTimeCard(
+        curriculumTime: CurriculumTime,
+        startTimeVisibility: Boolean = true,
+        endTimeVisibility: Boolean = true,
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxSize()
+                .animateContentSize(
+                    animationSpec = tween(durationMillis = 300,
+                        easing = LinearOutSlowInEasing)),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .heightIn(min = localDensity.run { gridMinHeight.toDp() })
+                    .padding(vertical = 5.dp, horizontal = 2.dp)
+                    .onGloballyPositioned {
+                        gridMinHeight =
+                            if (it.size.height > gridMinHeight) it.size.height else gridMinHeight
+                    },
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+
+                    Text(
+                        text = curriculumTime.id.toString(),
+                        modifier = Modifier
+                            .clip(shape)
+                            .background(MaterialTheme.colorScheme.onBackground)
+                            .padding(2.dp),
+                        style = TextStyle(
+                            color = MaterialTheme.colorScheme.background
+                        )
+                    )
+                    if (startTimeVisibility) Text(curriculumTime.time.start.toIsoDescription())
+                    if (endTimeVisibility) Text(curriculumTime.time.endInclusive.toIsoDescription())
+                }
+            }
+        }
+    }
+
+    @Composable
+    fun CourseDetail(course: CourseEntity) {
+        OutlinedCard {
+            val itemListToDisplay = listOf(
+                listOf(Icons.TwoTone.MenuOpen, "課程名稱", course.courseName),
+                listOf(Icons.TwoTone.EmojiPeople, "指導教授", course.professor),
+                listOf(Icons.TwoTone.LocationOn, "上課地點", course.classLocation),
+                listOf(Icons.TwoTone.AssistantPhoto, "學分數", course.credits)
+            )
+            Column(modifier = Modifier.padding(10.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                for (item in itemListToDisplay) {
+                    Text(text = buildAnnotatedString {
+                        appendInlineContent("course")
+                        append("${item[1]}:\t${item[2]}")
+                    }, inlineContent = mapOf(
+                        Pair("course", InlineTextContent(
+                            Placeholder(1.7.em,
+                                height = 23.sp,
+                                placeholderVerticalAlign = PlaceholderVerticalAlign.TextTop)
+                        ) {
+                            Icon(imageVector = item[0] as ImageVector, contentDescription = null)
+                        })
+                    ))
+                }
+
+            }
+        }
+    }
+
+    @Composable
+    fun CourseCard(course: CourseEntity) {
+        var showCourseDetail by remember { mutableStateOf(false) }
+
+        Card {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .heightIn(min = localDensity.run { gridMinHeight.toDp() })
+                    .onGloballyPositioned {
+                        gridMinHeight =
+                            if (it.size.height > gridMinHeight) it.size.height else gridMinHeight
+                    }
+                    .animateContentSize(animationSpec = tween(durationMillis = 300,
+                        easing = LinearOutSlowInEasing))
+                    .clickable { showCourseDetail = true },
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(text = course.courseName,
+                    textAlign = TextAlign.Center,)
+            }
+        }
+
+        if (showCourseDetail) {
+            Dialog(onDismissRequest = { showCourseDetail = false }) {
+                CourseDetail(course = course)
+            }
+        }
+    }
 
     LazyVerticalGrid(
         modifier = Modifier.animateContentSize(),
@@ -169,211 +347,13 @@ fun CurriculumTable(
                                         it.curriculumTimeRange.start.ordinal..
                                         it.curriculumTimeRange.endInclusive.ordinal
                                     ) {
-                                        CourseCard(course = eachCourse)
+                                        CourseCard(eachCourse)
                                     }
                                 }
                             }
                         }
                     }
                 }
-            }
-        }
-    }
-}
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ChipCell(
-    state: Boolean,
-    onClick: (() -> Unit),
-    content: @Composable () -> Unit,
-) {
-    FilterChip(
-        selected = state,
-        onClick = onClick,
-        label = content,
-        modifier = Modifier.padding(2.dp)
-    )
-}
-
-// 1
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SemesterSelector(
-    dropDownList: List<DropDownParams>,
-    onSelectDropDownChange: (DropDownParams) -> Unit,
-) {
-    val focusRequester = remember { FocusRequester() }
-    var expanded by remember { mutableStateOf(false) }
-
-    // TODO: wait until all data is ready and display
-    var selectedOption by remember { mutableStateOf("null") }
-
-    LaunchedEffect(dropDownList) {
-        if (dropDownList.isNotEmpty()) {
-            selectedOption = dropDownList.first().semDescription
-        }
-    }
-
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded },
-        modifier = Modifier.padding(start = 8.dp)
-    ) {
-        ChipCell(state = true, onClick = { expanded = true }) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Text(text = selectedOption)
-                Icon(
-                    imageVector = if (expanded) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown,
-                    contentDescription = null
-                )
-            }
-        }
-
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier.clickable { focusRequester.requestFocus() }
-        ) {
-            dropDownList.forEach {
-                DropdownMenuItem(
-                    text = { Text(text = it.semDescription) },
-                    onClick = {
-                        onSelectDropDownChange.invoke(it)
-                        selectedOption = it.semDescription
-                        expanded = false
-                    }
-                )
-            }
-        }
-    }
-
-}
-
-@Composable
-fun WeeksCard(week: Weeks) {
-    Card(
-//        modifier = Modifier.padding(2.dp),
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(week.shortCode.toString())
-        }
-    }
-}
-
-@Composable
-fun CourseCard(course: CourseEntity) {
-    var showCourseDetail by remember { mutableStateOf(false) }
-
-    Card(
-//            .padding(2.dp)
-//            .size(
-//                height = LocalDensity.current.run { gridHeight.toDp() },
-//                width = LocalDensity.current.run { gridWidth.toDp() })
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .size(
-                    height = LocalDensity.current.run { gridHeight.toDp() },
-                    width = LocalDensity.current.run { gridWidth.toDp() })
-                .animateContentSize()
-                .clickable { showCourseDetail = true },
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(text = course.courseName)
-        }
-    }
-
-    if (showCourseDetail) {
-        Dialog(onDismissRequest = { showCourseDetail = false }) {
-            CourseDetail(course = course)
-        }
-    }
-}
-
-@Composable
-fun CourseDetail(course: CourseEntity) {
-    OutlinedCard {
-        val itemListToDisplay = listOf(
-            listOf(Icons.TwoTone.MenuOpen, "課程名稱", course.courseName),
-            listOf(Icons.TwoTone.EmojiPeople, "指導教授", course.professor),
-            listOf(Icons.TwoTone.LocationOn, "上課地點", course.classLocation),
-            listOf(Icons.TwoTone.AssistantPhoto, "學分數", course.credits)
-        )
-        Column(modifier = Modifier.padding(10.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)) {
-            for (item in itemListToDisplay) {
-                Text(text = buildAnnotatedString {
-                    appendInlineContent("course")
-                    append("${item[1]}:\t${item[2]}")
-                }, inlineContent = mapOf(
-                    Pair("course", InlineTextContent(
-                        Placeholder(1.7.em,
-                            height = 23.sp,
-                            placeholderVerticalAlign = PlaceholderVerticalAlign.TextTop)
-                    ) {
-                        Icon(imageVector = item[0] as ImageVector, contentDescription = null)
-                    })
-                ))
-            }
-
-        }
-    }
-}
-
-@Composable
-fun CurriculumTimeCard(
-    curriculumTime: CurriculumTime,
-    startTimeVisibility: Boolean = true,
-    endTimeVisibility: Boolean = true,
-) {
-    Card(
-//        modifier = Modifier.padding(2.dp)
-        modifier = Modifier
-            .fillMaxSize()
-            .animateContentSize(
-                animationSpec = tween(durationMillis = 300,
-                    easing = LinearOutSlowInEasing)),
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .onGloballyPositioned {
-                    gridHeight = it.size.height
-                    gridWidth = it.size.width
-                }
-                .padding(vertical = 5.dp, horizontal = 2.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-
-                Text(
-                    text = curriculumTime.id.toString(),
-                    modifier = Modifier
-                        .clip(shape)
-                        .background(MaterialTheme.colorScheme.onBackground)
-                        .padding(2.dp),
-                    style = TextStyle(
-                        color = MaterialTheme.colorScheme.background
-                    )
-                )
-                if (startTimeVisibility) Text(curriculumTime.time.start.toIsoDescription())
-                if (endTimeVisibility) Text(curriculumTime.time.endInclusive.toIsoDescription())
             }
         }
     }
