@@ -7,16 +7,10 @@ import com.example.nkustplatformassistant.data.persistence.db.NkustDatabase
 import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntity
 import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
 import com.example.nkustplatformassistant.data.remote.NkustAccessor
-import com.example.nkustplatformassistant.ui.home.HomeViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import com.example.nkustplatformassistant.data.CurriculumTime
 import com.example.nkustplatformassistant.data.remote.NkustClient
-import java.time.Duration
 import java.time.LocalDate
-import java.time.LocalTime
-import java.time.temporal.TemporalAmount
-
 
 class DataRepository(context: Context) {
     companion object {
@@ -150,42 +144,26 @@ class DataRepository(context: Context) {
     }
 
     /**
-     * Get only one course for currently in course's time range,
-     * By providing [TemporalAmount] e.g. can be [java.time.Duration] or [java.time.Period]
-     * E.g: it's 11:00 AM, and we don't specify the [minuteBefore], it'll return course
-     * that exist in the interval, it maybe null if user didn't have any course
-     * to learn that day.
+     * Get today's course
      */
-    suspend fun getCurrentCourse(minuteBefore: TemporalAmount = Duration.ofMinutes(0L)): Map<HomeViewModel.SubjectWidgetEnum, String> {
+    suspend fun getTodayCourse(): List<CourseEntity>{
         val latestCourseList = getLatestCourseParams()
         val courseList = db.courseDao().getSpecCourseList(
             latestCourseList.year, latestCourseList.semester)
 
         val todayWeek = LocalDate.now().dayOfWeek.value
-        val currentTime = LocalTime.now()
+
+        val listToReturn = mutableListOf<CourseEntity>()
 
         courseList.forEach { eachCourseEntity ->
             eachCourseEntity.courseTime.forEach { courseTime ->
                 if ((courseTime.week!!.ordinal + 1) == todayWeek) {
-                    CurriculumTime.getByTime(currentTime)?.time?.let {
-                        if ((it include (currentTime - minuteBefore))) {
-                            return mapOf(
-                                HomeViewModel.SubjectWidgetEnum.CourseName to eachCourseEntity.courseName,
-                                HomeViewModel.SubjectWidgetEnum.ClassName to eachCourseEntity.className,
-                                HomeViewModel.SubjectWidgetEnum.ClassLocation to eachCourseEntity.classLocation,
-                                HomeViewModel.SubjectWidgetEnum.ClassTime to eachCourseEntity.classTime,
-                                HomeViewModel.SubjectWidgetEnum.ClassGroup to eachCourseEntity.classGroup,
-                                HomeViewModel.SubjectWidgetEnum.Professor to eachCourseEntity.professor,
-                                HomeViewModel.SubjectWidgetEnum.StartTime to courseTime.curriculumTimeRange.start.time.start.toIsoDescription(),
-                                HomeViewModel.SubjectWidgetEnum.EndTime to courseTime.curriculumTimeRange.endInclusive.time.endInclusive.toIsoDescription()
-                            )
-                        }
-                    }
+                    listToReturn.add(eachCourseEntity)
                 }
             }
         }
 
-        return mapOf()
+        return listToReturn
     }
 
     suspend fun getSpecCurriculumCourse(year: Int, semester: Int): List<CourseEntity> {
