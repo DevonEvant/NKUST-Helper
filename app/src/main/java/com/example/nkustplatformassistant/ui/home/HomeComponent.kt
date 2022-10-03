@@ -9,7 +9,9 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.Warning
 import androidx.compose.material3.*
@@ -22,12 +24,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -35,6 +35,7 @@ import androidx.navigation.NavController
 import com.example.nkustplatformassistant.navigation.Screen
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
+import java.time.Duration
 
 @Composable
 fun HomeScreenBase(homeViewModel: HomeViewModel, navController: NavController) {
@@ -110,7 +111,8 @@ fun HomeBase(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
         ) {
             Text(
                 "Recent Highlight",
@@ -203,6 +205,7 @@ fun HomeBase(
 
             // TODO: NO DATA state 抓不到資料
             // Text Color: https://m3.material.io/styles/color/dynamic-color/overview
+
             homeViewModel.courseWidgetParams.observeAsState(mapOf()).value.let {
                 if (it.isNotEmpty()) {
                     courseWidgetParams.putAll(it)
@@ -214,11 +217,13 @@ fun HomeBase(
 //                contentPadding = PaddingValues(horizontal = 0.dp)
             ) { currentPage ->
                 when (currentPage) {
-                    0 -> {
-                        if (courseWidgetParams.isNotEmpty())
-                            SubjectCard(courseWidgetParams)
-                        else NoSubjectCard(navController)
-                    }
+                    0 -> SubjectCard(
+                        courseWidgetParams,
+                        homeViewModel.minuteBefore
+                            .observeAsState(Duration.ofMinutes(0L))
+                            .value.toMinutes(),
+                        { homeViewModel.getRecentCourse(it) },
+                        navController)
                     1 -> Text(text = "22", color = MaterialTheme.colorScheme.onSurface)
                     2 -> Text(text = "33", color = MaterialTheme.colorScheme.onSurface)
                 }
@@ -267,24 +272,26 @@ fun MyIndicator(
 @Preview
 @Composable
 fun CardPreview() {
-    SubjectCard(
-        mapOf()
-    )
+//    SubjectCard(
+//        mapOf()
+//    )
 //    HomeBase(homeViewModel = HomeViewModel(DataRepository.getInstance(LocalContext.current)),
 //        navController = rememberNavController() )
 }
 
 // TODO: Observe data is fully loaded
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NoSubjectCard(
+fun SubjectCard(
+    courseWidgetParams: Map<HomeViewModel.SubjectWidgetEnum, String>,
+    minuteBefore: Long,
+    getRecentCourse: (Long) -> Unit,
     navController: NavController,
 ) {
     OutlinedCard {
         Column(
-            modifier = Modifier
-//                .size(width = 340.dp, height = 200.dp)
-                .padding(16.dp),
+            modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.SpaceEvenly
         ) {
             // TODO: 休息時間就不算了?
@@ -295,13 +302,32 @@ fun NoSubjectCard(
                 fontSize = 32.sp
             )
             Spacer(modifier = Modifier.padding(8.dp))
-            Text(text = "You don't have any course in ${0} minutes, just chill and take a break.")
+            Text(text = "You don't have any course in $minuteBefore minutes, just chill and take a break.")
             Spacer(modifier = Modifier.padding(bottom = 20.dp))
+            courseWidgetParams[HomeViewModel.SubjectWidgetEnum.ClassName]?.let { Text(text = it) }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+                var expanded by remember { mutableStateOf(false) }
+                FilterChip(selected = true, onClick = { expanded = true }, label = {
+                    Box(modifier = Modifier.wrapContentSize()) {
+                        Text(text = "after $minuteBefore minute")
+                        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                            for (minute in 15..60 step 15) {
+                                DropdownMenuItem(
+                                    text = { Text(text = "after $minute minutes") },
+                                    onClick = {
+                                        getRecentCourse(minute.toLong())
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                })
+
                 Button(onClick = {
                     navController.navigate(Screen.Curriculum.route)
                 }) {
@@ -312,121 +338,121 @@ fun NoSubjectCard(
     }
 }
 
-@Composable
-fun SubjectCard(
-    courseWidgetParams: Map<HomeViewModel.SubjectWidgetEnum, String>,
-) {
-    // Given SubjectWidgetEnum and it'll return string
-    @Composable
-    fun textOut(field: HomeViewModel.SubjectWidgetEnum) {
-        var textSize by remember { mutableStateOf<IntSize?>(null) }
-        val density = LocalDensity.current
-        val maxDimensionDp = remember(textSize) {
-            textSize?.let { textSize ->
-                with(density) {
-                    maxOf(textSize.width, textSize.height).toDp()
-                }
-            }
-        }
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceEvenly
-        ) {
-
-            val content =
-                if (courseWidgetParams[field].isNullOrBlank()) "Please Wait..."
-                else courseWidgetParams[field].toString()
-
-            Text(text = field.name, color = MaterialTheme.colorScheme.onTertiary,
-                onTextLayout = {
-                    textSize = it.size
-                })
-            Text(text = content, color = MaterialTheme.colorScheme.onTertiary,
-                onTextLayout = {
-                    textSize = it.size
-                })
-            //TODO: detail of SubjectWidget in (maybe enum class needed)
-        }
-    }
-
-    Card {
-        Column(
-            modifier = Modifier
-                .heightIn(0.dp, 200.dp)
-//                .size(width = 350.dp, height = 200.dp)
-                .padding(top = 10.dp, bottom = 10.dp),
+//@Composable
+//fun SubjectCard(
+//    courseWidgetParams: Map<HomeViewModel.SubjectWidgetEnum, String>,
+//) {
+//    // Given SubjectWidgetEnum and it'll return string
+//    @Composable
+//    fun textOut(field: HomeViewModel.SubjectWidgetEnum) {
+//        var textSize by remember { mutableStateOf<IntSize?>(null) }
+//        val density = LocalDensity.current
+//        val maxDimensionDp = remember(textSize) {
+//            textSize?.let { textSize ->
+//                with(density) {
+//                    maxOf(textSize.width, textSize.height).toDp()
+//                }
+//            }
+//        }
+//        Column(
+//            modifier = Modifier.fillMaxSize(),
 //            horizontalAlignment = Alignment.CenterHorizontally,
-//            verticalArrangement = Arrangement.Center
-        ) {
-            Row(
-                modifier = Modifier
-                    .weight(2F)
-                    .padding(bottom = 5.dp)
-                    .fillMaxSize(1F),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-
-                Row(
-                    modifier = Modifier.padding(horizontal = 5.dp)
-                ) {
-
-                    Box(
-                        modifier = Modifier
-                            .weight(0.75F)
-                            .fillMaxSize(1F)
-                            .clip(shape = RoundedCornerShape(15.dp))
-                            .background(color = MaterialTheme.colorScheme.primary)
-                    ) {
-                        textOut(field = HomeViewModel.SubjectWidgetEnum.CourseName)
-                    }
-                    Column(
-                        modifier = Modifier
-                            .weight(0.25F)
-                    ) {
-                        for (item in listOf(
-                            HomeViewModel.SubjectWidgetEnum.StartTime,
-                            HomeViewModel.SubjectWidgetEnum.EndTime
-                        )) {
-                            Box(
-                                modifier = Modifier
-                                    .weight(1F)
-                                    .fillMaxSize()
-                                    .padding(6.dp)
-                                    .clip(shape = RoundedCornerShape(20.dp))
-                                    .background(color = MaterialTheme.colorScheme.primary)
-                            ) {
-                                textOut(item)
-                            }
-                        }
-                    }
-                }
-            }
-
-            Row(
-                modifier = Modifier.weight(1F)
-            ) {
-                for (item in listOf(
-                    HomeViewModel.SubjectWidgetEnum.ClassName,
-                    HomeViewModel.SubjectWidgetEnum.ClassLocation,
-                    HomeViewModel.SubjectWidgetEnum.ClassGroup,
-                    HomeViewModel.SubjectWidgetEnum.ClassTime,
-                )) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1F)
-                            .fillMaxSize()
-                            .padding(horizontal = 5.dp)
-                            .clip(shape = RoundedCornerShape(3.dp))
-                            .background(color = MaterialTheme.colorScheme.secondary)
-                    ) {
-                        textOut(item)
-                    }
-                }
-            }
-        }
-    }
-}
+//            verticalArrangement = Arrangement.SpaceEvenly
+//        ) {
+//
+//            val content =
+//                if (courseWidgetParams[field].isNullOrBlank()) "Please Wait..."
+//                else courseWidgetParams[field].toString()
+//
+//            Text(text = field.name, color = MaterialTheme.colorScheme.onTertiary,
+//                onTextLayout = {
+//                    textSize = it.size
+//                })
+//            Text(text = content, color = MaterialTheme.colorScheme.onTertiary,
+//                onTextLayout = {
+//                    textSize = it.size
+//                })
+//            //TODO: detail of SubjectWidget in (maybe enum class needed)
+//        }
+//    }
+//
+//    Card {
+//        Column(
+//            modifier = Modifier
+//                .heightIn(0.dp, 200.dp)
+////                .size(width = 350.dp, height = 200.dp)
+//                .padding(top = 10.dp, bottom = 10.dp),
+////            horizontalAlignment = Alignment.CenterHorizontally,
+////            verticalArrangement = Arrangement.Center
+//        ) {
+//            Row(
+//                modifier = Modifier
+//                    .weight(2F)
+//                    .padding(bottom = 5.dp)
+//                    .fillMaxSize(1F),
+//                horizontalArrangement = Arrangement.SpaceEvenly
+//            ) {
+//
+//                Row(
+//                    modifier = Modifier.padding(horizontal = 5.dp)
+//                ) {
+//
+//                    Box(
+//                        modifier = Modifier
+//                            .weight(0.75F)
+//                            .fillMaxSize(1F)
+//                            .clip(shape = RoundedCornerShape(15.dp))
+//                            .background(color = MaterialTheme.colorScheme.primary)
+//                    ) {
+//                        textOut(field = HomeViewModel.SubjectWidgetEnum.CourseName)
+//                    }
+//                    Column(
+//                        modifier = Modifier
+//                            .weight(0.25F)
+//                    ) {
+//                        for (item in listOf(
+//                            HomeViewModel.SubjectWidgetEnum.StartTime,
+//                            HomeViewModel.SubjectWidgetEnum.EndTime
+//                        )) {
+//                            Box(
+//                                modifier = Modifier
+//                                    .weight(1F)
+//                                    .fillMaxSize()
+//                                    .padding(6.dp)
+//                                    .clip(shape = RoundedCornerShape(20.dp))
+//                                    .background(color = MaterialTheme.colorScheme.primary)
+//                            ) {
+//                                textOut(item)
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//
+//            Row(
+//                modifier = Modifier.weight(1F)
+//            ) {
+//                for (item in listOf(
+//                    HomeViewModel.SubjectWidgetEnum.ClassName,
+//                    HomeViewModel.SubjectWidgetEnum.ClassLocation,
+//                    HomeViewModel.SubjectWidgetEnum.ClassGroup,
+//                    HomeViewModel.SubjectWidgetEnum.ClassTime,
+//                )) {
+//                    Box(
+//                        modifier = Modifier
+//                            .weight(1F)
+//                            .fillMaxSize()
+//                            .padding(horizontal = 5.dp)
+//                            .clip(shape = RoundedCornerShape(3.dp))
+//                            .background(color = MaterialTheme.colorScheme.secondary)
+//                    ) {
+//                        textOut(item)
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
 
 @Composable
 fun CheckData(context: Context, navController: NavController) {

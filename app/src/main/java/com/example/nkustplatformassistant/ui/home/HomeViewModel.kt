@@ -5,7 +5,6 @@ import kotlinx.coroutines.launch
 import com.example.nkustplatformassistant.data.persistence.DataRepository
 import kotlinx.coroutines.Dispatchers
 import java.time.Duration
-import java.time.temporal.TemporalAmount
 
 class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
 
@@ -17,15 +16,23 @@ class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
     private val _fetchingProgress = MutableLiveData(0F)
     val fetchingProgress: LiveData<Float> get() = _fetchingProgress
 
-    private val _minuteBefore: MutableLiveData<TemporalAmount> =
-        MutableLiveData(Duration.ofMinutes(0L))
-    val minuteBefore = _minuteBefore
+    private val _minuteBefore = MutableLiveData(Duration.ofMinutes(15L))
+    val minuteBefore: LiveData<Duration> get() = _minuteBefore
 
     enum class SubjectWidgetEnum(name: String) {
         CourseName("課程名稱"), ClassName("開班名稱"), ClassLocation("教室地點"),
         ClassTime("沒用到"), ClassGroup("分組"), Professor("教授"),
         StartTime("上課時間"), EndTime("下課時間"),
     }
+
+    fun getRecentCourse(minute: Long) {
+        _minuteBefore.postValue(Duration.ofMinutes(minute))
+        viewModelScope.launch(Dispatchers.IO) {
+            // TODO: course update
+            dataRepository.getCurrentCourse(Duration.ofMinutes(minute))
+        }
+    }
+
 
     private val _courseWidgetParams: MutableLiveData<Map<SubjectWidgetEnum, String>> =
         MutableLiveData()
@@ -58,7 +65,7 @@ class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
 
             if (dbHasData.value!!) {
                 _courseWidgetParams.postValue(
-                    dataRepository.getCurrentCourse()
+                    dataRepository.getCurrentCourse(Duration.ofMinutes(15L))
                 )
             }
         }
