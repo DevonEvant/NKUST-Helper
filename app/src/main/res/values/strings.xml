@@ -1,5 +1,13 @@
 <resources>
     <string name="app_name">nkust_platform_assistant</string>
     <string name="title_activity_web_view">WebViewActivity</string>
-    <string name="title_activity_nkust">NkustActivity</string>
+    <string name="title_activity_nkust">Nkust Helper</string>
+    <string name="home_coursecard_course_name">Course name</string>
+    <string name="home_coursecard_start_time">Start time</string>
+    <string name="home_coursecard_end_time">End time</string>
+    <string name="home_coursecard_class_name">Class name</string>
+    <string name="home_coursecard_class_location">Location</string>
+    <string name="home_coursecard_class_group">Group</string>
+    <string name="home_coursecard_class_time">From</string>
+    <string name="home_coursecard_time_selector">You don\'t have any course in %1$d minutes, just chill and take a break.</string>
 </resources>

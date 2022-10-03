@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">高科喵喵喵</string>
+    <string name="home_coursecard_course_name">課程</string>
+    <string name="title_activity_nkust">高科小幫手</string>
+    <string name="title_activity_web_view">網頁瀏覽</string>
+    <string name="home_coursecard_start_time">開始時間</string>
+    <string name="home_coursecard_end_time">結束時間</string>
+    <string name="home_coursecard_class_name">教室名稱</string>
+    <string name="home_coursecard_class_location">所屬大樓</string>
+    <string name="home_coursecard_class_group">分組</string>
+    <string name="home_coursecard_class_time">從</string>
+    <string name="home_coursecard_time_selector">您在 %1$d 分鐘內沒有任何課程，抓緊空檔複習或休息一下吧~</string>
+</resources>

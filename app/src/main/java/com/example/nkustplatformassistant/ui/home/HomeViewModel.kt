@@ -1,17 +1,22 @@
 package com.example.nkustplatformassistant.ui.home
 
 import androidx.lifecycle.*
+import com.example.nkustplatformassistant.data.CurriculumTime
 import kotlinx.coroutines.launch
 import com.example.nkustplatformassistant.data.persistence.DataRepository
+import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntity
 import kotlinx.coroutines.Dispatchers
 import java.time.Duration
+import java.time.LocalDate
+import java.time.LocalTime
 
 class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
 
 
     // https://stackoverflow.com/questions/71709590/how-to-initialize-a-field-in-viewmodel-with-suspend-method
 
-    val dbHasData: MutableLiveData<Boolean> = MutableLiveData(false)
+    private val _dbHasData: MutableLiveData<Boolean> = MutableLiveData(false)
+    val dbHasData: LiveData<Boolean> get() = _dbHasData
 
     private val _fetchingProgress = MutableLiveData(0F)
     val fetchingProgress: LiveData<Float> get() = _fetchingProgress
@@ -19,24 +24,33 @@ class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
     private val _minuteBefore = MutableLiveData(Duration.ofMinutes(15L))
     val minuteBefore: LiveData<Duration> get() = _minuteBefore
 
-    enum class SubjectWidgetEnum(name: String) {
-        CourseName("課程名稱"), ClassName("開班名稱"), ClassLocation("教室地點"),
-        ClassTime("沒用到"), ClassGroup("分組"), Professor("教授"),
-        StartTime("上課時間"), EndTime("下課時間"),
-    }
+    private val _todayCourse: MutableLiveData<List<CourseEntity>> = MutableLiveData()
+    private val _recentCourse: MutableLiveData<CourseEntity> = MutableLiveData(
+        CourseEntity(-1, -1, -1, "",
+            "", "", "", "", "",
+            "", "", "", false)
+    )
+    val recentCourse: LiveData<CourseEntity> get() = _recentCourse
 
-    fun getRecentCourse(minute: Long) {
-        _minuteBefore.postValue(Duration.ofMinutes(minute))
-        viewModelScope.launch(Dispatchers.IO) {
-            // TODO: course update
-            dataRepository.getCurrentCourse(Duration.ofMinutes(minute))
+    fun getRecentCourse(minuteBefore: Long) {
+        val todayWeek = LocalDate.now().dayOfWeek.value
+        val currentTime = LocalTime.now()
+
+        _minuteBefore.postValue(Duration.ofMinutes(minuteBefore))
+
+        _todayCourse.value?.forEach { eachCourse ->
+            eachCourse.courseTime.forEach { courseTime ->
+                if ((courseTime.week!!.ordinal + 1) == todayWeek) {
+                    CurriculumTime.getByTime(currentTime)?.time?.let {
+                        if (it.include(currentTime + Duration.ofMinutes(minuteBefore))) {
+                            _recentCourse.postValue(eachCourse)
+                        }
+                    }
+                }
+            }
         }
     }
 
-
-    private val _courseWidgetParams: MutableLiveData<Map<SubjectWidgetEnum, String>> =
-        MutableLiveData()
-    val courseWidgetParams: LiveData<Map<SubjectWidgetEnum, String>> = _courseWidgetParams
 
     fun startFetch(force: Boolean) {
         if (force && DataRepository.loginState) {
@@ -61,12 +75,14 @@ class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
-            dbHasData.postValue(dataRepository.checkDataIsReady())
+            dataRepository.checkDataIsReady().let {
+                _dbHasData.postValue(it)
 
-            if (dbHasData.value!!) {
-                _courseWidgetParams.postValue(
-                    dataRepository.getCurrentCourse(Duration.ofMinutes(15L))
-                )
+                if (it) {
+                    _todayCourse.postValue(
+                        dataRepository.getTodayCourse()
+                    )
+                }
             }
         }
     }

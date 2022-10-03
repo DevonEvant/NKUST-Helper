@@ -26,10 +26,10 @@ interface CourseDao {
     }
 
 
-    @Query("SELECT DISTINCT year,semester,semDescription FROM course_table")
+    @Query("SELECT DISTINCT year,semester,semDescription FROM SCORE_TABLE ORDER BY YEAR DESC, SEMESTER DESC")
     fun getDropDownList(): List<DropDownParams>
 
-    @Query("SELECT DISTINCT year,semester,semDescription FROM course_table ORDER BY semester,year LIMIT 1")
+    @Query("SELECT DISTINCT year,semester,semDescription FROM course_table ORDER BY YEAR DESC, SEMESTER DESC LIMIT 1")
     suspend fun getLatestCourseParams(): DropDownParams
 
     @Query("SELECT COUNT(*) FROM course_table")

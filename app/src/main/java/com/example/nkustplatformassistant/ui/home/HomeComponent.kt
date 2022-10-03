@@ -13,29 +13,42 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.twotone.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.lerp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.example.nkustplatformassistant.R
+import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntity
 import com.example.nkustplatformassistant.navigation.Screen
-import com.google.accompanist.pager.ExperimentalPagerApi
-import com.google.accompanist.pager.HorizontalPager
+import com.google.accompanist.pager.*
 import java.time.Duration
+import kotlin.math.absoluteValue
+
+const val defaultTime = 15L
 
 @Composable
 fun HomeScreenBase(homeViewModel: HomeViewModel, navController: NavController) {
@@ -80,18 +93,15 @@ fun HomeBase(
     homeViewModel: HomeViewModel,
     navController: NavController,
 ) {
-    val lifecycleOwner = LocalLifecycleOwner.current
-
     val displayIndicator = remember { mutableStateOf(false) }
 
     val displayContent = remember { mutableStateOf(false) }
 
-    homeViewModel.dbHasData.observeAsState(null).let {
+    homeViewModel.dbHasData.observeAsState(false).let {
         println("dbHasData: ${it.value}")
         when (it.value) {
             true -> displayContent.value = true
             false -> displayIndicator.value = true
-            else -> {}
         }
     }
 
@@ -199,35 +209,110 @@ fun HomeBase(
             // TODO: when finish scraping, stop showing circular progress bar and show Pager
             // loading with progress bar, when it reaches its end, show home page
 
-            val courseWidgetParams = remember {
-                mutableMapOf<HomeViewModel.SubjectWidgetEnum, String>()
+            var recentCourse by remember {
+                mutableStateOf(CourseEntity(-1, -1, -1, "",
+                    "", "", "", "", "",
+                    "", "", "", false)
+                )
             }
 
             // TODO: NO DATA state 抓不到資料
             // Text Color: https://m3.material.io/styles/color/dynamic-color/overview
 
-            homeViewModel.courseWidgetParams.observeAsState(mapOf()).value.let {
-                if (it.isNotEmpty()) {
-                    courseWidgetParams.putAll(it)
-                }
+            LaunchedEffect(Unit, recentCourse) {
+                homeViewModel.getRecentCourse(defaultTime)
             }
+
+            homeViewModel.recentCourse.observeAsState(recentCourse).value.let {
+//                if ((it as CourseEntity).courseId != recentCourse.courseId) {
+                recentCourse = it
+//                }
+            }
+
+            val pagerState = rememberPagerState()
+//            LaunchedEffect(pagerState.currentPage) {
+//                delay(5000)
+//                with(pagerState) {
+//                    val target = if (currentPage < pageCount - 1) currentPage + 1 else 0
+//                    animateScrollToPage(target)
+//                }
+//            }
 
             HorizontalPager(
                 count = 3,
-//                contentPadding = PaddingValues(horizontal = 0.dp)
+                state = pagerState,
+                modifier = Modifier.heightIn(200.dp, 270.dp)
             ) { currentPage ->
-                when (currentPage) {
-                    0 -> SubjectCard(
-                        courseWidgetParams,
-                        homeViewModel.minuteBefore
-                            .observeAsState(Duration.ofMinutes(0L))
-                            .value.toMinutes(),
-                        { homeViewModel.getRecentCourse(it) },
-                        navController)
-                    1 -> Text(text = "22", color = MaterialTheme.colorScheme.onSurface)
-                    2 -> Text(text = "33", color = MaterialTheme.colorScheme.onSurface)
+                Card(
+                    Modifier
+                        .graphicsLayer {
+                            // Calculate the absolute offset for the current page from the
+                            // scroll position. We use the absolute value which allows us to mirror
+                            // any effects for both directions
+                            val pageOffset =
+                                calculateCurrentOffsetForPage(currentPage).absoluteValue
+
+                            // We animate the scaleX + scaleY, between 85% and 100%
+                            lerp(
+                                start = 0.85f,
+                                stop = 1f,
+                                fraction = 1f - pageOffset.coerceIn(0f, 1f)
+                            ).also { scale ->
+                                scaleX = scale
+                                scaleY = scale
+                            }
+
+                            // We animate the alpha, between 50% and 100%
+                            alpha = lerp(
+                                start = 0.5f,
+                                stop = 1f,
+                                fraction = 1f - pageOffset.coerceIn(0f, 1f)
+                            )
+                        }
+                ) {
+                    when (currentPage) {
+                        0 -> SubjectCard(
+                            recentCourse,
+                            homeViewModel.minuteBefore
+                                .observeAsState(Duration.ofMinutes(defaultTime))
+                                .value.toMinutes(),
+                            { homeViewModel.getRecentCourse(it) },
+                            navController)
+
+                        1 -> {
+                            OutlinedCard(
+                                modifier = Modifier.size(150.dp, 100.dp),
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalArrangement = Arrangement.SpaceEvenly
+                                ) {
+                                    Text(text = "22", color = MaterialTheme.colorScheme.onSurface)
+                                }
+                            }
+                        }
+
+                        2 -> {
+                            OutlinedCard(
+                                modifier = Modifier.size(150.dp, 100.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalArrangement = Arrangement.SpaceEvenly
+                                ) {
+                                    Text(text = "33", color = MaterialTheme.colorScheme.onSurface)
+                                }
+                            }
+                        }
+                    }
                 }
             }
+            HorizontalPagerIndicator(
+                pagerState = pagerState,
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(16.dp),
+            )
         }
     }
 }
@@ -272,19 +357,35 @@ fun MyIndicator(
 @Preview
 @Composable
 fun CardPreview() {
-//    SubjectCard(
-//        mapOf()
-//    )
-//    HomeBase(homeViewModel = HomeViewModel(DataRepository.getInstance(LocalContext.current)),
-//        navController = rememberNavController() )
+    CourseCard(
+        CourseEntity(-1, -1, -1, "",
+            "", "", "", "", "",
+            "", "", "", false),
+        15L,
+        {},
+        rememberNavController()
+    )
 }
 
 // TODO: Observe data is fully loaded
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SubjectCard(
-    courseWidgetParams: Map<HomeViewModel.SubjectWidgetEnum, String>,
+    recentCourse: CourseEntity,
+    minuteBefore: Long,
+    getRecentCourse: (Long) -> Unit,
+    navController: NavController,
+) {
+    if (recentCourse.courseId == -1) {
+        NoCourseCard(minuteBefore, getRecentCourse, navController)
+    } else {
+        CourseCard(recentCourse, minuteBefore, getRecentCourse, navController)
+    }
+
+}
+
+@Composable
+fun NoCourseCard(
     minuteBefore: Long,
     getRecentCourse: (Long) -> Unit,
     navController: NavController,
@@ -302,157 +403,234 @@ fun SubjectCard(
                 fontSize = 32.sp
             )
             Spacer(modifier = Modifier.padding(8.dp))
-            Text(text = "You don't have any course in $minuteBefore minutes, just chill and take a break.")
+            Text(text = stringResource(
+                id = R.string.home_coursecard_time_selector,
+                minuteBefore.toInt()))
             Spacer(modifier = Modifier.padding(bottom = 20.dp))
-            courseWidgetParams[HomeViewModel.SubjectWidgetEnum.ClassName]?.let { Text(text = it) }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                var expanded by remember { mutableStateOf(false) }
-                FilterChip(selected = true, onClick = { expanded = true }, label = {
-                    Box(modifier = Modifier.wrapContentSize()) {
-                        Text(text = "after $minuteBefore minute")
-                        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                            for (minute in 15..60 step 15) {
-                                DropdownMenuItem(
-                                    text = { Text(text = "after $minute minutes") },
-                                    onClick = {
-                                        getRecentCourse(minute.toLong())
-                                        expanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-                })
-
-                Button(onClick = {
-                    navController.navigate(Screen.Curriculum.route)
-                }) {
-                    Text(text = "See all courses")
-                }
-            }
+            BeforeTimeSelector(minuteBefore, getRecentCourse, navController)
         }
     }
 }
 
-//@Composable
-//fun SubjectCard(
-//    courseWidgetParams: Map<HomeViewModel.SubjectWidgetEnum, String>,
-//) {
-//    // Given SubjectWidgetEnum and it'll return string
-//    @Composable
-//    fun textOut(field: HomeViewModel.SubjectWidgetEnum) {
-//        var textSize by remember { mutableStateOf<IntSize?>(null) }
-//        val density = LocalDensity.current
-//        val maxDimensionDp = remember(textSize) {
-//            textSize?.let { textSize ->
-//                with(density) {
-//                    maxOf(textSize.width, textSize.height).toDp()
-//                }
-//            }
-//        }
-//        Column(
-//            modifier = Modifier.fillMaxSize(),
-//            horizontalAlignment = Alignment.CenterHorizontally,
-//            verticalArrangement = Arrangement.SpaceEvenly
-//        ) {
-//
-//            val content =
-//                if (courseWidgetParams[field].isNullOrBlank()) "Please Wait..."
-//                else courseWidgetParams[field].toString()
-//
-//            Text(text = field.name, color = MaterialTheme.colorScheme.onTertiary,
-//                onTextLayout = {
-//                    textSize = it.size
-//                })
-//            Text(text = content, color = MaterialTheme.colorScheme.onTertiary,
-//                onTextLayout = {
-//                    textSize = it.size
-//                })
-//            //TODO: detail of SubjectWidget in (maybe enum class needed)
-//        }
-//    }
-//
-//    Card {
-//        Column(
-//            modifier = Modifier
-//                .heightIn(0.dp, 200.dp)
-////                .size(width = 350.dp, height = 200.dp)
-//                .padding(top = 10.dp, bottom = 10.dp),
-////            horizontalAlignment = Alignment.CenterHorizontally,
-////            verticalArrangement = Arrangement.Center
-//        ) {
-//            Row(
-//                modifier = Modifier
-//                    .weight(2F)
-//                    .padding(bottom = 5.dp)
-//                    .fillMaxSize(1F),
-//                horizontalArrangement = Arrangement.SpaceEvenly
-//            ) {
-//
-//                Row(
-//                    modifier = Modifier.padding(horizontal = 5.dp)
-//                ) {
-//
-//                    Box(
-//                        modifier = Modifier
-//                            .weight(0.75F)
-//                            .fillMaxSize(1F)
-//                            .clip(shape = RoundedCornerShape(15.dp))
-//                            .background(color = MaterialTheme.colorScheme.primary)
-//                    ) {
-//                        textOut(field = HomeViewModel.SubjectWidgetEnum.CourseName)
-//                    }
-//                    Column(
-//                        modifier = Modifier
-//                            .weight(0.25F)
-//                    ) {
-//                        for (item in listOf(
-//                            HomeViewModel.SubjectWidgetEnum.StartTime,
-//                            HomeViewModel.SubjectWidgetEnum.EndTime
-//                        )) {
-//                            Box(
-//                                modifier = Modifier
-//                                    .weight(1F)
-//                                    .fillMaxSize()
-//                                    .padding(6.dp)
-//                                    .clip(shape = RoundedCornerShape(20.dp))
-//                                    .background(color = MaterialTheme.colorScheme.primary)
-//                            ) {
-//                                textOut(item)
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//
-//            Row(
-//                modifier = Modifier.weight(1F)
-//            ) {
-//                for (item in listOf(
-//                    HomeViewModel.SubjectWidgetEnum.ClassName,
-//                    HomeViewModel.SubjectWidgetEnum.ClassLocation,
-//                    HomeViewModel.SubjectWidgetEnum.ClassGroup,
-//                    HomeViewModel.SubjectWidgetEnum.ClassTime,
-//                )) {
-//                    Box(
-//                        modifier = Modifier
-//                            .weight(1F)
-//                            .fillMaxSize()
-//                            .padding(horizontal = 5.dp)
-//                            .clip(shape = RoundedCornerShape(3.dp))
-//                            .background(color = MaterialTheme.colorScheme.secondary)
-//                    ) {
-//                        textOut(item)
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}
+@Composable
+fun CourseCard(
+    recentCourse: CourseEntity,
+    minuteBefore: Long,
+    getRecentCourse: (Long) -> Unit,
+    navController: NavController,
+) {
+    // first: stringResource: Int, second: recentCourse: String
+    @Composable
+    fun textOut(param: Pair<Int, String>) {
+        var textSize by remember { mutableStateOf<IntSize?>(null) }
+        val density = LocalDensity.current
+        val maxDimensionDp = remember(textSize) {
+            textSize?.let { textSize ->
+                with(density) {
+                    maxOf(textSize.width, textSize.height).toDp()
+                }
+            }
+        }
+
+        var textSize2 by remember { mutableStateOf<IntSize?>(null) }
+        val maxDimensionDp2 = remember(textSize2) {
+            textSize?.let { textSize ->
+                with(density) {
+                    maxOf(textSize.width, textSize.height).toDp()
+                }
+            }
+        }
+
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceEvenly
+        ) {
+            val textComposable = @Composable {
+                Text(
+                    text = stringResource(param.first),
+                    color = MaterialTheme.colorScheme.onTertiary,
+                    maxLines = 1,
+                    onTextLayout = {
+                        textSize = it.size
+                    },
+                    modifier = Modifier.drawWithContent {
+                        if (textSize != null) {
+                            drawContent()
+                        }
+                    }
+                )
+            }
+
+            val textComposable2 = @Composable {
+                Text(
+                    text = param.second, color = MaterialTheme.colorScheme.onTertiary, maxLines = 1,
+                    onTextLayout = {
+                        textSize2 = it.size
+                    },
+                    modifier = Modifier.drawWithContent {
+                        if (textSize2 != null) {
+                            drawContent()
+                        }
+                    }
+                )
+            }
+
+            when {
+                maxDimensionDp == null || maxDimensionDp2 == null -> {
+                    // calculating size.
+                    // because of drawWithContent it's not gonna be drawn
+                    textComposable()
+                    textComposable2()
+
+                }
+                maxDimensionDp < 40.dp && maxDimensionDp2 < 40.dp -> {
+                    textComposable()
+                    textComposable2()
+                }
+                else -> {
+                    textComposable()
+                    textComposable2()
+                }
+
+            }
+        }
+
+
+    }
+
+    Card {
+        Column(
+            modifier = Modifier
+                .heightIn(200.dp, 270.dp)
+                .padding(10.dp),
+        ) {
+            Row(
+                modifier = Modifier
+                    .weight(2F)
+                    .padding(bottom = 5.dp)
+                    .fillMaxSize(1F),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+
+                Row(
+                    modifier = Modifier.padding(horizontal = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    Box(
+                        modifier = Modifier
+                            .weight(0.75F)
+                            .fillMaxSize(1F)
+                            .clip(shape = RoundedCornerShape(15.dp))
+                            .background(color = MaterialTheme.colorScheme.primary)
+                    ) {
+                        textOut(R.string.home_coursecard_course_name to recentCourse.courseName)
+                    }
+                    Column(
+                        modifier = Modifier
+                            .weight(0.25F)
+                    ) {
+                        for (item in listOf(
+                            R.string.home_coursecard_start_time to
+                                    recentCourse.courseTime[0].curriculumTimeRange.start.time.start.toIsoDescription(),
+                            R.string.home_coursecard_end_time to
+                                    recentCourse.courseTime[0].curriculumTimeRange.endInclusive.time.endInclusive.toIsoDescription()
+                        )) {
+                            Box(
+                                modifier = Modifier
+                                    .weight(1F)
+                                    .fillMaxSize()
+                                    .padding(6.dp)
+                                    .clip(shape = RoundedCornerShape(15.dp))
+                                    .background(color = MaterialTheme.colorScheme.primary)
+                            ) {
+                                Column {
+                                    textOut(item)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier.weight(1F)
+            ) {
+                for (item in listOf(
+                    R.string.home_coursecard_class_name to recentCourse.className,
+                    R.string.home_coursecard_class_location to recentCourse.classLocation,
+                    R.string.home_coursecard_class_group to recentCourse.classGroup,
+                    R.string.home_coursecard_class_time to recentCourse.classTime,
+                )) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1F)
+                            .fillMaxSize()
+                            .padding(horizontal = 5.dp)
+                            .clip(shape = RoundedCornerShape(3.dp))
+                            .background(color = MaterialTheme.colorScheme.secondary)
+                    ) {
+                        textOut(item)
+                    }
+                }
+            }
+
+            Divider(modifier = Modifier.padding(top = 20.dp))
+            BeforeTimeSelector(minuteBefore, getRecentCourse, navController)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BeforeTimeSelector(
+    minuteBefore: Long,
+    getRecentCourse: (Long) -> Unit,
+    navController: NavController,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(end = 5.dp),
+        horizontalArrangement = Arrangement.End
+    ) {
+        var expanded by remember { mutableStateOf(false) }
+        FilterChip(selected = true, onClick = { expanded = true }, label = {
+            Box(modifier = Modifier.wrapContentSize()
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(3.dp),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = "After $minuteBefore minutes")
+                    Icon(
+                        imageVector =
+                        if (expanded) Icons.Filled.ArrowDropUp
+                        else Icons.Filled.ArrowDropDown,
+                        contentDescription = null)
+                }
+                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    for (minute in 15..60 step 15) {
+                        DropdownMenuItem(
+                            text = { Text(text = "after $minute minutes") },
+                            onClick = {
+                                getRecentCourse(minute.toLong())
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
+        })
+
+        Spacer(modifier = Modifier.padding(end = 8.dp))
+        Button(onClick = {
+            navController.navigate(Screen.Curriculum.route)
+        }) {
+            Text(text = "See all courses")
+        }
+    }
+}
 
 @Composable
 fun CheckData(context: Context, navController: NavController) {
