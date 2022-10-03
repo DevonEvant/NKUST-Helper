@@ -14,9 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.nkustplatformassistant.data.persistence.DataRepository
@@ -40,21 +38,21 @@ fun ScheduleContent(scheduleViewModel: ScheduleViewModel, navController: NavCont
         verticalArrangement = Arrangement.spacedBy(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally) {
         val events = listOf<KalendarEvent>(
-            KalendarEvent(LocalDate(2022, 9, 29), "1", "1"),
-            KalendarEvent(LocalDate(2022, 9, 30), "2", "2"),
-            KalendarEvent(LocalDate(2022, 10, 1), "3", "3"),
-            KalendarEvent(LocalDate(2022, 10, 2), "4", "4"),
-            KalendarEvent(LocalDate(2022, 10, 3), "5", "5"),
+//            KalendarEvent(LocalDate(2022, 9, 29), "1", "1"),
+//            KalendarEvent(LocalDate(2022, 9, 30), "2", "2"),
+            KalendarEvent(LocalDate(2022, 10, 10), "3", "3"),
+//            KalendarEvent(LocalDate(2022, 10, 2), "4", "4"),
+//            KalendarEvent(LocalDate(2022, 10, 3), "5", "5"),
         )
 
         var eventDescription by remember { mutableStateOf("no event") }
-        Kalendar(kalendarType = KalendarType.Oceanic,
+        Kalendar(kalendarType = KalendarType.Firey,
             kalendarEvents = events,
             onCurrentDayClick = { kalendarDay, kalendarEvents ->
                 for (event in kalendarEvents) {
                     if (kalendarDay.localDate != event.date) {
                         eventDescription = "no event"
-                    } else if (kalendarDay.localDate == event.date ) {
+                    } else if (kalendarDay.localDate == event.date) {
                         eventDescription =
                             kalendarDay.localDate.toString() + "\n" + event.eventDescription
                         break
@@ -151,7 +149,8 @@ fun SchedulePreview() {
     val viewModelStoreOwner = checkNotNull(LocalViewModelStoreOwner.current) {
         throw Error("No ViewModelStoreOwner was provided via LocalViewModelStoreOwner")
     }
-    ScheduleContent(ScheduleViewModel(DataRepository(LocalContext.current)), rememberNavController())
+    ScheduleContent(ScheduleViewModel(DataRepository(LocalContext.current)),
+        rememberNavController())
 
 }
 
