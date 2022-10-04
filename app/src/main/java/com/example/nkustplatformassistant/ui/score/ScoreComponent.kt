@@ -46,7 +46,7 @@ fun ScoreContent(scoreViewModel: ScoreViewModel, navController: NavController) {
     ) {
 
         scores?.let { ScoresDataTable(it) } ?: Card {
-            Text(text = "scoreData not found")
+            Text(text = "Score not found")
         }
 
         Row() {
