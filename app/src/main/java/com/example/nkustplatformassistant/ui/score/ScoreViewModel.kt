@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nkustplatformassistant.data.persistence.DataRepository
 import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
+import com.example.nkustplatformassistant.dbDataAvailability
 import kotlinx.coroutines.Dispatchers
 
 class ScoreViewModel(private val dataRepository: DataRepository) : ViewModel() {
@@ -16,18 +17,17 @@ class ScoreViewModel(private val dataRepository: DataRepository) : ViewModel() {
         getAllScore()
     }
 
-    private val _scores = MutableLiveData(mutableListOf<ScoreEntity>())
-    val scores: LiveData<MutableList<ScoreEntity>> = _scores
+    private val _scores = MutableLiveData<List<ScoreEntity>>()
+    val scores: LiveData<List<ScoreEntity>> = _scores
 
-    fun getAllScore() {
-
-        if (DataRepository.loginState ) {
+    private fun getAllScore() {
+        if (dbDataAvailability) {
             viewModelScope.launch(Dispatchers.IO) {
                 val latestScoreParams = dataRepository.getLatestScoreParams()
                 _scores.postValue(dataRepository.getSpecScoreDataFromDB(
                     latestScoreParams.year,
                     latestScoreParams.semester,
-                ) as MutableList<ScoreEntity>)
+                ))
             }
         }
     }
