@@ -322,7 +322,7 @@ class NkustAccessor(client: HttpClient) : NkustUser(client) {
      * @param file
      */
     @OptIn(InternalAPI::class)
-    suspend fun getNkustCnCalenderPdf(
+    suspend fun getNkustScheduleCn(
         year: String,
         semester: String,
         file: File = File("./", "${year}-${semester}.pdf"),
@@ -348,6 +348,40 @@ class NkustAccessor(client: HttpClient) : NkustUser(client) {
 //        val calenderPdf = File(path)
         res.content.copyAndClose(file.writeChannel())
         return file
+    }
+
+
+    /**
+     * paser Nkust schedule. give Nkust schedule pdf file. return all of eventlist in the pdf file
+     */
+    fun parseNkustSchedule(pdf: File): MutableList<NkustEvent> {
+        val doc = PDDocument.load(pdf)
+        val docTextSoup = PDFTextStripper().getText(doc).let {
+//        it.dropLast(5)
+            it.dropLast(it.indexOfLast { it == '1' })
+            it
+        }
+
+        val nkustEvents = mutableListOf<NkustEvent>()
+
+        Regex("[A○].+\\((\\S* ?\\S)+\\s").findAll(docTextSoup).forEach {
+            val event = docTextSoup.substring(it.range)
+
+            val agency = event.substring(0, event.indexOf('(')).replace("[A○E \\s]+".toRegex(), "")
+            val time = event.substring(event.indexOf('(') + 1, event.indexOf(')'))
+            val description = event.substringAfter(')')
+
+            println("=>> $agency | $time | $description")
+
+            nkustEvents.add(
+                NkustEvent(
+                    agency = agency,
+                    time = time,
+                    description = description
+                )
+            )
+        }
+        return nkustEvents
     }
 
     /**
@@ -463,41 +497,6 @@ class NkustAccessor(client: HttpClient) : NkustUser(client) {
     }
 }
 
-/**
- * paser Nkust schedule. give Nkust schedule pdf file. return all of eventlist in the pdf file
- */
-fun parseNkustSchedule(pdf: File): MutableList<NkustEvent> {
-    val doc = PDDocument.load(pdf)
-    val docTextSoup = PDFTextStripper().getText(doc).let {
-//        it.dropLast(5)
-        it.dropLast(it.indexOfLast { it == '1' })
-        it
-    }
-
-    val nkustEvents = mutableListOf<NkustEvent>()
-
-    Regex("[A○].+\\((\\S* ?\\S)+\\s").findAll(docTextSoup).forEach {
-        val event = docTextSoup.substring(it.range)
-
-        val agency = event.substring(0, event.indexOf('(')).let {
-            it.replace("[A○E \\s]+".toRegex(), "")
-        }
-        val time = event.substring(event.indexOf('(') + 1, event.indexOf(')'))
-        val description = event.substringAfter(')')
-
-//        println("=>> $agency | $time | $description")
-
-//        nkustEvents.add(
-//            NkustEvent(
-//                agency = agency,
-//                time = time,
-//                description = description
-//            )
-//        )
-        throw Error("paserNkustSchedule 未完成")
-    }
-    return nkustEvents
-}
 
 
 
