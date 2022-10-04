@@ -1,8 +1,6 @@
 package com.example.nkustplatformassistant.ui.home
 
 import android.app.Activity
-import android.content.Context
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -20,7 +18,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -43,6 +40,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.nkustplatformassistant.R
 import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntity
+import com.example.nkustplatformassistant.dbDataAvailability
 import com.example.nkustplatformassistant.navigation.Screen
 import com.google.accompanist.pager.*
 import java.time.Duration
@@ -69,17 +67,17 @@ fun BackCard(showBackCard: MutableState<Boolean>) {
         Card(modifier = Modifier.padding(20.dp)) {
             Column(verticalArrangement = Arrangement.spacedBy(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "Are you sure to leave?")
+                Text(stringResource(R.string.home_leaving_message))
                 Row(modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly) {
                     Button(onClick = { showBackCard.value = false }) {
-                        Text(text = "No")
+                        Text(stringResource(R.string.no))
                     }
                     Button(onClick = {
                         showBackCard.value = false
                         activity.finish()
                     }) {
-                        Text(text = "Yes")
+                        Text(stringResource(R.string.yes))
                     }
                 }
             }
@@ -97,12 +95,12 @@ fun HomeBase(
 
     val displayContent = remember { mutableStateOf(false) }
 
-    homeViewModel.dbHasData.observeAsState(false).let {
-        println("dbHasData: ${it.value}")
-        when (it.value) {
-            true -> displayContent.value = true
-            false -> displayIndicator.value = true
-        }
+
+    println("Database Availability: $dbDataAvailability")
+
+    when (dbDataAvailability) {
+        true -> displayContent.value = true
+        false -> displayIndicator.value = true
     }
 
     if (displayIndicator.value) {
@@ -125,7 +123,7 @@ fun HomeBase(
                 .verticalScroll(rememberScrollState()),
         ) {
             Text(
-                "Recent Highlight",
+                stringResource(R.string.home_recenthighlight_text),
                 fontWeight = FontWeight.Bold,
                 fontSize = 44.sp,
                 lineHeight = 40.sp
@@ -139,13 +137,13 @@ fun HomeBase(
                 Column(Modifier.padding(16.dp)) {
                     val showConfirmDialog = remember { mutableStateOf(false) }
                     Text(
-                        text = "Welcome!",
+                        stringResource(R.string.home_welcome),
                         fontWeight = FontWeight.Bold,
                         fontSize = 32.sp
                     )
                     Spacer(modifier = Modifier.padding(8.dp))
                     Text(
-                        text = "If you faced data missing, don't hesitate to login again refresh database.",
+                        stringResource(R.string.home_datamissing_text),
                         fontSize = 20.sp
                     )
                     Spacer(modifier = Modifier.padding(8.dp))
@@ -156,7 +154,7 @@ fun HomeBase(
                         Button(onClick = {
                             showConfirmDialog.value = true
                         }) {
-                            Text(text = "Press me to refresh!")
+                            Text(stringResource(R.string.home_datamissing_refresh))
                         }
                     }
                     // Confirm Dialog
@@ -172,7 +170,7 @@ fun HomeBase(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Text(
-                                        text = "Are you sure to refresh database and login again?",
+                                        stringResource(R.string.home_datamissing_refresh_confirm),
                                         textAlign = TextAlign.Center
                                     )
                                     Spacer(modifier = Modifier.padding(bottom = 20.dp))
@@ -186,13 +184,13 @@ fun HomeBase(
                                         horizontalArrangement = Arrangement.SpaceAround
                                     ) {
                                         Button(onClick = { showConfirmDialog.value = false }) {
-                                            Text(text = "No")
+                                            Text(stringResource(R.string.no))
                                         }
                                         Button(modifier = Modifier.padding(end = 4.dp), onClick = {
                                             navController.navigate(Screen.Login.route)
                                             homeViewModel.clearDB(true)
                                         }) {
-                                            Text(text = "Yes")
+                                            Text(stringResource(R.string.yes))
                                         }
                                     }
                                 }
@@ -398,12 +396,12 @@ fun NoCourseCard(
             // TODO: 休息時間就不算了?
 
             Text(
-                text = "Subject",
+                stringResource(R.string.home_coursecard_subject),
                 fontWeight = FontWeight.Bold,
                 fontSize = 32.sp
             )
             Spacer(modifier = Modifier.padding(8.dp))
-            Text(text = stringResource(
+            Text(stringResource(
                 id = R.string.home_coursecard_time_selector,
                 minuteBefore.toInt()))
             Spacer(modifier = Modifier.padding(bottom = 20.dp))
@@ -602,7 +600,8 @@ fun BeforeTimeSelector(
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(3.dp),
                     verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = "After $minuteBefore minutes")
+                    Text(stringResource(R.string.home_coursecard_timeselector_text,
+                        minuteBefore.toInt()))
                     Icon(
                         imageVector =
                         if (expanded) Icons.Filled.ArrowDropUp
@@ -612,7 +611,10 @@ fun BeforeTimeSelector(
                 DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                     for (minute in 15..60 step 15) {
                         DropdownMenuItem(
-                            text = { Text(text = "after $minute minutes") },
+                            text = {
+                                Text(stringResource(R.string.home_coursecard_timeselector_text,
+                                    minuteBefore.toInt()))
+                            },
                             onClick = {
                                 getRecentCourse(minute.toLong())
                                 expanded = false
@@ -632,25 +634,25 @@ fun BeforeTimeSelector(
     }
 }
 
-@Composable
-fun CheckData(context: Context, navController: NavController) {
-    Column(
-        modifier = Modifier
-            .padding(bottom = 20.dp)
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        CircularProgressIndicator()
-        Text(text = "Please wait a while...")
-        // https://stackoverflow.com/questions/72701963/why-it-says-list-contains-no-element-matching-the-predicate-for-android-jetp
-        LaunchedEffect(Unit) {
-            Toast.makeText(
-                context,
-                "It seems database is null, please re-login to get data from web again.",
-                Toast.LENGTH_LONG
-            ).show()
-            navController.navigate(Screen.Login.route)
-        }
-    }
-}
+//@Composable
+//fun CheckData(context: Context, navController: NavController) {
+//    Column(
+//        modifier = Modifier
+//            .padding(bottom = 20.dp)
+//            .fillMaxSize(),
+//        verticalArrangement = Arrangement.Center,
+//        horizontalAlignment = Alignment.CenterHorizontally
+//    ) {
+//        CircularProgressIndicator()
+//        Text(text = "Please wait a while...")
+//        // https://stackoverflow.com/questions/72701963/why-it-says-list-contains-no-element-matching-the-predicate-for-android-jetp
+//        LaunchedEffect(Unit) {
+//            Toast.makeText(
+//                context,
+//                "It seems database is null, please re-login to get data from web again.",
+//                Toast.LENGTH_LONG
+//            ).show()
+//            navController.navigate(Screen.Login.route)
+//        }
+//    }
+//}

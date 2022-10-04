@@ -19,7 +19,6 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.graphics.ImageBitmap
@@ -27,7 +26,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -37,6 +36,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.nkustplatformassistant.R
 import com.example.nkustplatformassistant.navigation.Screen
 
 @Composable
@@ -51,29 +51,20 @@ fun LoginScreenBase(
     val context = LocalContext.current
 
     // https://proandroiddev.com/how-to-collect-flows-lifecycle-aware-in-jetpack-compose-babd53582d0b
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val loginStateFlowLifecycleAware = remember(
-        loginParamsViewModel.loginState, lifecycleOwner
-    ) {
-        loginParamsViewModel.loginState.flowWithLifecycle(
-            lifecycleOwner.lifecycle,
-            Lifecycle.State.STARTED)
-    }
+    val loginState by loginParamsViewModel.loginState.observeAsState(false)
 
-    val loginState = loginStateFlowLifecycleAware.collectAsState(3)
-
-    LaunchedEffect(loginState.value) {
+    LaunchedEffect(loginState) {
         fun showToast(value: String) {
             Toast.makeText(context, "Login state: $value", Toast.LENGTH_SHORT)
                 .show()
         }
 
-        when (loginState.value) {
-            1 -> {
+        when (loginState) {
+            true -> {
                 showToast("true")
                 navController.navigate(Screen.Home.route)
             }
-            else -> showToast("false")
+            false -> showToast("false")
         }
     }
 
@@ -86,8 +77,6 @@ fun LoginScreenBase(
         onPwdChanged = { loginParamsViewModel.onPwdChange(it) },
         onPwdVisibilityReversed = { loginParamsViewModel.onPwdVisibilityReversed() },
         loginParamsViewModel = loginParamsViewModel,
-        navController = navController,
-        lifecycleOwner = lifecycleOwner
     )
 
     LaunchedEffect(Unit) {
@@ -107,8 +96,6 @@ fun LoginForm(
     onPwdChanged: (String) -> Unit,
     onPwdVisibilityReversed: () -> Unit,
     loginParamsViewModel: LoginParamsViewModel,
-    navController: NavController,
-    lifecycleOwner: LifecycleOwner,
 ) {
     val focusManager = LocalFocusManager.current
     val context = LocalContext.current
@@ -117,8 +104,6 @@ fun LoginForm(
     ShowDialogBase(
         showDialog = showDialog,
         loginParamsViewModel = loginParamsViewModel,
-        navController = navController,
-        lifecycleOwner = lifecycleOwner
     )
 
     // TODO(1. only put etxt to home screen and do login in HomeScreen - bad
@@ -135,13 +120,13 @@ fun LoginForm(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Welcome!",
+        Text(stringResource(R.string.login_welcome),
             style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.padding(bottom = 10.dp))
         OutlinedTextField(
             value = uid,
             onValueChange = onUidChanged,
-            label = { Text(text = "Student ID") },
+            label = { Text(stringResource(R.string.login_student_id)) },
             singleLine = true,
             leadingIcon = {
                 Icon(imageVector = Icons.TwoTone.Person,
@@ -164,7 +149,7 @@ fun LoginForm(
                 .fillMaxWidth(0.85F),
             value = pwd,
             onValueChange = onPwdChanged,
-            label = { Text(text = "Password") },
+            label = { Text(stringResource(R.string.login_student_password)) },
             singleLine = true,
             leadingIcon = {
                 Icon(imageVector = Icons.TwoTone.Password,
@@ -215,7 +200,7 @@ fun LoginForm(
                 },
                 shape = RoundedCornerShape(50),
             ) {
-                Text(text = "Login")
+                Text(stringResource(R.string.login_login))
                 Icon(imageVector = Icons.TwoTone.Login,
                     contentDescription = null,
                     Modifier.padding(start = 10.dp))
@@ -229,8 +214,6 @@ fun ShowDialogBase(
     showDialog: MutableState<Boolean>,
     context: Context = LocalContext.current,
     loginParamsViewModel: LoginParamsViewModel,
-    navController: NavController,
-    lifecycleOwner: LifecycleOwner,
 ) {
 
     val etxtCode: String by loginParamsViewModel.etxtCode.observeAsState("")
@@ -319,30 +302,32 @@ fun AlertDialogForEtxtCode(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center) {
                 Text(
-                    text = "Please input validate code below:",
+                    stringResource(R.string.login_validate_code_message),
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Spacer(modifier = Modifier.padding(10.dp))
 
-                if (etxtIsLoadingValue) {
-                    CircularProgressIndicator()
-                } else {
-                    Image(
-                        bitmap = etxtImageBitmap,
-                        contentDescription = null,
-                        alignment = Alignment.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onImageClicked.invoke() },
-                        contentScale = ContentScale.FillWidth
-                    )
+                Box(modifier = Modifier.size(width = 200.dp, height = 100.dp),
+                    contentAlignment = Alignment.Center) {
+                    if (etxtIsLoadingValue)
+                        CircularProgressIndicator()
+                    else
+                        Image(
+                            bitmap = etxtImageBitmap,
+                            contentDescription = null,
+                            alignment = Alignment.Center,
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clickable { onImageClicked.invoke() },
+                            contentScale = ContentScale.FillWidth
+                        )
                 }
 
                 Spacer(modifier = Modifier.padding(5.dp))
                 OutlinedTextField(
                     value = etxtCode,
                     onValueChange = { onEtxtCodeChange(it) },
-                    label = { Text(text = "Validate Code") },
+                    label = { Text(stringResource(R.string.login_validate_code)) },
                     singleLine = true,
                     leadingIcon = {
                         Icon(imageVector = Icons.TwoTone.HowToReg,
@@ -373,7 +358,7 @@ fun AlertDialogForEtxtCode(
                         Icon(imageVector = Icons.TwoTone.Cancel,
                             modifier = Modifier.padding(end = 4.dp),
                             contentDescription = null)
-                        Text(text = "Cancel")
+                        Text(stringResource(R.string.login_cancel))
                     }
                     Spacer(modifier = Modifier.width(4.dp))
                     OutlinedButton(
@@ -385,7 +370,7 @@ fun AlertDialogForEtxtCode(
                         Icon(imageVector = Icons.TwoTone.Verified,
                             contentDescription = null,
                             modifier = Modifier.padding(end = 4.dp))
-                        Text(text = "Login")
+                        Text(stringResource(R.string.login_proceed))
                     }
                 }
             }
