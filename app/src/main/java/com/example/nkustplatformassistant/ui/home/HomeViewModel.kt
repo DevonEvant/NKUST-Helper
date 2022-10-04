@@ -5,6 +5,7 @@ import com.example.nkustplatformassistant.data.CurriculumTime
 import kotlinx.coroutines.launch
 import com.example.nkustplatformassistant.data.persistence.DataRepository
 import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntity
+import com.example.nkustplatformassistant.dbDataAvailability
 import kotlinx.coroutines.Dispatchers
 import java.time.Duration
 import java.time.LocalDate
@@ -14,9 +15,6 @@ class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
 
 
     // https://stackoverflow.com/questions/71709590/how-to-initialize-a-field-in-viewmodel-with-suspend-method
-
-    private val _dbHasData: MutableLiveData<Boolean> = MutableLiveData(false)
-    val dbHasData: LiveData<Boolean> get() = _dbHasData
 
     private val _fetchingProgress = MutableLiveData(0F)
     val fetchingProgress: LiveData<Float> get() = _fetchingProgress
@@ -61,6 +59,10 @@ class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
                 _fetchingProgress.postValue(0.67F)
                 // TODO: fetch Schedule to DB, progress didn't change
                 _fetchingProgress.postValue(1F)
+
+                dataRepository.checkDataIsReady().let {
+                    dbDataAvailability = it
+                }
             }
         }
     }
@@ -75,14 +77,10 @@ class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
-            dataRepository.checkDataIsReady().let {
-                _dbHasData.postValue(it)
-
-                if (it) {
-                    _todayCourse.postValue(
-                        dataRepository.getTodayCourse()
-                    )
-                }
+            if (dbDataAvailability) {
+                _todayCourse.postValue(
+                    dataRepository.getTodayCourse()
+                )
             }
         }
     }

@@ -11,4 +11,22 @@
     <string name="home_coursecard_class_group">分組</string>
     <string name="home_coursecard_class_time">從</string>
     <string name="home_coursecard_time_selector">您在 %1$d 分鐘內沒有任何課程，抓緊空檔複習或休息一下吧~</string>
+    <string name="login_welcome">很高興再次見到您!</string>
+    <string name="login_student_id">學號</string>
+    <string name="login_login">登入</string>
+    <string name="login_student_password">密碼</string>
+    <string name="login_validate_code_message">請在下方輸入驗證碼</string>
+    <string name="login_validate_code">驗證碼</string>
+    <string name="login_cancel">取消</string>
+    <string name="login_proceed">登入</string>
+    <string name="home_leaving_message">您確定要離開嗎?</string>
+    <string name="yes">是的</string>
+    <string name="no">不是</string>
+    <string name="home_welcome">您好!</string>
+    <string name="home_datamissing_text">如果遇到資料顯示不全、或資料遺失，請重新下載資料</string>
+    <string name="home_datamissing_refresh">點我重新下載</string>
+    <string name="home_datamissing_refresh_confirm">您確定想要重新下載資料嗎?</string>
+    <string name="home_coursecard_subject">科目快覽</string>
+    <string name="home_coursecard_timeselector_text">在 %1$d 分鐘後</string>
+    <string name="home_recenthighlight_text">近期焦點</string>
 </resources>

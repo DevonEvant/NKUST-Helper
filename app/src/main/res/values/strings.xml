@@ -10,4 +10,22 @@
     <string name="home_coursecard_class_group">Group</string>
     <string name="home_coursecard_class_time">From</string>
     <string name="home_coursecard_time_selector">You don\'t have any course in %1$d minutes, just chill and take a break.</string>
+    <string name="login_welcome">Welcome!</string>
+    <string name="login_student_id">Student ID</string>
+    <string name="login_student_password">Password</string>
+    <string name="login_login">Login</string>
+    <string name="login_validate_code_message">Please input validate code below</string>
+    <string name="login_validate_code">Validate Code</string>
+    <string name="login_cancel">Cancel</string>
+    <string name="login_proceed">Proceed</string>
+    <string name="home_leaving_message">Are you sure to leave?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="home_welcome">Welcome!</string>
+    <string name="home_datamissing_text">If you faced data missing, don\'t hesitate to login again refresh database.</string>
+    <string name="home_datamissing_refresh">Press me to refresh</string>
+    <string name="home_datamissing_refresh_confirm">Are you sure to refresh database and login again?</string>
+    <string name="home_coursecard_subject">Subject</string>
+    <string name="home_coursecard_timeselector_text">After %1$d minutes</string>
+    <string name="home_recenthighlight_text">Recent Highlight</string>
 </resources>

@@ -18,12 +18,21 @@ import com.example.nkustplatformassistant.ui.login.LoginScreen
 import com.example.nkustplatformassistant.ui.score.ScoreScreen
 import com.example.nkustplatformassistant.ui.score.ScoreViewModel
 import com.example.nkustplatformassistant.ui.theme.Nkust_platform_assistantTheme
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.ktx.Firebase
 
 // TODO(1. check network, 2. launch repository call when login state is initiated)
 
+var dbDataAvailability = false
+
 class NkustActivity : ComponentActivity() {
+    private lateinit var analytics: FirebaseAnalytics
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Obtain the FirebaseAnalytics instance.
+        analytics = Firebase.analytics
         val dataRepository = DataRepository.getInstance(applicationContext)
 
         setContent {
@@ -31,6 +40,7 @@ class NkustActivity : ComponentActivity() {
 
             Nkust_platform_assistantTheme {
                 NkustViewModel(dataRepository).dataAvailability().observeAsState(false).let {
+                    dbDataAvailability = it.value
                     if (it.value) navController.navigate(Screen.Home.route) {
                         popUpTo(0)
                     }

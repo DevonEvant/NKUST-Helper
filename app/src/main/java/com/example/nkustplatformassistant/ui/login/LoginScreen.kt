@@ -5,7 +5,6 @@ package com.example.nkustplatformassistant.ui.login
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -40,16 +39,11 @@ fun LoginScreenPreview() {
 fun LoginWhateverPreview() {
     Nkust_platform_assistantTheme {
         val context = LocalContext.current
-        val lifecycleOwner = LocalLifecycleOwner.current
 
         Column {
             ShowDialogBase(
                 showDialog = remember { mutableStateOf(true) },
-                loginParamsViewModel = LoginParamsViewModel(
-                    DataRepository(context)
-                ),
-                navController = rememberNavController(),
-                lifecycleOwner = lifecycleOwner
+                loginParamsViewModel = LoginParamsViewModel(DataRepository(context)),
             )
         }
     }
