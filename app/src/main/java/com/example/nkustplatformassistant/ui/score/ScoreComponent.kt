@@ -17,17 +17,20 @@ import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.graphics.Color.Companion.Blue
 import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.graphics.Color.Companion.Yellow
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.liveData
+import androidx.navigation.NavController
+import com.example.nkustplatformassistant.data.persistence.DataRepository
 import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
 import com.example.nkustplatformassistant.ui.theme.Nkust_platform_assistantTheme
 
 @Composable
-fun ScoreContent(scoreViewModel: ScoreViewModel) {
+fun ScoreContent(scoreViewModel: ScoreViewModel, navController: NavController) {
 
     val scores by scoreViewModel.scores.observeAsState()
 
@@ -179,8 +182,9 @@ fun ScoresDataTable(scores: List<ScoreEntity?>) {
 @Composable
 @Preview(showBackground = true)
 fun LoginScreenPreview() {
+    val context = LocalContext.current
     Nkust_platform_assistantTheme {
-        val scoreViewModel = ScoreViewModel()
+        val scoreViewModel = ScoreViewModel(DataRepository(context))
         scoreViewModel.rS(
             mutableListOf(
                 ScoreEntity(
@@ -209,6 +213,7 @@ fun LoginScreenPreview() {
                 ),
             )
         )
-        ScoreContent(scoreViewModel)
+        val navController = null
+//        ScoreContent(scoreViewModel, navController)
     }
 }

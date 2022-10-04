@@ -15,6 +15,8 @@ import com.example.nkustplatformassistant.ui.home.HomeScreen
 import com.example.nkustplatformassistant.ui.home.HomeViewModel
 import com.example.nkustplatformassistant.ui.login.LoginParamsViewModel
 import com.example.nkustplatformassistant.ui.login.LoginScreen
+import com.example.nkustplatformassistant.ui.score.ScoreScreen
+import com.example.nkustplatformassistant.ui.score.ScoreViewModel
 import com.example.nkustplatformassistant.ui.theme.Nkust_platform_assistantTheme
 
 // TODO(1. check network, 2. launch repository call when login state is initiated)
@@ -46,6 +48,9 @@ class NkustActivity : ComponentActivity() {
                     }
                     composable(Screen.Curriculum.route) {
                         CurriculumScreen(CurriculumViewModel(dataRepository), navController)
+                    }
+                    composable(Screen.Score.route) {
+                        ScoreScreen(ScoreViewModel(dataRepository), navController)
                     }
                 }
             }

@@ -308,7 +308,8 @@ interface OpenedRange<T> {
 
 class NkustEvent(
     val agency: String,
-    val time: OpenedRange<MonthAndDay>,
+//    todo val time: OpenedRange<MonthAndDay>,
+    val time: String,
     val description: String,
 ) {
 
