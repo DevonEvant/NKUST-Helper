@@ -39,6 +39,7 @@ import com.example.nkustplatformassistant.data.DropDownParams
 import com.example.nkustplatformassistant.data.Weeks
 import com.example.nkustplatformassistant.data.curriculumParams
 import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntity
+import com.example.nkustplatformassistant.navigation.Screen
 
 @Composable
 fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: NavController) {
@@ -53,10 +54,13 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
     Column(modifier = Modifier.padding(8.dp)) {
 //    -----DisplayOption-----
         Row(
-            modifier = Modifier.horizontalScroll(scrollState),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            IconButton(onClick = { navController.navigate(Screen.Home.route) }) {
+                Icon(imageVector = Icons.TwoTone.ArrowBack, contentDescription = null)
+            }
+
             Icon(
                 imageVector = Icons.Default.AutoAwesome,
                 contentDescription = null,
@@ -64,24 +68,27 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
             )
             Text(stringResource(R.string.curriculum_filter))
 
-            ChipCell(
-                startTimeVisibility,
-                { curriculumViewModel.onStartTimeVisibilityChange() },
-            ) { Text(stringResource(R.string.curriculum_start_time)) }
+            Row(modifier = Modifier.horizontalScroll(scrollState)) {
 
-            ChipCell(
-                endTimeVisibility,
-                { curriculumViewModel.onEndTimeVisibilityChange() },
-            ) { Text(stringResource(R.string.curriculum_end_time)) }
+                ChipCell(
+                    startTimeVisibility,
+                    { curriculumViewModel.onStartTimeVisibilityChange() },
+                ) { Text(stringResource(R.string.curriculum_start_time)) }
 
-            // TODO: Debug usage here
+                ChipCell(
+                    endTimeVisibility,
+                    { curriculumViewModel.onEndTimeVisibilityChange() },
+                ) { Text(stringResource(R.string.curriculum_end_time)) }
+
+                // TODO: Debug usage here
 //            val dropDownParams = listOf(
 //                DropDownParams(110,1,"110-1"),
 //                DropDownParams(110,2,"110-2"),
 //                DropDownParams(110,3,"110-3"),
 //            )
-            SemesterSelector(dropDownParams) {
-                curriculumViewModel.onSelectDropDownChange(it)
+                SemesterSelector(dropDownParams) {
+                    curriculumViewModel.onSelectDropDownChange(it)
+                }
             }
         }
 
@@ -143,7 +150,13 @@ fun SemesterSelector(
 
     ChipCell(state = true, onClick = { expanded = true }) {
         Box(modifier = Modifier.wrapContentSize()) {
-            Text(text = currentSelectDropDownText)
+            Row(horizontalArrangement = Arrangement.spacedBy(5.dp),
+                verticalAlignment = Alignment.CenterVertically) {
+                Text(text = currentSelectDropDownText)
+                Icon(imageVector = if (expanded) Icons.TwoTone.ArrowDropUp
+                else Icons.TwoTone.ArrowDropDown,
+                    contentDescription = null)
+            }
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                 if (dropDownList.isEmpty()) {
                     DropdownMenuItem(text = { Text(text = currentSelectDropDownText) },
