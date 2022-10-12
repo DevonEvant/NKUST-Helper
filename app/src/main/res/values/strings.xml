@@ -37,4 +37,11 @@
     <string name="score_average">Average</string>
     <string name="score_dept_ranking">Department ranking</string>
     <string name="score_class_ranking">Class ranking</string>
+    <string name="score_class_ranking_rate">%1$.2f%% of the class</string>
+    <string name="score_dept_ranking_rate">%1$.2f%% of the department</string>
+    <string name="home_scorecard_text">Academic performance</string>
+    <string name="home_scorecard_button">See detail</string>
+    <string name="score_scoretable_subject">Subject</string>
+    <string name="score_scoretable_midscore">Mid score</string>
+    <string name="score_scoretable_finalscore">Final Score</string>
 </resources>
