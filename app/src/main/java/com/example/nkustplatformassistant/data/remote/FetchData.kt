@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import com.example.nkustplatformassistant.data.NkustEvent
 import com.example.nkustplatformassistant.data.Score
 import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntity
+import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreOtherEntity
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
@@ -21,7 +22,6 @@ import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.text.PDFTextStripper
 import org.jsoup.parser.*
 import java.io.File
-import kotlin.random.Random
 
 // TODO Timeout handling
 
@@ -293,7 +293,105 @@ class NkustAccessor(client: HttpClient) : NkustUser(client) {
 //            }
             return scoreList
         }
+    }
 
+
+    suspend fun getSemesterScoreOther(
+        year: String,
+        semester: String,
+        semDescription: String,
+    ): ScoreOtherEntity {
+        val dropdownList = getDstJspBase("AG008") // score page
+
+        val scoreUrl = Url(NKUST_ROUTES.WEBAP_ENTRY_FRAME + "/../ag_pro/ag008.jsp")
+
+        client.post(scoreUrl) {
+            url {
+                parameters.append("yms", "$year,$semester")
+                parameters.append("spath", dropdownList["spath"]!!)
+                parameters.append("arg01", year)
+                parameters.append("arg02", semester)
+            }
+        }.bodyAsText().let {
+            val stringToParse = parser
+                .parseInput(it, scoreUrl.toString())
+                .selectXpath("//form[@action='./ag008_pdf.jsp']//div[1]")
+                .text()
+
+            /*
+             * 操行成績：81.60
+             * 總平均：85.86
+             * 班名次/班人數：2/59
+             * 系名次/系人數：9/160
+             */
+
+            /* when no data
+             * 操行成績：0
+             * 總平均：
+             * 班名次/班人數：/
+             * 系名次/系人數：/
+             */
+
+            val stringList = stringToParse.split("[\\^\\h]+".toRegex())
+            // 班名次 != null
+
+            try {
+
+                val classRanking = stringList[2].split("：")[1].split("/")[0].let { classRanking ->
+                    if (classRanking.isNotEmpty()) {
+                        classRanking.toInt()
+                    } else {
+                        null
+                    }
+                }
+                val classPeople = stringList[2].split("：")[1].split("/")[1].let { classPeople ->
+                    if (classPeople.isNotEmpty()) {
+                        classPeople.toInt()
+                    } else {
+                        null
+                    }
+                }
+                val deptRanking = stringList[3].split("：")[1].split("/")[0].let { deptRanking ->
+                    if (deptRanking.isNotEmpty()) {
+                        deptRanking.toInt()
+                    } else {
+                        null
+                    }
+                }
+                val deptPeople = stringList[3].split("：")[1].split("/")[1].let { deptPeople ->
+                    if (deptPeople.isNotEmpty()) {
+                        deptPeople.toInt()
+                    } else {
+                        null
+                    }
+                }
+
+                return ScoreOtherEntity(
+                    year = year,
+                    semester = semester,
+                    semDescription = semDescription,
+                    behaviorScore = stringList[0].split("：")[1],
+                    average = stringList[1].split("：")[1],
+                    classRanking = classRanking,
+                    classPeople = classPeople,
+                    deptRanking = deptRanking,
+                    deptPeople = deptPeople)
+            } catch (e: IndexOutOfBoundsException) {
+                println("$e is okay because there's no data yet.")
+
+                return ScoreOtherEntity(
+                    year = year,
+                    semester = semester,
+                    semDescription = semDescription,
+                    behaviorScore = "",
+                    average = "",
+                    classRanking = null,
+                    classPeople = null,
+                    deptRanking = null,
+                    deptPeople = null
+                )
+            }
+        }
     }
 
 
@@ -367,7 +465,8 @@ class NkustAccessor(client: HttpClient) : NkustUser(client) {
         Regex("[A○].+\\((\\S* ?\\S)+\\s").findAll(docTextSoup).forEach {
             val event = docTextSoup.substring(it.range)
 
-            val agency = event.substring(0, event.indexOf('(')).replace("[A○E \\s]+".toRegex(), "")
+            val agency =
+                event.substring(0, event.indexOf('(')).replace("[A○E \\s]+".toRegex(), "")
             val time = event.substring(event.indexOf('(') + 1, event.indexOf(')'))
             val description = event.substringAfter(')')
 

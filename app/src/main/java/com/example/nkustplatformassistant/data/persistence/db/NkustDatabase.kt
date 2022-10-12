@@ -5,9 +5,11 @@ import androidx.room.*
 import com.example.nkustplatformassistant.data.persistence.db.dao.CalendarDao
 import com.example.nkustplatformassistant.data.persistence.db.dao.CourseDao
 import com.example.nkustplatformassistant.data.persistence.db.dao.ScoreDao
+import com.example.nkustplatformassistant.data.persistence.db.dao.ScoreOtherDao
 import com.example.nkustplatformassistant.data.persistence.db.entity.Calender
 import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntity
 import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
+import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreOtherEntity
 
 /* Reference:
  * https://wm4n.github.io/Android-Room%20Database-%E7%AB%8B%E9%A6%AC%E4%B8%8A%E6%89%8B%E5%B0%B1%E7%9C%8B%E9%80%99%E7%AF%87/
@@ -18,7 +20,7 @@ import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
 // https://medium.com/androiddevelopers/7-steps-to-room-27a5fe5f99b2
 
 @Database(
-    entities = arrayOf(Calender::class, ScoreEntity::class, CourseEntity::class),
+    entities = arrayOf(Calender::class, ScoreEntity::class, ScoreOtherEntity::class, CourseEntity::class),
     version = 1,
     exportSchema = false
 )
@@ -26,6 +28,7 @@ abstract class NkustDatabase : RoomDatabase() {
 
     abstract fun calenderDao(): CalendarDao
     abstract fun scoreDao(): ScoreDao
+    abstract fun scoreOtherDao(): ScoreOtherDao
     abstract fun courseDao(): CourseDao
 
     companion object {

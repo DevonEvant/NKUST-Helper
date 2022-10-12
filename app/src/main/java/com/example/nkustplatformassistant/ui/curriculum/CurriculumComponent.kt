@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.TextStyle
@@ -32,11 +33,13 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
+import com.example.nkustplatformassistant.R
 import com.example.nkustplatformassistant.data.CurriculumTime
 import com.example.nkustplatformassistant.data.DropDownParams
 import com.example.nkustplatformassistant.data.Weeks
 import com.example.nkustplatformassistant.data.curriculumParams
 import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntity
+import com.example.nkustplatformassistant.navigation.Screen
 
 @Composable
 fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: NavController) {
@@ -51,37 +54,41 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
     Column(modifier = Modifier.padding(8.dp)) {
 //    -----DisplayOption-----
         Row(
-            modifier = Modifier.horizontalScroll(scrollState),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            IconButton(onClick = { navController.navigate(Screen.Home.route) }) {
+                Icon(imageVector = Icons.TwoTone.ArrowBack, contentDescription = null)
+            }
+
             Icon(
                 imageVector = Icons.Default.AutoAwesome,
                 contentDescription = null,
                 modifier = Modifier.padding(end = 2.dp)
             )
-            Text(text = "Display:")
+            Text(stringResource(R.string.curriculum_filter))
 
-            ChipCell(
-                startTimeVisibility,
-                { curriculumViewModel.onStartTimeVisibilityChange() },
-//                focusRequester
-            ) { Text("Start Time") }
+            Row(modifier = Modifier.horizontalScroll(scrollState)) {
 
-            ChipCell(
-                endTimeVisibility,
-                { curriculumViewModel.onEndTimeVisibilityChange() },
-//                focusRequester
-            ) { Text("End Time") }
+                ChipCell(
+                    startTimeVisibility,
+                    { curriculumViewModel.onStartTimeVisibilityChange() },
+                ) { Text(stringResource(R.string.curriculum_start_time)) }
 
-            // TODO: Debug usage here
+                ChipCell(
+                    endTimeVisibility,
+                    { curriculumViewModel.onEndTimeVisibilityChange() },
+                ) { Text(stringResource(R.string.curriculum_end_time)) }
+
+                // TODO: Debug usage here
 //            val dropDownParams = listOf(
 //                DropDownParams(110,1,"110-1"),
 //                DropDownParams(110,2,"110-2"),
 //                DropDownParams(110,3,"110-3"),
 //            )
-            SemesterSelector(dropDownParams) {
-                curriculumViewModel.onSelectDropDownChange(it)
+                SemesterSelector(dropDownParams) {
+                    curriculumViewModel.onSelectDropDownChange(it)
+                }
             }
         }
 
@@ -105,7 +112,7 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Text(text = "Please wait a while...")
+                Text(stringResource(R.string.curriculum_waiting))
                 Spacer(modifier = Modifier.padding(bottom = 20.dp))
                 CircularProgressIndicator()
             }
@@ -143,7 +150,13 @@ fun SemesterSelector(
 
     ChipCell(state = true, onClick = { expanded = true }) {
         Box(modifier = Modifier.wrapContentSize()) {
-            Text(text = currentSelectDropDownText)
+            Row(horizontalArrangement = Arrangement.spacedBy(5.dp),
+                verticalAlignment = Alignment.CenterVertically) {
+                Text(text = currentSelectDropDownText)
+                Icon(imageVector = if (expanded) Icons.TwoTone.ArrowDropUp
+                else Icons.TwoTone.ArrowDropDown,
+                    contentDescription = null)
+            }
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                 if (dropDownList.isEmpty()) {
                     DropdownMenuItem(text = { Text(text = currentSelectDropDownText) },
@@ -304,8 +317,10 @@ fun CurriculumTable(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Text(text = course.courseName,
-                    textAlign = TextAlign.Center,)
+                Text(
+                    text = course.courseName,
+                    textAlign = TextAlign.Center,
+                )
             }
         }
 

@@ -27,6 +27,22 @@
     <string name="home_datamissing_refresh">點我重新下載</string>
     <string name="home_datamissing_refresh_confirm">您確定想要重新下載資料嗎?</string>
     <string name="home_coursecard_subject">科目快覽</string>
-    <string name="home_coursecard_timeselector_text">在 %1$d 分鐘後</string>
+    <string name="home_coursecard_timeselector_text">在 %1$d 分鐘</string>
     <string name="home_recenthighlight_text">近期焦點</string>
+    <string name="curriculum_filter">篩選器:</string>
+    <string name="curriculum_start_time">開始時間</string>
+    <string name="curriculum_end_time">結束時間</string>
+    <string name="curriculum_waiting">請稍後…</string>
+    <string name="home_coursecard_see_all">查看所有課程</string>
+    <string name="score_average">總平均</string>
+    <string name="score_beheavior">操行成績</string>
+    <string name="score_dept_ranking">系上排名</string>
+    <string name="score_class_ranking">班上排名</string>
+    <string name="score_class_ranking_rate">班排名前 %1$.2f%%</string>
+    <string name="score_dept_ranking_rate">系排名前 %1$.2f%%</string>
+    <string name="home_scorecard_text">學期成績快覽</string>
+    <string name="home_scorecard_button">查看詳細資料</string>
+    <string name="score_scoretable_subject">科目</string>
+    <string name="score_scoretable_midscore">期中考</string>
+    <string name="score_scoretable_finalscore">期末考</string>
 </resources>

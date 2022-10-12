@@ -6,6 +6,8 @@ import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.cookies.*
 import org.bouncycastle.jce.provider.BouncyCastleProvider
+import java.io.File
+import java.io.FileInputStream
 import java.security.KeyStore
 import java.security.Security
 import javax.net.ssl.SSLContext
@@ -27,6 +29,31 @@ class NkustClient {
                 }
             }
 
+            return client
+        }
+
+        fun getInstance(): HttpClient{
+            val client = HttpClient(CIO){
+                install(HttpCookies){
+                    storage = AcceptAllCookiesStorage()
+                }
+                engine {
+                    https{
+                        Security.addProvider(BouncyCastleProvider())
+                        val keyStoreFile = FileInputStream(
+                            File("./app/src/main/res/raw/nkustcertchain.bks"))
+                        val keyStorePassword = "NKUSTCertPass".toCharArray()
+                        val keyStore: KeyStore = KeyStore.getInstance("BKS")
+                        keyStore.load(keyStoreFile, keyStorePassword)
+
+                        val trustManagerFactory =
+                            TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
+                        trustManagerFactory.init(keyStore)
+
+                        trustManager = trustManagerFactory.trustManagers?.first { it is X509TrustManager } as X509TrustManager
+                    }
+                }
+            }
             return client
         }
     }

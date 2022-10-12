@@ -6,6 +6,7 @@ import com.example.nkustplatformassistant.data.*
 import com.example.nkustplatformassistant.data.persistence.db.NkustDatabase
 import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntity
 import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
+import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreOtherEntity
 import com.example.nkustplatformassistant.data.remote.NkustAccessor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -26,6 +27,7 @@ class DataRepository(context: Context) {
             return INSTANCE as DataRepository
         }
     }
+
     private val nkustClient = NkustClient.getInstance(context)
     private val nkustAccessor = NkustAccessor(nkustClient)
     private val db = NkustDatabase.getInstance(context)
@@ -35,7 +37,7 @@ class DataRepository(context: Context) {
         val isDataReady = mutableListOf<Boolean>()
         withContext(Dispatchers.IO) {
             isDataReady.addAll(
-                listOf(isScoreExist(), isCourseExist())
+                listOf(isScoreExist(), isScoreOtherExist(), isCourseExist())
             )
         }
         return !isDataReady.contains(false)
@@ -45,6 +47,8 @@ class DataRepository(context: Context) {
     suspend fun clearAllDB() {
         db.scoreDao().emptyScoreTable()
         db.courseDao().emptyCourseTable()
+        db.scoreDao().emptyScoreTable()
+        db.scoreOtherDao().emptyScoreOtherTable()
     }
 
     // Login...
@@ -86,6 +90,14 @@ class DataRepository(context: Context) {
         db.scoreDao().insertMultiScore(listToInsert)
     }
 
+    suspend fun fetchAllScoreOtherToDB() {
+        val listToInsert = getAllScoreOtherToTypedScoreOtherEntity(nkustAccessor)
+
+        for (item in listToInsert) {
+            db.scoreOtherDao().insertScoreOther(item)
+        }
+    }
+
     suspend fun getDropDownListFromDB(): List<DropDownParams> {
         val dropDownList = mutableListOf<DropDownParams>()
         withContext(Dispatchers.IO) {
@@ -97,20 +109,38 @@ class DataRepository(context: Context) {
         return dropDownList
     }
 
+//    /**
+//     * By using [getLatestScoreParams], you can get latest year, semester, and semester description
+//     * with a data class of [DropDownParams]
+//     */
+//    suspend fun getLatestScoreParams(): DropDownParams {
+//        lateinit var latestScoreParams: DropDownParams
+//        withContext(Dispatchers.IO) {
+//            latestScoreParams = db.scoreDao().getLatestScoreList()
+//        }
+//        return latestScoreParams
+//    }
+
     /**
-     * By using [getLatestScoreParams], you can get latest year, semester, and semester description
-     * with a data class of [DropDownParams]
+     * Get Score's DropDownList by its availability
+     * @return List<[DropDownParams]>
+     *
+     * first element is the latest param
      */
-    suspend fun getLatestScoreParams(): DropDownParams {
-        lateinit var latestScoreParams: DropDownParams
-        withContext(Dispatchers.IO) {
-            latestScoreParams = db.scoreDao().getLatestScoreList()
+    suspend fun getScoreDropDownList(): List<DropDownParams>{
+        lateinit var dropDownList: List<DropDownParams>
+        withContext(Dispatchers.IO){
+            dropDownList = db.scoreDao().getDropDownList()
         }
-        return latestScoreParams
+        return dropDownList
     }
 
     suspend fun getSpecScoreDataFromDB(year: Int, semester: Int): List<ScoreEntity> {
         return db.scoreDao().getSpecScoreList(year, semester)
+    }
+
+    suspend fun getSpecScoreOtherDataFromDB(year: Int, semester: Int): ScoreOtherEntity{
+        return db.scoreOtherDao().getScoreOther(year, semester)
     }
 
 
@@ -118,6 +148,14 @@ class DataRepository(context: Context) {
         var exist: Boolean
         withContext(Dispatchers.IO) {
             exist = db.scoreDao().isExist()
+        }
+        return exist
+    }
+
+    private suspend fun isScoreOtherExist(): Boolean {
+        var exist: Boolean
+        withContext(Dispatchers.IO) {
+            exist = db.scoreOtherDao().isExist()
         }
         return exist
     }
@@ -146,7 +184,7 @@ class DataRepository(context: Context) {
     /**
      * Get today's course
      */
-    suspend fun getTodayCourse(): List<CourseEntity>{
+    suspend fun getTodayCourse(): List<CourseEntity> {
         val latestCourseList = getLatestCourseParams()
         val courseList = db.courseDao().getSpecCourseList(
             latestCourseList.year, latestCourseList.semester)
@@ -181,6 +219,9 @@ class DataRepository(context: Context) {
     }
 
 }
+
+// TODO: Reuse allListToGet
+// var listToGet: List<List<String>> = listOf()
 
 private suspend fun allListToGet(nkustAccessor: NkustAccessor): List<List<String>> {
     val listToGet: MutableList<List<String>> = mutableListOf()
@@ -236,6 +277,17 @@ private suspend fun getAllScoreToTypedScoreEntity(nkustAccessor: NkustAccessor):
     }
 
     return scoreEntityList
+}
+
+private suspend fun getAllScoreOtherToTypedScoreOtherEntity(nkustAccessor: NkustAccessor): List<ScoreOtherEntity> {
+    val listToGet = allListToGet(nkustAccessor)
+
+    val scoreOtherList = mutableListOf<ScoreOtherEntity>()
+
+    listToGet.forEach {
+        scoreOtherList.add(nkustAccessor.getSemesterScoreOther(it[0], it[1], it[2]))
+    }
+    return scoreOtherList
 }
 
 private suspend fun getAllCourseToTypedCourseEntity(nkustAccessor: NkustAccessor): List<CourseEntity> {

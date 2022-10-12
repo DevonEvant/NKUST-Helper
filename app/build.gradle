@@ -144,7 +144,7 @@ dependencies {
 
     // https://devlibrary.withgoogle.com/products/android/repos/hi-manshu-kalendar
     // https://github.com/hi-manshu/Kalendar
-    implementation "com.himanshoe:kalendar:1.1.0"
+    implementation "com.himanshoe:kalendar:1.1.1"
 
     // BouncyCastle
     implementation 'org.bouncycastle:bcpkix-jdk18on:1.72'

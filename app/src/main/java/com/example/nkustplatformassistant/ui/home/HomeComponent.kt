@@ -24,7 +24,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -34,7 +33,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.util.lerp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -42,9 +40,7 @@ import com.example.nkustplatformassistant.R
 import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntity
 import com.example.nkustplatformassistant.dbDataAvailability
 import com.example.nkustplatformassistant.navigation.Screen
-import com.google.accompanist.pager.*
 import java.time.Duration
-import kotlin.math.absoluteValue
 
 const val defaultTime = 15L
 
@@ -85,7 +81,6 @@ fun BackCard(showBackCard: MutableState<Boolean>) {
     }
 }
 
-@OptIn(ExperimentalPagerApi::class)
 @Composable
 fun HomeBase(
     homeViewModel: HomeViewModel,
@@ -121,6 +116,7 @@ fun HomeBase(
                 .fillMaxSize()
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             Text(
                 stringResource(R.string.home_recenthighlight_text),
@@ -128,84 +124,8 @@ fun HomeBase(
                 fontSize = 44.sp,
                 lineHeight = 40.sp
             )
-            Spacer(modifier = Modifier.padding(vertical = 15.dp))
 
-            ElevatedCard(
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.medium,
-            ) {
-                Column(Modifier.padding(16.dp)) {
-                    val showConfirmDialog = remember { mutableStateOf(false) }
-                    Text(
-                        stringResource(R.string.home_welcome),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 32.sp
-                    )
-                    Spacer(modifier = Modifier.padding(8.dp))
-                    Text(
-                        stringResource(R.string.home_datamissing_text),
-                        fontSize = 20.sp
-                    )
-                    Spacer(modifier = Modifier.padding(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        Button(onClick = {
-                            showConfirmDialog.value = true
-                        }) {
-                            Text(stringResource(R.string.home_datamissing_refresh))
-                        }
-                    }
-                    // Confirm Dialog
-                    if (showConfirmDialog.value) {
-                        Dialog(onDismissRequest = { showConfirmDialog.value = false }) {
-                            Card(modifier = Modifier.padding(8.dp)) {
-                                Column(
-                                    modifier = Modifier.padding(
-                                        horizontal = 8.dp,
-                                        vertical = 20.dp
-                                    ),
-                                    verticalArrangement = Arrangement.Center,
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        stringResource(R.string.home_datamissing_refresh_confirm),
-                                        textAlign = TextAlign.Center
-                                    )
-                                    Spacer(modifier = Modifier.padding(bottom = 20.dp))
-                                    Icon(
-                                        imageVector = Icons.TwoTone.Warning,
-                                        contentDescription = null, modifier = Modifier.scale(2F)
-                                    )
-                                    Spacer(modifier = Modifier.padding(bottom = 20.dp))
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceAround
-                                    ) {
-                                        Button(onClick = { showConfirmDialog.value = false }) {
-                                            Text(stringResource(R.string.no))
-                                        }
-                                        Button(modifier = Modifier.padding(end = 4.dp), onClick = {
-                                            navController.navigate(Screen.Login.route)
-                                            homeViewModel.clearDB(true)
-                                        }) {
-                                            Text(stringResource(R.string.yes))
-                                        }
-                                    }
-                                }
-
-                            }
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.padding(vertical = 20.dp))
-
-            // https://google.github.io/accompanist/pager/
-            // TODO: when finish scraping, stop showing circular progress bar and show Pager
-            // loading with progress bar, when it reaches its end, show home page
+            WelcomeCard(navController = navController, homeViewModel = homeViewModel)
 
             var recentCourse by remember {
                 mutableStateOf(CourseEntity(-1, -1, -1, "",
@@ -222,95 +142,26 @@ fun HomeBase(
             }
 
             homeViewModel.recentCourse.observeAsState(recentCourse).value.let {
-//                if ((it as CourseEntity).courseId != recentCourse.courseId) {
                 recentCourse = it
-//                }
             }
 
-            val pagerState = rememberPagerState()
-//            LaunchedEffect(pagerState.currentPage) {
-//                delay(5000)
-//                with(pagerState) {
-//                    val target = if (currentPage < pageCount - 1) currentPage + 1 else 0
-//                    animateScrollToPage(target)
-//                }
-//            }
+            SubjectCard(
+                recentCourse = recentCourse,
+                minuteBefore = homeViewModel.minuteBefore
+                    .observeAsState(Duration.ofMinutes(defaultTime)).value.toMinutes(),
+                getRecentCourse = { homeViewModel.getRecentCourse(it) },
+                navController = navController)
 
-            HorizontalPager(
-                count = 3,
-                state = pagerState,
-                modifier = Modifier.heightIn(200.dp, 270.dp)
-            ) { currentPage ->
-                Card(
-                    Modifier
-                        .graphicsLayer {
-                            // Calculate the absolute offset for the current page from the
-                            // scroll position. We use the absolute value which allows us to mirror
-                            // any effects for both directions
-                            val pageOffset =
-                                calculateCurrentOffsetForPage(currentPage).absoluteValue
+            ScoreCard(navController = navController)
 
-                            // We animate the scaleX + scaleY, between 85% and 100%
-                            lerp(
-                                start = 0.85f,
-                                stop = 1f,
-                                fraction = 1f - pageOffset.coerceIn(0f, 1f)
-                            ).also { scale ->
-                                scaleX = scale
-                                scaleY = scale
-                            }
-
-                            // We animate the alpha, between 50% and 100%
-                            alpha = lerp(
-                                start = 0.5f,
-                                stop = 1f,
-                                fraction = 1f - pageOffset.coerceIn(0f, 1f)
-                            )
-                        }
+            OutlinedCard(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    when (currentPage) {
-                        0 -> SubjectCard(
-                            recentCourse,
-                            homeViewModel.minuteBefore
-                                .observeAsState(Duration.ofMinutes(defaultTime))
-                                .value.toMinutes(),
-                            { homeViewModel.getRecentCourse(it) },
-                            navController)
-
-                        1 -> {
-                            OutlinedCard(
-                                modifier = Modifier.size(150.dp, 100.dp),
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(16.dp),
-                                    verticalArrangement = Arrangement.SpaceEvenly
-                                ) {
-                                    Text(text = "22", color = MaterialTheme.colorScheme.onSurface)
-                                }
-                            }
-                        }
-
-                        2 -> {
-                            OutlinedCard(
-                                modifier = Modifier.size(150.dp, 100.dp)
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(16.dp),
-                                    verticalArrangement = Arrangement.SpaceEvenly
-                                ) {
-                                    Text(text = "33", color = MaterialTheme.colorScheme.onSurface)
-                                }
-                            }
-                        }
-                    }
+                    Text(text = "22", color = MaterialTheme.colorScheme.onSurface)
                 }
             }
-            HorizontalPagerIndicator(
-                pagerState = pagerState,
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(16.dp),
-            )
         }
     }
 }
@@ -324,13 +175,6 @@ fun MyIndicator(
 
     val progress by remember { mutableStateOf(indicatorProgress) }
     val progressAnimDuration = 1500
-
-//    progress = indicatorProgress.observeAsState(0F).value.let {
-//        if (it == 1F) {
-//            displayContent.value = true
-//        }
-//        it
-//    }
 
     val progressAnimation by animateFloatAsState(
         targetValue = progress,
@@ -355,17 +199,84 @@ fun MyIndicator(
 @Preview
 @Composable
 fun CardPreview() {
-    CourseCard(
-        CourseEntity(-1, -1, -1, "",
-            "", "", "", "", "",
-            "", "", "", false),
-        15L,
-        {},
-        rememberNavController()
-    )
+    ScoreCard(rememberNavController())
 }
 
 // TODO: Observe data is fully loaded
+
+@Composable
+fun WelcomeCard(navController: NavController, homeViewModel: HomeViewModel) {
+    OutlinedCard(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            val showConfirmDialog = remember { mutableStateOf(false) }
+            Text(
+                stringResource(R.string.home_welcome),
+                fontWeight = FontWeight.Bold,
+                fontSize = 32.sp
+            )
+            Spacer(modifier = Modifier.padding(8.dp))
+            Text(
+                stringResource(R.string.home_datamissing_text),
+                fontSize = 20.sp
+            )
+            Spacer(modifier = Modifier.padding(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Button(onClick = {
+                    showConfirmDialog.value = true
+                }) {
+                    Text(stringResource(R.string.home_datamissing_refresh))
+                }
+            }
+            // Confirm Dialog
+            if (showConfirmDialog.value) {
+                Dialog(onDismissRequest = { showConfirmDialog.value = false }) {
+                    Card(modifier = Modifier.padding(8.dp)) {
+                        Column(
+                            modifier = Modifier.padding(
+                                horizontal = 8.dp,
+                                vertical = 20.dp
+                            ),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                stringResource(R.string.home_datamissing_refresh_confirm),
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.padding(bottom = 20.dp))
+                            Icon(
+                                imageVector = Icons.TwoTone.Warning,
+                                contentDescription = null, modifier = Modifier.scale(2F)
+                            )
+                            Spacer(modifier = Modifier.padding(bottom = 20.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceAround
+                            ) {
+                                Button(onClick = { showConfirmDialog.value = false }) {
+                                    Text(stringResource(R.string.no))
+                                }
+                                Button(modifier = Modifier.padding(end = 4.dp), onClick = {
+                                    navController.navigate(Screen.Login.route)
+                                    homeViewModel.clearDB(true)
+                                }) {
+                                    Text(stringResource(R.string.yes))
+                                }
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+    }
+}
 
 @Composable
 fun SubjectCard(
@@ -494,8 +405,6 @@ fun CourseCard(
 
             }
         }
-
-
     }
 
     Card {
@@ -613,7 +522,7 @@ fun BeforeTimeSelector(
                         DropdownMenuItem(
                             text = {
                                 Text(stringResource(R.string.home_coursecard_timeselector_text,
-                                    minuteBefore.toInt()))
+                                    minute))
                             },
                             onClick = {
                                 getRecentCourse(minute.toLong())
@@ -629,30 +538,31 @@ fun BeforeTimeSelector(
         Button(onClick = {
             navController.navigate(Screen.Curriculum.route)
         }) {
-            Text(text = "See all courses")
+            Text(stringResource(R.string.home_coursecard_see_all))
         }
     }
 }
 
-//@Composable
-//fun CheckData(context: Context, navController: NavController) {
-//    Column(
-//        modifier = Modifier
-//            .padding(bottom = 20.dp)
-//            .fillMaxSize(),
-//        verticalArrangement = Arrangement.Center,
-//        horizontalAlignment = Alignment.CenterHorizontally
-//    ) {
-//        CircularProgressIndicator()
-//        Text(text = "Please wait a while...")
-//        // https://stackoverflow.com/questions/72701963/why-it-says-list-contains-no-element-matching-the-predicate-for-android-jetp
-//        LaunchedEffect(Unit) {
-//            Toast.makeText(
-//                context,
-//                "It seems database is null, please re-login to get data from web again.",
-//                Toast.LENGTH_LONG
-//            ).show()
-//            navController.navigate(Screen.Login.route)
-//        }
-//    }
-//}
+@Composable
+fun ScoreCard(navController: NavController) {
+    OutlinedCard {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.SpaceEvenly,
+        ) {
+            Text(stringResource(R.string.home_scorecard_text),
+                fontWeight = FontWeight.Bold,
+                fontSize = 32.sp)
+
+            Row(modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End) {
+                Button(onClick = { navController.navigate(Screen.Score.route) }) {
+                    Text(stringResource(R.string.home_scorecard_button))
+                }
+            }
+        }
+    }
+
+}
