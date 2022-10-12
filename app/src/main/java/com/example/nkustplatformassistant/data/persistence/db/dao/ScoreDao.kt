@@ -12,8 +12,6 @@ interface ScoreDao {
     @Query("SELECT DISTINCT year,semester,semDescription FROM SCORE_TABLE ORDER BY YEAR DESC, SEMESTER DESC")
     fun getDropDownList(): List<DropDownParams>
 
-    @Query("SELECT DISTINCT year,semester,semDescription FROM SCORE_TABLE ORDER BY YEAR DESC, SEMESTER DESC LIMIT 1")
-    fun getLatestScoreList(): DropDownParams
 
     @Query("SELECT COUNT(*) FROM score_table")
     fun sizeOfDB(): Int
