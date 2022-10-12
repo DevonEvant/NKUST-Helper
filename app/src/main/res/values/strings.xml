@@ -28,4 +28,13 @@
     <string name="home_coursecard_subject">Subject</string>
     <string name="home_coursecard_timeselector_text">After %1$d minutes</string>
     <string name="home_recenthighlight_text">Recent Highlight</string>
+    <string name="curriculum_filter">Filter:</string>
+    <string name="curriculum_start_time">Start Time</string>
+    <string name="curriculum_end_time">End Time</string>
+    <string name="curriculum_waiting">Please wait a while…</string>
+    <string name="home_coursecard_see_all">See all courses</string>
+    <string name="score_beheavior">Beheavior score</string>
+    <string name="score_average">Average</string>
+    <string name="score_dept_ranking">Department ranking</string>
+    <string name="score_class_ranking">Class ranking</string>
 </resources>

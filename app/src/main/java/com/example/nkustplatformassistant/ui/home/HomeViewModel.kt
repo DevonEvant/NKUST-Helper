@@ -54,6 +54,7 @@ class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
         if (force && DataRepository.loginState) {
             viewModelScope.launch(Dispatchers.IO) {
                 dataRepository.fetchAllScoreToDB()
+                dataRepository.fetchAllScoreOtherToDB()
                 _fetchingProgress.postValue(0.33F)
                 dataRepository.fetchCourseDataToDB()
                 _fetchingProgress.postValue(0.67F)

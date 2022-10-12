@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.TextStyle
@@ -32,6 +33,7 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
+import com.example.nkustplatformassistant.R
 import com.example.nkustplatformassistant.data.CurriculumTime
 import com.example.nkustplatformassistant.data.DropDownParams
 import com.example.nkustplatformassistant.data.Weeks
@@ -60,19 +62,17 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
                 contentDescription = null,
                 modifier = Modifier.padding(end = 2.dp)
             )
-            Text(text = "Display:")
+            Text(stringResource(R.string.curriculum_filter))
 
             ChipCell(
                 startTimeVisibility,
                 { curriculumViewModel.onStartTimeVisibilityChange() },
-//                focusRequester
-            ) { Text("Start Time") }
+            ) { Text(stringResource(R.string.curriculum_start_time)) }
 
             ChipCell(
                 endTimeVisibility,
                 { curriculumViewModel.onEndTimeVisibilityChange() },
-//                focusRequester
-            ) { Text("End Time") }
+            ) { Text(stringResource(R.string.curriculum_end_time)) }
 
             // TODO: Debug usage here
 //            val dropDownParams = listOf(
@@ -105,7 +105,7 @@ fun CurriculumContent(curriculumViewModel: CurriculumViewModel, navController: N
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Text(text = "Please wait a while...")
+                Text(stringResource(R.string.curriculum_waiting))
                 Spacer(modifier = Modifier.padding(bottom = 20.dp))
                 CircularProgressIndicator()
             }
@@ -304,8 +304,10 @@ fun CurriculumTable(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Text(text = course.courseName,
-                    textAlign = TextAlign.Center,)
+                Text(
+                    text = course.courseName,
+                    textAlign = TextAlign.Center,
+                )
             }
         }
 
