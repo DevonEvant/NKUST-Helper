@@ -552,20 +552,14 @@ fun ScoreCard(navController: NavController) {
                 .fillMaxWidth(),
             verticalArrangement = Arrangement.SpaceEvenly,
         ) {
-            Text("Score",
-                fontWeight = FontWeight.Bold,
-                fontSize = 32.sp)
-            Text("Score",
-                fontWeight = FontWeight.Bold,
-                fontSize = 32.sp)
-            Text("Score",
+            Text(stringResource(R.string.home_scorecard_text),
                 fontWeight = FontWeight.Bold,
                 fontSize = 32.sp)
 
             Row(modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End) {
-                Button(onClick = {navController.navigate(Screen.Score.route) }) {
-                    Text(text = "Click me to see score")
+                Button(onClick = { navController.navigate(Screen.Score.route) }) {
+                    Text(stringResource(R.string.home_scorecard_button))
                 }
             }
         }
