@@ -109,20 +109,38 @@ class DataRepository(context: Context) {
         return dropDownList
     }
 
+//    /**
+//     * By using [getLatestScoreParams], you can get latest year, semester, and semester description
+//     * with a data class of [DropDownParams]
+//     */
+//    suspend fun getLatestScoreParams(): DropDownParams {
+//        lateinit var latestScoreParams: DropDownParams
+//        withContext(Dispatchers.IO) {
+//            latestScoreParams = db.scoreDao().getLatestScoreList()
+//        }
+//        return latestScoreParams
+//    }
+
     /**
-     * By using [getLatestScoreParams], you can get latest year, semester, and semester description
-     * with a data class of [DropDownParams]
+     * Get Score's DropDownList by its availability
+     * @return List<[DropDownParams]>
+     *
+     * first element is the latest param
      */
-    suspend fun getLatestScoreParams(): DropDownParams {
-        lateinit var latestScoreParams: DropDownParams
-        withContext(Dispatchers.IO) {
-            latestScoreParams = db.scoreDao().getLatestScoreList()
+    suspend fun getScoreDropDownList(): List<DropDownParams>{
+        lateinit var dropDownList: List<DropDownParams>
+        withContext(Dispatchers.IO){
+            dropDownList = db.scoreDao().getDropDownList()
         }
-        return latestScoreParams
+        return dropDownList
     }
 
     suspend fun getSpecScoreDataFromDB(year: Int, semester: Int): List<ScoreEntity> {
         return db.scoreDao().getSpecScoreList(year, semester)
+    }
+
+    suspend fun getSpecScoreOtherDataFromDB(year: Int, semester: Int): ScoreOtherEntity{
+        return db.scoreOtherDao().getScoreOther(year, semester)
     }
 
 
