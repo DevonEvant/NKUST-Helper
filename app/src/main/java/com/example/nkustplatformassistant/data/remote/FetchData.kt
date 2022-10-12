@@ -334,7 +334,9 @@ class NkustAccessor(client: HttpClient) : NkustUser(client) {
 
             val stringList = stringToParse.split("[\\^\\h]+".toRegex())
             // 班名次 != null
-            if (stringList[2].split("：")[1].split("/")[0].isNotEmpty()) {
+
+            try {
+
                 val classRanking = stringList[2].split("：")[1].split("/")[0].let { classRanking ->
                     if (classRanking.isNotEmpty()) {
                         classRanking.toInt()
@@ -373,21 +375,22 @@ class NkustAccessor(client: HttpClient) : NkustUser(client) {
                     classRanking = classRanking,
                     classPeople = classPeople,
                     deptRanking = deptRanking,
-                    deptPeople = deptPeople
+                    deptPeople = deptPeople)
+            } catch (e: IndexOutOfBoundsException) {
+                println("$e is okay because there's no data yet.")
+
+                return ScoreOtherEntity(
+                    year = year,
+                    semester = semester,
+                    semDescription = semDescription,
+                    behaviorScore = "",
+                    average = "",
+                    classRanking = null,
+                    classPeople = null,
+                    deptRanking = null,
+                    deptPeople = null
                 )
-            } else return ScoreOtherEntity(
-                year = year,
-                semester = semester,
-                semDescription = semDescription,
-                behaviorScore = "",
-                average = "",
-                classRanking = null,
-                classPeople = null,
-                deptRanking = null,
-                deptPeople = null
-            )
-
-
+            }
         }
     }
 
