@@ -45,4 +45,7 @@
     <string name="score_scoretable_subject">科目</string>
     <string name="score_scoretable_midscore">期中考</string>
     <string name="score_scoretable_finalscore">期末考</string>
+    <string name="nullstring">無資料</string>
+    <string name="pleasewait">請稍後...</string>
+    <string name="login_toast_database">資料庫是空的，請重新登入下載資料</string>
 </resources>

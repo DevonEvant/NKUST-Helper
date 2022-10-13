@@ -44,4 +44,7 @@
     <string name="score_scoretable_subject">Subject</string>
     <string name="score_scoretable_midscore">Mid score</string>
     <string name="score_scoretable_finalscore">Final Score</string>
+    <string name="nullstring">empty data</string>
+    <string name="pleasewait">Please wait...</string>
+    <string name="login_toast_database">It seems database is empty, please re-login to get data from web again.</string>
 </resources>

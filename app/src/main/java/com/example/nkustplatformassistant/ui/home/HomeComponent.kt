@@ -37,9 +37,14 @@ import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.nkustplatformassistant.R
+import com.example.nkustplatformassistant.data.DropDownParams
 import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntity
+import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreOtherEntity
 import com.example.nkustplatformassistant.dbDataAvailability
 import com.example.nkustplatformassistant.navigation.Screen
+import com.example.nkustplatformassistant.ui.curriculum.AutosizeText
+import com.example.nkustplatformassistant.ui.curriculum.SemesterSelector
+import com.example.nkustplatformassistant.ui.score.ScoreOtherWidget
 import java.time.Duration
 
 const val defaultTime = 15L
@@ -148,12 +153,16 @@ fun HomeBase(
                 // TODO: NO DATA state 抓不到資料
                 // Text Color: https://m3.material.io/styles/color/dynamic-color/overview
 
-                LaunchedEffect(Unit, recentCourse) {
-                    homeViewModel.getRecentCourse(defaultTime)
-                }
 
                 homeViewModel.recentCourse.observeAsState(recentCourse).value.let {
                     recentCourse = it
+                }
+
+                val todayCourse by homeViewModel.todayCourse.observeAsState()
+                LaunchedEffect(todayCourse) {
+                    todayCourse?.let {
+                        homeViewModel.getRecentCourse(defaultTime)
+                    }
                 }
 
                 SubjectCard(
@@ -164,7 +173,20 @@ fun HomeBase(
                     navController = navController
                 )
 
-                ScoreCard(navController = navController)
+                val scoreOther by homeViewModel.scoreOther.observeAsState(
+                    ScoreOtherEntity(
+                        "-1", "-1", "-1", "", "",
+                        null, null, null, null,
+                    )
+                )
+
+                val scoreDropDownList by homeViewModel.scoreDropDownList.observeAsState(listOf())
+
+
+                ScoreCard(scoreDropDownList = scoreDropDownList,
+                    scoreOther = scoreOther,
+                    onScoreOtherDropDownChange = { homeViewModel.onScoreOtherDropDownChange(it) },
+                    navController = navController)
 
                 OutlinedCard(modifier = Modifier.fillMaxWidth()) {
                     Column(
@@ -212,7 +234,15 @@ fun MyIndicator(
 @Preview
 @Composable
 fun CardPreview() {
-    ScoreCard(rememberNavController())
+    ScoreCard(scoreDropDownList = listOf(
+        DropDownParams(110, 1, "110-1"),
+        DropDownParams(110, 2, "110-2")),
+        scoreOther = ScoreOtherEntity(
+            "-1", "-1", "-1", "", "",
+            null, null, null, null,
+        ),
+        onScoreOtherDropDownChange = {},
+        navController = rememberNavController())
 }
 
 // TODO: Observe data is fully loaded
@@ -348,87 +378,32 @@ fun CourseCard(
     // first: stringResource: Int, second: recentCourse: String
     @Composable
     fun textOut(param: Pair<Int, String>) {
-        var textSize by remember { mutableStateOf<IntSize?>(null) }
-        val density = LocalDensity.current
-        val maxDimensionDp = remember(textSize) {
-            textSize?.let { textSize ->
-                with(density) {
-                    maxOf(textSize.width, textSize.height).toDp()
-                }
-            }
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .padding(8.dp),
+            verticalArrangement = Arrangement.SpaceEvenly,
+            horizontalAlignment = Alignment.CenterHorizontally) {
+            val textColor = MaterialTheme.colorScheme.onSurface
+            AutosizeText(text = stringResource(param.first), maxLines = 1, textColor = textColor)
+            AutosizeText(text = param.second, maxLines = 1, textColor)
         }
 
-        var textSize2 by remember { mutableStateOf<IntSize?>(null) }
-        val maxDimensionDp2 = remember(textSize2) {
-            textSize?.let { textSize ->
-                with(density) {
-                    maxOf(textSize.width, textSize.height).toDp()
-                }
-            }
-        }
 
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceEvenly
-        ) {
-            val textComposable = @Composable {
-                Text(
-                    text = stringResource(param.first),
-                    color = MaterialTheme.colorScheme.onTertiary,
-                    maxLines = 1,
-                    onTextLayout = {
-                        textSize = it.size
-                    },
-                    modifier = Modifier.drawWithContent {
-                        if (textSize != null) {
-                            drawContent()
-                        }
-                    }
-                )
-            }
-
-            val textComposable2 = @Composable {
-                Text(
-                    text = param.second, color = MaterialTheme.colorScheme.onTertiary, maxLines = 1,
-                    onTextLayout = {
-                        textSize2 = it.size
-                    },
-                    modifier = Modifier.drawWithContent {
-                        if (textSize2 != null) {
-                            drawContent()
-                        }
-                    }
-                )
-            }
-
-            when {
-                maxDimensionDp == null || maxDimensionDp2 == null -> {
-                    // calculating size.
-                    // because of drawWithContent it's not gonna be drawn
-                    textComposable()
-                    textComposable2()
-
-                }
-                maxDimensionDp < 40.dp && maxDimensionDp2 < 40.dp -> {
-                    textComposable()
-                    textComposable2()
-                }
-                else -> {
-                    textComposable()
-                    textComposable2()
-                }
-
-            }
-        }
     }
 
-    Card {
+    OutlinedCard {
         Column(
             modifier = Modifier
-                .heightIn(200.dp, 270.dp)
+                .heightIn(min = 350.dp)
                 .padding(10.dp),
         ) {
+            Text(
+                stringResource(R.string.home_coursecard_subject),
+                fontWeight = FontWeight.Bold,
+                fontSize = 32.sp
+            )
+            Spacer(modifier = Modifier.padding(8.dp))
+
             Row(
                 modifier = Modifier
                     .weight(2F)
@@ -453,7 +428,9 @@ fun CourseCard(
                     }
                     Column(
                         modifier = Modifier
-                            .weight(0.25F)
+                            .padding(start = 2.dp)
+                            .weight(0.25F),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         for (item in listOf(
                             R.string.home_coursecard_start_time to
@@ -572,7 +549,12 @@ fun BeforeTimeSelector(
 }
 
 @Composable
-fun ScoreCard(navController: NavController) {
+fun ScoreCard(
+    scoreDropDownList: List<DropDownParams>,
+    scoreOther: ScoreOtherEntity,
+    onScoreOtherDropDownChange: (DropDownParams) -> Unit,
+    navController: NavController,
+) {
     OutlinedCard {
         Column(
             modifier = Modifier
@@ -587,10 +569,20 @@ fun ScoreCard(navController: NavController) {
                 lineHeight = 32.sp
             )
 
+            ScoreOtherWidget(scoreOther = scoreOther)
+
+            Divider()
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
+                if (scoreDropDownList.isNotEmpty()) {
+                    SemesterSelector(scoreDropDownList) {
+                        onScoreOtherDropDownChange(it)
+                    }
+                }
+
                 Button(onClick = { navController.navigate(Screen.Score.route) }) {
                     Text(stringResource(R.string.home_scorecard_button))
                 }

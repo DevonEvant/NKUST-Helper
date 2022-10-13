@@ -2,9 +2,11 @@ package com.example.nkustplatformassistant.ui.home
 
 import androidx.lifecycle.*
 import com.example.nkustplatformassistant.data.CurriculumTime
+import com.example.nkustplatformassistant.data.DropDownParams
 import kotlinx.coroutines.launch
 import com.example.nkustplatformassistant.data.persistence.DataRepository
 import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntity
+import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreOtherEntity
 import com.example.nkustplatformassistant.dbDataAvailability
 import kotlinx.coroutines.Dispatchers
 import java.time.Duration
@@ -23,12 +25,32 @@ class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
     val minuteBefore: LiveData<Duration> get() = _minuteBefore
 
     private val _todayCourse: MutableLiveData<List<CourseEntity>> = MutableLiveData()
-    private val _recentCourse: MutableLiveData<CourseEntity> = MutableLiveData(
-        CourseEntity(-1, -1, -1, "",
-            "", "", "", "", "",
-            "", "", "", false)
-    )
+    val todayCourse: LiveData<List<CourseEntity>> get() = _todayCourse
+    private val _recentCourse: MutableLiveData<CourseEntity> = MutableLiveData()
     val recentCourse: LiveData<CourseEntity> get() = _recentCourse
+
+    private val _scoreDropdownList = MutableLiveData<List<DropDownParams>>()
+    val scoreDropDownList: LiveData<List<DropDownParams>> get() = _scoreDropdownList
+
+    private val _scoreOther = MutableLiveData(
+        ScoreOtherEntity(
+            "-1", "-1", "-1", "", "",
+            null, null, null, null,
+        )
+    )
+    val scoreOther: LiveData<ScoreOtherEntity> get() = _scoreOther
+
+    fun onScoreOtherDropDownChange(dropDownParams: DropDownParams) {
+        viewModelScope.launch {
+            getScoreOther(dropDownParams.year, dropDownParams.semester)
+        }
+    }
+
+    private suspend fun getScoreOther(year: Int, semester: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _scoreOther.postValue(dataRepository.getSpecScoreOtherDataFromDB(year, semester))
+        }
+    }
 
     fun getRecentCourse(minuteBefore: Long) {
         val todayWeek = LocalDate.now().dayOfWeek.value
@@ -77,13 +99,17 @@ class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
     }
 
     init {
-        viewModelScope.launch(Dispatchers.IO) {
-            if (dbDataAvailability) {
-                _todayCourse.postValue(
-                    dataRepository.getTodayCourse()
-                )
+        if (dbDataAvailability) {
+            viewModelScope.launch(Dispatchers.IO) {
+                _todayCourse.postValue(dataRepository.getTodayCourse())
+            }
+            viewModelScope.launch(Dispatchers.IO) {
+                dataRepository.getScoreDropDownList().let {
+                    _scoreDropdownList.postValue(it)
+
+                    getScoreOther(it[0].year, it[0].semester)
+                }
             }
         }
     }
 }
-
