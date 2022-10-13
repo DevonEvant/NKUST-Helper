@@ -81,7 +81,7 @@ fun LoginScreenBase(
 
     LaunchedEffect(Unit) {
         Toast.makeText(context,
-            "It seems database is null, please re-login to get data from web again.",
+            context.getString(R.string.login_toast_database),
             Toast.LENGTH_LONG).show()
     }
 }
