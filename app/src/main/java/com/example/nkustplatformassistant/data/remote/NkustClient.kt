@@ -4,8 +4,10 @@ import android.content.Context
 import com.example.nkustplatformassistant.R
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.*
 import io.ktor.client.plugins.cookies.*
 import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.junit.rules.Timeout
 import java.io.File
 import java.io.FileInputStream
 import java.security.KeyStore
@@ -21,6 +23,11 @@ class NkustClient {
                 install(HttpCookies) {
                     storage = AcceptAllCookiesStorage()
                 }
+                install(HttpTimeout) {
+                    requestTimeoutMillis = 60000
+                    socketTimeoutMillis = 60000
+                    connectTimeoutMillis = 60000
+                }
                 engine {
                     https {
                         trustManager = SslSettings(applicationContext)
@@ -32,13 +39,13 @@ class NkustClient {
             return client
         }
 
-        fun getInstance(): HttpClient{
-            val client = HttpClient(CIO){
-                install(HttpCookies){
+        fun getInstance(): HttpClient {
+            val client = HttpClient(CIO) {
+                install(HttpCookies) {
                     storage = AcceptAllCookiesStorage()
                 }
                 engine {
-                    https{
+                    https {
                         Security.addProvider(BouncyCastleProvider())
                         val keyStoreFile = FileInputStream(
                             File("./app/src/main/res/raw/nkustcertchain.bks"))
@@ -50,7 +57,8 @@ class NkustClient {
                             TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
                         trustManagerFactory.init(keyStore)
 
-                        trustManager = trustManagerFactory.trustManagers?.first { it is X509TrustManager } as X509TrustManager
+                        trustManager =
+                            trustManagerFactory.trustManagers?.first { it is X509TrustManager } as X509TrustManager
                     }
                 }
             }

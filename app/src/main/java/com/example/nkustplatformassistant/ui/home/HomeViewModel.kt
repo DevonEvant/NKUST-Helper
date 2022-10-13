@@ -9,6 +9,7 @@ import com.example.nkustplatformassistant.data.persistence.db.entity.CourseEntit
 import com.example.nkustplatformassistant.data.persistence.db.entity.ScoreOtherEntity
 import com.example.nkustplatformassistant.dbDataAvailability
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalTime
@@ -76,7 +77,9 @@ class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
         if (force && DataRepository.loginState) {
             viewModelScope.launch(Dispatchers.IO) {
                 dataRepository.fetchAllScoreToDB()
+                delay(timeMillis = 3000)
                 dataRepository.fetchAllScoreOtherToDB()
+                delay(timeMillis = 3000)
                 _fetchingProgress.postValue(0.33F)
                 dataRepository.fetchCourseDataToDB()
                 _fetchingProgress.postValue(0.67F)
