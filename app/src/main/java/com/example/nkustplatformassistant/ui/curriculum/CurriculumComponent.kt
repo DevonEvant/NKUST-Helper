@@ -7,8 +7,6 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.text.InlineTextContent
-import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.twotone.*
@@ -19,18 +17,16 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.Placeholder
-import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.example.nkustplatformassistant.R
@@ -180,6 +176,34 @@ fun SemesterSelector(
 }
 
 @Composable
+fun AutosizeText(text: String, maxLines: Int, textColor: Color = TextStyle.Default.color) {
+
+    var multiplier by remember { mutableStateOf(1F) }
+    var readyToDraw by remember { mutableStateOf(false) }
+
+    Text(
+        text = text,
+        color = textColor,
+        maxLines = maxLines, // modify to fit your need
+        overflow = TextOverflow.Visible,
+        style = LocalTextStyle.current.copy(
+            fontSize = LocalTextStyle.current.fontSize * multiplier
+        ),
+        textAlign = TextAlign.Center,
+        modifier = Modifier.drawWithContent {
+            if (readyToDraw) drawContent()
+        },
+        onTextLayout = {
+            if (it.hasVisualOverflow && !readyToDraw) {
+                multiplier *= 0.9F // you can tune this constant
+            } else {
+                readyToDraw = true
+            }
+        }
+    )
+}
+
+@Composable
 fun CurriculumTable(
     startTimeVisibility: Boolean,
     endTimeVisibility: Boolean,
@@ -190,7 +214,7 @@ fun CurriculumTable(
     // int multiply this and add .dp will transfer to dp
     val localDensity = LocalDensity.current
 
-    var gridMinHeight by remember {
+    var weekCardMinHeight by remember {
         mutableStateOf(50)
     }
 
@@ -236,11 +260,10 @@ fun CurriculumTable(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .heightIn(min = localDensity.run { gridMinHeight.toDp() })
                     .padding(vertical = 5.dp, horizontal = 2.dp)
+                    .heightIn(min = localDensity.run { weekCardMinHeight.toDp() })
                     .onGloballyPositioned {
-                        gridMinHeight =
-                            if (it.size.height > gridMinHeight) it.size.height else gridMinHeight
+                        weekCardMinHeight = it.size.height
                     },
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -261,8 +284,15 @@ fun CurriculumTable(
                             color = MaterialTheme.colorScheme.background
                         )
                     )
-                    if (startTimeVisibility) Text(curriculumTime.time.start.toIsoDescription())
-                    if (endTimeVisibility) Text(curriculumTime.time.endInclusive.toIsoDescription())
+
+                    if (startTimeVisibility) AutosizeText(
+                        text = curriculumTime.time.start.toIsoDescription(),
+                        maxLines = 1
+                    )
+                    if (endTimeVisibility) AutosizeText(
+                        text = curriculumTime.time.endInclusive.toIsoDescription(),
+                        maxLines = 1,
+                    )
                 }
             }
         }
@@ -280,20 +310,13 @@ fun CurriculumTable(
             Column(modifier = Modifier.padding(10.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)) {
                 for (item in itemListToDisplay) {
-                    Text(text = buildAnnotatedString {
-                        appendInlineContent("course")
-                        append("${item[1]}:\t${item[2]}")
-                    }, inlineContent = mapOf(
-                        Pair("course", InlineTextContent(
-                            Placeholder(1.7.em,
-                                height = 23.sp,
-                                placeholderVerticalAlign = PlaceholderVerticalAlign.TextTop)
-                        ) {
-                            Icon(imageVector = item[0] as ImageVector, contentDescription = null)
-                        })
-                    ))
-                }
+                    Row(horizontalArrangement = Arrangement.spacedBy(5.dp),
+                        verticalAlignment = Alignment.CenterVertically) {
+                        Icon(imageVector = item[0] as ImageVector, contentDescription = null)
 
+                        AutosizeText(text = "${item[1]}:\t${item[2]}", maxLines = 1)
+                    }
+                }
             }
         }
     }
@@ -306,21 +329,16 @@ fun CurriculumTable(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .heightIn(min = localDensity.run { gridMinHeight.toDp() })
-                    .onGloballyPositioned {
-                        gridMinHeight =
-                            if (it.size.height > gridMinHeight) it.size.height else gridMinHeight
-                    }
+                    .heightIn(
+                        min = localDensity.run { weekCardMinHeight.toDp() },
+                        max = localDensity.run { weekCardMinHeight.toDp() })
                     .animateContentSize(animationSpec = tween(durationMillis = 300,
                         easing = LinearOutSlowInEasing))
                     .clickable { showCourseDetail = true },
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Text(
-                    text = course.courseName,
-                    textAlign = TextAlign.Center,
-                )
+                AutosizeText(text = course.courseName, maxLines = 3)
             }
         }
 
