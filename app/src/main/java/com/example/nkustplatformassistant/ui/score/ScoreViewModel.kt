@@ -23,7 +23,7 @@ class ScoreViewModel(private val dataRepository: DataRepository) : ViewModel() {
 
     private val _scoreOther = MutableLiveData(
         ScoreOtherEntity(
-            "-1", "-1", "-1", "0", "0",
+            "-1", "-1", "-1", "", "",
             null, null, null, null,
         )
     )
