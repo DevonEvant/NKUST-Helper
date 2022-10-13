@@ -61,11 +61,15 @@ fun BackCard(showBackCard: MutableState<Boolean>) {
     val activity = LocalContext.current as Activity
     Dialog(onDismissRequest = { showBackCard.value = false }) {
         Card(modifier = Modifier.padding(20.dp)) {
-            Column(verticalArrangement = Arrangement.spacedBy(20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Text(stringResource(R.string.home_leaving_message))
-                Row(modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
                     Button(onClick = { showBackCard.value = false }) {
                         Text(stringResource(R.string.no))
                     }
@@ -114,52 +118,61 @@ fun HomeBase(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Text(
-                stringResource(R.string.home_recenthighlight_text),
-                fontWeight = FontWeight.Bold,
-                fontSize = 44.sp,
-                lineHeight = 40.sp
-            )
-
-            WelcomeCard(navController = navController, homeViewModel = homeViewModel)
-
-            var recentCourse by remember {
-                mutableStateOf(CourseEntity(-1, -1, -1, "",
-                    "", "", "", "", "",
-                    "", "", "", false)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                Text(
+                    stringResource(R.string.home_recenthighlight_text),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 44.sp,
+                    lineHeight = 40.sp
                 )
-            }
 
-            // TODO: NO DATA state 抓不到資料
-            // Text Color: https://m3.material.io/styles/color/dynamic-color/overview
+                WelcomeCard(navController = navController, homeViewModel = homeViewModel)
 
-            LaunchedEffect(Unit, recentCourse) {
-                homeViewModel.getRecentCourse(defaultTime)
-            }
+                var recentCourse by remember {
+                    mutableStateOf(
+                        CourseEntity(
+                            -1, -1, -1, "",
+                            "", "", "", "", "",
+                            "", "", "", false
+                        )
+                    )
+                }
 
-            homeViewModel.recentCourse.observeAsState(recentCourse).value.let {
-                recentCourse = it
-            }
+                // TODO: NO DATA state 抓不到資料
+                // Text Color: https://m3.material.io/styles/color/dynamic-color/overview
 
-            SubjectCard(
-                recentCourse = recentCourse,
-                minuteBefore = homeViewModel.minuteBefore
-                    .observeAsState(Duration.ofMinutes(defaultTime)).value.toMinutes(),
-                getRecentCourse = { homeViewModel.getRecentCourse(it) },
-                navController = navController)
+                LaunchedEffect(Unit, recentCourse) {
+                    homeViewModel.getRecentCourse(defaultTime)
+                }
 
-            ScoreCard(navController = navController)
+                homeViewModel.recentCourse.observeAsState(recentCourse).value.let {
+                    recentCourse = it
+                }
 
-            OutlinedCard(modifier = Modifier.fillMaxWidth()) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    Text(text = "22", color = MaterialTheme.colorScheme.onSurface)
+                SubjectCard(
+                    recentCourse = recentCourse,
+                    minuteBefore = homeViewModel.minuteBefore
+                        .observeAsState(Duration.ofMinutes(defaultTime)).value.toMinutes(),
+                    getRecentCourse = { homeViewModel.getRecentCourse(it) },
+                    navController = navController
+                )
+
+                ScoreCard(navController = navController)
+
+                OutlinedCard(modifier = Modifier.fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        Text(text = "22", color = MaterialTheme.colorScheme.onSurface)
+                    }
                 }
             }
         }
@@ -312,9 +325,12 @@ fun NoCourseCard(
                 fontSize = 32.sp
             )
             Spacer(modifier = Modifier.padding(8.dp))
-            Text(stringResource(
-                id = R.string.home_coursecard_time_selector,
-                minuteBefore.toInt()))
+            Text(
+                stringResource(
+                    id = R.string.home_coursecard_time_selector,
+                    minuteBefore.toInt()
+                )
+            )
             Spacer(modifier = Modifier.padding(bottom = 20.dp))
 
             BeforeTimeSelector(minuteBefore, getRecentCourse, navController)
@@ -505,24 +521,36 @@ fun BeforeTimeSelector(
     ) {
         var expanded by remember { mutableStateOf(false) }
         FilterChip(selected = true, onClick = { expanded = true }, label = {
-            Box(modifier = Modifier.wrapContentSize()
+            Box(
+                modifier = Modifier.wrapContentSize()
             ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(3.dp),
-                    verticalAlignment = Alignment.CenterVertically) {
-                    Text(stringResource(R.string.home_coursecard_timeselector_text,
-                        minuteBefore.toInt()))
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(3.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        stringResource(
+                            R.string.home_coursecard_timeselector_text,
+                            minuteBefore.toInt()
+                        )
+                    )
                     Icon(
                         imageVector =
                         if (expanded) Icons.Filled.ArrowDropUp
                         else Icons.Filled.ArrowDropDown,
-                        contentDescription = null)
+                        contentDescription = null
+                    )
                 }
                 DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                     for (minute in 15..60 step 15) {
                         DropdownMenuItem(
                             text = {
-                                Text(stringResource(R.string.home_coursecard_timeselector_text,
-                                    minute))
+                                Text(
+                                    stringResource(
+                                        R.string.home_coursecard_timeselector_text,
+                                        minute
+                                    )
+                                )
                             },
                             onClick = {
                                 getRecentCourse(minute.toLong())
@@ -552,17 +580,21 @@ fun ScoreCard(navController: NavController) {
                 .fillMaxWidth(),
             verticalArrangement = Arrangement.SpaceEvenly,
         ) {
-            Text(stringResource(R.string.home_scorecard_text),
+            Text(
+                stringResource(R.string.home_scorecard_text),
                 fontWeight = FontWeight.Bold,
-                fontSize = 32.sp)
+                fontSize = 32.sp,
+                lineHeight = 32.sp
+            )
 
-            Row(modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
                 Button(onClick = { navController.navigate(Screen.Score.route) }) {
                     Text(stringResource(R.string.home_scorecard_button))
                 }
             }
         }
     }
-
 }
