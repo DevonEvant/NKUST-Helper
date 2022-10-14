@@ -16,6 +16,9 @@ class LoginParamsViewModel(private val dataRepository: DataRepository) : ViewMod
     val pwd: LiveData<String> = _pwd
     val pwdVisibility: LiveData<Boolean> = _pwdVisibility
 
+    /**
+     * different from [DataRepository.loginState]
+     */
     private val _loginState = MutableLiveData(false)
     val loginState: LiveData<Boolean> get() = _loginState
 
