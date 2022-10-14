@@ -47,7 +47,7 @@ class ScoreViewModel(private val dataRepository: DataRepository) : ViewModel() {
     }
 
     init {
-        if (dbDataAvailability) {
+        if (dbDataAvailability.value!!) {
             viewModelScope.launch(Dispatchers.IO) {
                 dataRepository.getScoreDropDownList().let {
                     _scoreDropdownList.postValue(it)
