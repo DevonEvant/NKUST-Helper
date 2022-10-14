@@ -2,9 +2,6 @@ package com.example.nkustplatformassistant.ui.home
 
 import android.app.Activity
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -19,18 +16,13 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -95,28 +87,24 @@ fun HomeBase(
     homeViewModel: HomeViewModel,
     navController: NavController,
 ) {
-    val displayIndicator = remember { mutableStateOf(false) }
-
+    val context = LocalContext.current
     val displayContent = remember { mutableStateOf(false) }
 
 
-    println("Database Availability: $dbDataAvailability")
+    println("Database Availability: ${dbDataAvailability.value}")
 
-    when (dbDataAvailability) {
-        true -> displayContent.value = true
-        false -> displayIndicator.value = true
-    }
-
-    if (displayIndicator.value) {
-        LaunchedEffect(Unit) {
-            homeViewModel.startFetch(true)
-        }
-
-        val fetchingProgress by homeViewModel.fetchingProgress.observeAsState(0F)
-        if (fetchingProgress < 1F)
-            MyIndicator(fetchingProgress)
-        else
+    dbDataAvailability.observeAsState(false).value.let { dbDataAvailability ->
+        if (dbDataAvailability) {
             displayContent.value = true
+
+        } else {
+            val fetchingDetails by homeViewModel.fetchingDetails
+                .observeAsState(context.getString(R.string.home_viewmodel_waitingresource))
+
+            // TODO: fetching Details 變另一個字, 資料就被重抓
+            ShowProgress(fetchingDetails = fetchingDetails,
+                startfetch = { homeViewModel.startFetch(true, context) })
+        }
     }
 
     if (displayContent.value) {
@@ -201,34 +189,45 @@ fun HomeBase(
     }
 }
 
-
 @Composable
-
-fun MyIndicator(
-    indicatorProgress: Float,
+fun ShowProgress(
+    fetchingDetails: String, startfetch: () -> Unit,
 ) {
+    val showingText by remember { mutableStateOf(fetchingDetails) }
 
-    val progress by remember { mutableStateOf(indicatorProgress) }
-    val progressAnimDuration = 1500
+    LaunchedEffect(Unit) {
+        startfetch.invoke()
+    }
 
-    val progressAnimation by animateFloatAsState(
-        targetValue = progress,
-        animationSpec = tween(durationMillis = progressAnimDuration, easing = FastOutSlowInEasing)
-    )
+    Column(modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally) {
+        LinearProgressIndicator()
+        Spacer(modifier = Modifier.padding(bottom = 10.dp))
+        Text(showingText)
+    }
 
-    LinearProgressIndicator(
-        modifier =
-        if (progress < 1F) {
-            Modifier
-                .fillMaxWidth()
-                .background(color = Color.Transparent)
-                .clip(RoundedCornerShape(20.dp))
-        } else {
-            Modifier
-                .alpha(0F)
-        },
-        progress = progressAnimation
-    )
+//    val progress by remember { mutableStateOf(indicatorProgress) }
+//    val progressAnimDuration = 1500
+//
+//    val progressAnimation by animateFloatAsState(
+//        targetValue = progress,
+//        animationSpec = tween(durationMillis = progressAnimDuration, easing = FastOutSlowInEasing)
+//    )
+//
+//    LinearProgressIndicator(
+//        modifier =
+//        if (progress < 1F) {
+//            Modifier
+//                .fillMaxWidth()
+//                .background(color = Color.Transparent)
+//                .clip(RoundedCornerShape(20.dp))
+//        } else {
+//            Modifier
+//                .alpha(0F)
+//        },
+//        progress = progressAnimation
+//    )
 }
 
 @Preview
@@ -306,6 +305,7 @@ fun WelcomeCard(navController: NavController, homeViewModel: HomeViewModel) {
                                     Text(stringResource(R.string.no))
                                 }
                                 Button(modifier = Modifier.padding(end = 4.dp), onClick = {
+                                    dbDataAvailability.value = false
                                     navController.navigate(Screen.Login.route)
                                     homeViewModel.clearDB(true)
                                 }) {
@@ -543,7 +543,7 @@ fun BeforeTimeSelector(
         Button(onClick = {
             navController.navigate(Screen.Curriculum.route)
         }) {
-            Text(stringResource(R.string.home_coursecard_see_all))
+            AutosizeText(stringResource(R.string.home_coursecard_see_all), 2)
         }
     }
 }
@@ -566,16 +566,18 @@ fun ScoreCard(
                 stringResource(R.string.home_scorecard_text),
                 fontWeight = FontWeight.Bold,
                 fontSize = 32.sp,
-                lineHeight = 32.sp
+                lineHeight = 32.sp,
+                modifier = Modifier.padding(bottom = 3.dp)
             )
 
             ScoreOtherWidget(scoreOther = scoreOther)
 
-            Divider()
+            Divider(modifier = Modifier.padding(top = 3.dp, bottom = 3.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 if (scoreDropDownList.isNotEmpty()) {
                     SemesterSelector(scoreDropDownList) {
@@ -584,7 +586,7 @@ fun ScoreCard(
                 }
 
                 Button(onClick = { navController.navigate(Screen.Score.route) }) {
-                    Text(stringResource(R.string.home_scorecard_button))
+                    AutosizeText(stringResource(R.string.home_scorecard_button), 2)
                 }
             }
         }

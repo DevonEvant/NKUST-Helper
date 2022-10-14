@@ -19,7 +19,7 @@ fun HomeScreenPreview() {
     val context = LocalContext.current
     Nkust_platform_assistantTheme {
         HomeScreen(
-            HomeViewModel(DataRepository(context)),
+            HomeViewModel(DataRepository(context), context),
             rememberNavController()
         )
     }

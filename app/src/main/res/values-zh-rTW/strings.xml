@@ -15,7 +15,7 @@
     <string name="login_student_id">學號</string>
     <string name="login_login">登入</string>
     <string name="login_student_password">密碼</string>
-    <string name="login_validate_code_message">請在下方輸入驗證碼</string>
+    <string name="login_validate_code_message">請在下方輸入驗證碼\n(點擊刷新)</string>
     <string name="login_validate_code">驗證碼</string>
     <string name="login_cancel">取消</string>
     <string name="login_proceed">登入</string>
@@ -46,6 +46,16 @@
     <string name="score_scoretable_midscore">期中考</string>
     <string name="score_scoretable_finalscore">期末考</string>
     <string name="nullstring">無資料</string>
-    <string name="pleasewait">請稍後...</string>
+    <string name="pleasewait">請稍後…</string>
     <string name="login_toast_database">資料庫是空的，請重新登入下載資料</string>
+    <string name="home_viewmodel_getscore">正在取得分數…</string>
+    <string name="home_viewmodel_getcourse">正在取得課表中…</string>
+    <string name="home_viewmodel_getscoreother">正在取得排名…</string>
+    <string name="login_toast_loginsucceed">登入成功</string>
+    <string name="login_toast_loginfail">登入失敗</string>
+    <string name="login_textfield_noinput">學號或密碼輸入不全</string>
+    <string name="login_textfield_etxtchecking">登入中…</string>
+    <string name="login_textfield_etxtfailed">請重新輸入驗證碼</string>
+    <string name="login_textfield_etxtnoinput">請重新輸入驗證碼</string>
+    <string name="home_viewmodel_waitingresource">等待下載...</string>
 </resources>

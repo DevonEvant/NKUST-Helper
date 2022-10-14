@@ -27,10 +27,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.*
@@ -38,6 +35,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.nkustplatformassistant.R
 import com.example.nkustplatformassistant.navigation.Screen
+import java.util.*
 
 @Composable
 fun LoginScreenBase(
@@ -61,10 +59,10 @@ fun LoginScreenBase(
 
         when (loginState) {
             true -> {
-                showToast("true")
+                showToast(context.getString(R.string.login_toast_loginsucceed))
                 navController.navigate(Screen.Home.route)
             }
-            false -> showToast("false")
+            false -> showToast(context.getString(R.string.login_toast_loginfail))
         }
     }
 
@@ -124,7 +122,7 @@ fun LoginForm(
             style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.padding(bottom = 10.dp))
         OutlinedTextField(
-            value = uid,
+            value = uid.uppercase(),
             onValueChange = onUidChanged,
             label = { Text(stringResource(R.string.login_student_id)) },
             singleLine = true,
@@ -136,7 +134,8 @@ fun LoginForm(
             modifier = Modifier
                 .focusTarget()
                 .fillMaxWidth(0.85F),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go,
+                capitalization = KeyboardCapitalization.Characters),
             keyboardActions = KeyboardActions(
                 onGo = {
                     focusManager.moveFocus(FocusDirection.Down)
@@ -192,7 +191,7 @@ fun LoginForm(
                     // TODO: Check if the user entered uid and pwd using better way
                     if (pwd.isEmpty() || uid.isEmpty()) {
                         Toast.makeText(context,
-                            "ID or PW didn't input",
+                            context.getString(R.string.login_textfield_noinput),
                             Toast.LENGTH_LONG).show()
                     } else {
                         showDialog.value = true
@@ -229,16 +228,20 @@ fun ShowDialogBase(
         when {
             etxtCode.length < 4 -> {
                 Toast.makeText(context,
-                    "Check validate code and enter again!",
+                    context.getString(R.string.login_textfield_etxtfailed),
                     Toast.LENGTH_LONG)
                     .show()
             }
             etxtCode.isEmpty() -> {
-                Toast.makeText(context, "Enter validate code before login!", Toast.LENGTH_LONG)
+                Toast.makeText(context,
+                    context.getString(R.string.login_textfield_etxtnoinput),
+                    Toast.LENGTH_LONG)
                     .show()
             }
             etxtCode.length == 4 -> {
-                Toast.makeText(context, "Checking...", Toast.LENGTH_SHORT)
+                Toast.makeText(context,
+                    context.getString(R.string.login_textfield_etxtchecking),
+                    Toast.LENGTH_SHORT)
                     .show()
 
                 // TODO: Login! and start new intent
@@ -325,7 +328,7 @@ fun AlertDialogForEtxtCode(
 
                 Spacer(modifier = Modifier.padding(5.dp))
                 OutlinedTextField(
-                    value = etxtCode,
+                    value = etxtCode.uppercase(),
                     onValueChange = { onEtxtCodeChange(it) },
                     label = { Text(stringResource(R.string.login_validate_code)) },
                     singleLine = true,
@@ -339,7 +342,8 @@ fun AlertDialogForEtxtCode(
                         .fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(
                         imeAction = ImeAction.Done,
-                        keyboardType = KeyboardType.Password),
+                        keyboardType = KeyboardType.Password,
+                        capitalization = KeyboardCapitalization.Characters),
                     keyboardActions = KeyboardActions(onDone = {
                         focusManager.clearFocus()
                         onPositiveClick.invoke()
