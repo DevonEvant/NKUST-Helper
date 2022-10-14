@@ -1,6 +1,8 @@
 package com.example.nkustplatformassistant.ui.home
 
+import android.content.Context
 import androidx.lifecycle.*
+import com.example.nkustplatformassistant.R
 import com.example.nkustplatformassistant.data.CurriculumTime
 import com.example.nkustplatformassistant.data.DropDownParams
 import kotlinx.coroutines.launch
@@ -13,14 +15,17 @@ import kotlinx.coroutines.delay
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalTime
+import com.example.nkustplatformassistant.data.persistence.DataRepository.Companion.loginState
 
-class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
+
+class HomeViewModel(private val dataRepository: DataRepository, context: Context) : ViewModel() {
 
 
     // https://stackoverflow.com/questions/71709590/how-to-initialize-a-field-in-viewmodel-with-suspend-method
 
-    private val _fetchingProgress = MutableLiveData(0F)
-    val fetchingProgress: LiveData<Float> get() = _fetchingProgress
+    private val _fetchingDetails =
+        MutableLiveData(context.getString(R.string.home_viewmodel_waitingresource))
+    val fetchingDetails: LiveData<String> get() = _fetchingDetails
 
     private val _minuteBefore = MutableLiveData(Duration.ofMinutes(15L))
     val minuteBefore: LiveData<Duration> get() = _minuteBefore
@@ -73,21 +78,24 @@ class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
     }
 
 
-    fun startFetch(force: Boolean) {
-        if (force && DataRepository.loginState) {
+    fun startFetch(force: Boolean, context: Context) {
+        if (force && loginState) {
             viewModelScope.launch(Dispatchers.IO) {
+                _fetchingDetails.postValue(context.getString(R.string.home_viewmodel_getscore))
                 dataRepository.fetchAllScoreToDB()
                 delay(timeMillis = 3000)
+                _fetchingDetails.postValue(context.getString(R.string.home_viewmodel_getscoreother))
                 dataRepository.fetchAllScoreOtherToDB()
                 delay(timeMillis = 3000)
-                _fetchingProgress.postValue(0.33F)
+                _fetchingDetails.postValue(context.getString(R.string.home_viewmodel_getcourse))
                 dataRepository.fetchCourseDataToDB()
-                _fetchingProgress.postValue(0.67F)
                 // TODO: fetch Schedule to DB, progress didn't change
-                _fetchingProgress.postValue(1F)
-
-                dataRepository.checkDataIsReady().let {
-                    dbDataAvailability = it
+            }.invokeOnCompletion {
+                viewModelScope.launch(Dispatchers.IO) {
+                    dataRepository.checkDataIsReady().let {
+                        dbDataAvailability.postValue(it)
+                        loginState = false
+                    }
                 }
             }
         }
@@ -96,13 +104,14 @@ class HomeViewModel(private val dataRepository: DataRepository) : ViewModel() {
     fun clearDB(force: Boolean) {
         if (force) {
             viewModelScope.launch {
+                dbDataAvailability.postValue(false)
                 dataRepository.clearAllDB()
             }
         }
     }
 
     init {
-        if (dbDataAvailability) {
+        if (dbDataAvailability.value!!) {
             viewModelScope.launch(Dispatchers.IO) {
                 _todayCourse.postValue(dataRepository.getTodayCourse())
             }
