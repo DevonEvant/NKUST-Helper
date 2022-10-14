@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.MutableLiveData
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -24,7 +26,7 @@ import com.google.firebase.ktx.Firebase
 
 // TODO(1. check network, 2. launch repository call when login state is initiated)
 
-var dbDataAvailability = false
+val dbDataAvailability = MutableLiveData(false)
 
 class NkustActivity : ComponentActivity() {
     private lateinit var analytics: FirebaseAnalytics
@@ -39,8 +41,11 @@ class NkustActivity : ComponentActivity() {
             val navController = rememberNavController()
 
             Nkust_platform_assistantTheme {
-                NkustViewModel(dataRepository).dataAvailability().observeAsState(false).let {
-                    dbDataAvailability = it.value
+                val context = LocalContext.current
+                NkustViewModel(dataRepository)
+
+                dbDataAvailability.observeAsState(false).let {
+                    dbDataAvailability.postValue(it.value)
                     if (it.value) navController.navigate(Screen.Home.route) {
                         popUpTo(0)
                     }
@@ -51,7 +56,7 @@ class NkustActivity : ComponentActivity() {
                 ) {
 
                     composable(Screen.Home.route) {
-                        HomeScreen(HomeViewModel(dataRepository), navController)
+                        HomeScreen(HomeViewModel(dataRepository, context), navController)
                     }
                     composable(Screen.Login.route) {
                         LoginScreen(LoginParamsViewModel(dataRepository), navController)
