@@ -1,5 +1,8 @@
 package com.example.nkustplatformassistant.ui.login
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.*
 import com.example.nkustplatformassistant.data.persistence.DataRepository
@@ -15,6 +18,21 @@ class LoginParamsViewModel(private val dataRepository: DataRepository) : ViewMod
     val uid: LiveData<String> = _uid
     val pwd: LiveData<String> = _pwd
     val pwdVisibility: LiveData<Boolean> = _pwdVisibility
+
+    fun currentConnectState(context: Context): Boolean {
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val networkCapabilities = connectivityManager.activeNetwork ?: return false
+        val activeNetwork = connectivityManager
+            .getNetworkCapabilities(networkCapabilities) ?: return false
+
+        return when {
+            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
+            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
+            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
+            else -> false
+        }
+    }
 
     /**
      * different from [DataRepository.loginState]
