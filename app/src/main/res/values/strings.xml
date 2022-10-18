@@ -56,5 +56,6 @@
     <string name="login_textfield_etxtfailed">Check validate code and enter again!</string>
     <string name="login_textfield_etxtnoinput">Enter validate code and try again.</string>
     <string name="login_textfield_etxtchecking">Checking…</string>
-    <string name="home_viewmodel_waitingresource">Waiting resources...</string>
+    <string name="home_viewmodel_waitingresource">Waiting resources…</string>
+    <string name="login_network_failed">Please connect to internet.</string>
 </resources>
