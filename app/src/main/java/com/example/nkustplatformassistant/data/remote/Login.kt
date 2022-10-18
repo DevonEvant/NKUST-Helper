@@ -24,14 +24,6 @@ import io.ktor.utils.io.*
  * About login to NKUST system.
  */
 open class NkustUser(val client: HttpClient) {
-//    companion object {
-//        val client = HttpClient(CIO) {
-//            install(HttpCookies) {
-//                storage = AcceptAllCookiesStorage()
-//            }
-//        }
-//    }
-
 
     /**
      * Refresh Session if session unavailable.
