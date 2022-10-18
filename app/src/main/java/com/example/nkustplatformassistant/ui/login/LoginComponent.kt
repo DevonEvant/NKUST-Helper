@@ -34,6 +34,7 @@ import androidx.lifecycle.*
 import androidx.navigation.NavController
 import com.example.nkustplatformassistant.R
 import com.example.nkustplatformassistant.navigation.Screen
+import kotlinx.coroutines.delay
 import java.util.*
 
 @Composable
@@ -49,16 +50,20 @@ fun LoginScreenBase(loginParamsViewModel: LoginParamsViewModel, navController: N
 
     LaunchedEffect(loginState) {
         fun showToast(value: String) {
-            Toast.makeText(context, "Login state: $value", Toast.LENGTH_SHORT)
+            Toast.makeText(context,
+                context.getString(R.string.login_toast_loginstate, value),
+                Toast.LENGTH_SHORT)
                 .show()
         }
-
         when (loginState) {
             true -> {
                 showToast(context.getString(R.string.login_toast_loginsucceed))
                 navController.navigate(Screen.Home.route)
             }
-            false -> showToast(context.getString(R.string.login_toast_loginfail))
+            false -> {
+                delay(3500L)
+                showToast(context.getString(R.string.login_toast_loginfail))
+            }
         }
     }
 
@@ -74,6 +79,7 @@ fun LoginScreenBase(loginParamsViewModel: LoginParamsViewModel, navController: N
     )
 
     LaunchedEffect(Unit) {
+        delay(3500L)
         Toast.makeText(context,
             context.getString(R.string.login_toast_database),
             Toast.LENGTH_LONG).show()
