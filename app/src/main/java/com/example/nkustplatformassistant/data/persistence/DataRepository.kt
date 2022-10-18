@@ -127,9 +127,9 @@ class DataRepository(context: Context) {
      *
      * first element is the latest param
      */
-    suspend fun getScoreDropDownList(): List<DropDownParams>{
+    suspend fun getScoreDropDownList(): List<DropDownParams> {
         lateinit var dropDownList: List<DropDownParams>
-        withContext(Dispatchers.IO){
+        withContext(Dispatchers.IO) {
             dropDownList = db.scoreDao().getDropDownList()
         }
         return dropDownList
@@ -139,7 +139,7 @@ class DataRepository(context: Context) {
         return db.scoreDao().getSpecScoreList(year, semester)
     }
 
-    suspend fun getSpecScoreOtherDataFromDB(year: Int, semester: Int): ScoreOtherEntity{
+    suspend fun getSpecScoreOtherDataFromDB(year: Int, semester: Int): ScoreOtherEntity {
         return db.scoreOtherDao().getScoreOther(year, semester)
     }
 
