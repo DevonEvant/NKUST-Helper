@@ -31,17 +31,13 @@ import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.*
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.nkustplatformassistant.R
 import com.example.nkustplatformassistant.navigation.Screen
 import java.util.*
 
 @Composable
-fun LoginScreenBase(
-    loginParamsViewModel: LoginParamsViewModel = viewModel(),
-    navController: NavController,
-) {
+fun LoginScreenBase(loginParamsViewModel: LoginParamsViewModel, navController: NavController) {
     val uid: String by loginParamsViewModel.uid.observeAsState("")
     val pwd: String by loginParamsViewModel.pwd.observeAsState("")
     val pwdVisibility: Boolean by loginParamsViewModel.pwdVisibility.observeAsState(false)
@@ -103,11 +99,6 @@ fun LoginForm(
         showDialog = showDialog,
         loginParamsViewModel = loginParamsViewModel,
     )
-
-    // TODO(1. only put etxt to home screen and do login in HomeScreen - bad
-    //      2. create data class to determinate is it okay to logon
-    //         if it's OK, then direct put Home screen
-    //      3. use viewModel to handling uid, pwd & etxt, then login in HomeScreen - meh)
 
     Column(
         modifier = Modifier
@@ -173,11 +164,8 @@ fun LoginForm(
                 val image =
                     if (pwdVisibility) Icons.TwoTone.Visibility
                     else Icons.TwoTone.VisibilityOff
-                val description =
-                    if (pwdVisibility) "Hide password"
-                    else "Show password"
                 IconButton(onClick = onPwdVisibilityReversed) {
-                    Icon(imageVector = image, description)
+                    Icon(imageVector = image, null)
                 }
             }
         )
@@ -194,7 +182,13 @@ fun LoginForm(
                             context.getString(R.string.login_textfield_noinput),
                             Toast.LENGTH_LONG).show()
                     } else {
-                        showDialog.value = true
+                        if (loginParamsViewModel.currentConnectState(context)) {
+                            showDialog.value = true
+                        } else {
+                            Toast.makeText(context,
+                                context.getString(R.string.login_network_failed),
+                                Toast.LENGTH_LONG).show()
+                        }
                     }
                 },
                 shape = RoundedCornerShape(50),
