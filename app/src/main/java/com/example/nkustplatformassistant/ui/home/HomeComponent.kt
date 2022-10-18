@@ -88,22 +88,23 @@ fun HomeBase(
     navController: NavController,
 ) {
     val context = LocalContext.current
+
     val displayContent = remember { mutableStateOf(false) }
-
-
     println("Database Availability: ${dbDataAvailability.value}")
+
 
     dbDataAvailability.observeAsState(false).value.let { dbDataAvailability ->
         if (dbDataAvailability) {
             displayContent.value = true
 
         } else {
-            val fetchingDetails by homeViewModel.fetchingDetails
-                .observeAsState(context.getString(R.string.home_viewmodel_waitingresource))
 
-            // TODO: fetching Details 變另一個字, 資料就被重抓
-            ShowProgress(fetchingDetails = fetchingDetails,
-                startfetch = { homeViewModel.startFetch(true, context) })
+            val fetchingDetails = homeViewModel.fetchingDetails
+                .observeAsState(stringResource(R.string.home_viewmodel_waitingresource)).value
+            ShowProgress(
+                fetchingDetails = fetchingDetails,
+                startfetch = { homeViewModel.startFetch(true, context) }
+            )
         }
     }
 
@@ -138,9 +139,7 @@ fun HomeBase(
                     )
                 }
 
-                // TODO: NO DATA state 抓不到資料
                 // Text Color: https://m3.material.io/styles/color/dynamic-color/overview
-
 
                 homeViewModel.recentCourse.observeAsState(recentCourse).value.let {
                     recentCourse = it
@@ -175,15 +174,6 @@ fun HomeBase(
                     scoreOther = scoreOther,
                     onScoreOtherDropDownChange = { homeViewModel.onScoreOtherDropDownChange(it) },
                     navController = navController)
-
-                OutlinedCard(modifier = Modifier.fillMaxWidth()) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        Text(text = "22", color = MaterialTheme.colorScheme.onSurface)
-                    }
-                }
             }
         }
     }
@@ -193,11 +183,13 @@ fun HomeBase(
 fun ShowProgress(
     fetchingDetails: String, startfetch: () -> Unit,
 ) {
-    val showingText by remember { mutableStateOf(fetchingDetails) }
+    var showingText by remember { mutableStateOf("") }
+    showingText = fetchingDetails
 
     LaunchedEffect(Unit) {
         startfetch.invoke()
     }
+
 
     Column(modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -206,28 +198,6 @@ fun ShowProgress(
         Spacer(modifier = Modifier.padding(bottom = 10.dp))
         Text(showingText)
     }
-
-//    val progress by remember { mutableStateOf(indicatorProgress) }
-//    val progressAnimDuration = 1500
-//
-//    val progressAnimation by animateFloatAsState(
-//        targetValue = progress,
-//        animationSpec = tween(durationMillis = progressAnimDuration, easing = FastOutSlowInEasing)
-//    )
-//
-//    LinearProgressIndicator(
-//        modifier =
-//        if (progress < 1F) {
-//            Modifier
-//                .fillMaxWidth()
-//                .background(color = Color.Transparent)
-//                .clip(RoundedCornerShape(20.dp))
-//        } else {
-//            Modifier
-//                .alpha(0F)
-//        },
-//        progress = progressAnimation
-//    )
 }
 
 @Preview
