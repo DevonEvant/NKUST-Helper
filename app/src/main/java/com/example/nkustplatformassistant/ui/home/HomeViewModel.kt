@@ -19,12 +19,20 @@ import com.example.nkustplatformassistant.data.persistence.DataRepository.Compan
 
 
 class HomeViewModel(private val dataRepository: DataRepository, context: Context) : ViewModel() {
-
-
     // https://stackoverflow.com/questions/71709590/how-to-initialize-a-field-in-viewmodel-with-suspend-method
+    companion object {
+        @Volatile
+        var INSTANCE: HomeViewModel? = null
 
-    private val _fetchingDetails =
-        MutableLiveData(context.getString(R.string.home_viewmodel_waitingresource))
+        fun getInstance(dataRepository: DataRepository, context: Context): HomeViewModel {
+            if (INSTANCE === null) {
+                INSTANCE = HomeViewModel(dataRepository, context)
+            }
+            return INSTANCE as HomeViewModel
+        }
+    }
+
+    private val _fetchingDetails = MutableLiveData("")
     val fetchingDetails: LiveData<String> get() = _fetchingDetails
 
     private val _minuteBefore = MutableLiveData(Duration.ofMinutes(15L))
@@ -83,19 +91,16 @@ class HomeViewModel(private val dataRepository: DataRepository, context: Context
             viewModelScope.launch(Dispatchers.IO) {
                 _fetchingDetails.postValue(context.getString(R.string.home_viewmodel_getscore))
                 dataRepository.fetchAllScoreToDB()
-                delay(timeMillis = 3000)
                 _fetchingDetails.postValue(context.getString(R.string.home_viewmodel_getscoreother))
-                dataRepository.fetchAllScoreOtherToDB()
                 delay(timeMillis = 3000)
+                dataRepository.fetchAllScoreOtherToDB()
                 _fetchingDetails.postValue(context.getString(R.string.home_viewmodel_getcourse))
+                delay(timeMillis = 3000)
                 dataRepository.fetchCourseDataToDB()
                 // TODO: fetch Schedule to DB, progress didn't change
-            }.invokeOnCompletion {
-                viewModelScope.launch(Dispatchers.IO) {
-                    dataRepository.checkDataIsReady().let {
-                        dbDataAvailability.postValue(it)
-                        loginState = false
-                    }
+                dataRepository.checkDataIsReady().let {
+                    dbDataAvailability.postValue(it)
+                    loginState = false
                 }
             }
         }
@@ -111,6 +116,7 @@ class HomeViewModel(private val dataRepository: DataRepository, context: Context
     }
 
     init {
+        _fetchingDetails.postValue(context.getString(R.string.home_viewmodel_waitingresource))
         if (dbDataAvailability.value!!) {
             viewModelScope.launch(Dispatchers.IO) {
                 _todayCourse.postValue(dataRepository.getTodayCourse())

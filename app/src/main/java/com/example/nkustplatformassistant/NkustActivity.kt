@@ -56,7 +56,7 @@ class NkustActivity : ComponentActivity() {
                 ) {
 
                     composable(Screen.Home.route) {
-                        HomeScreen(HomeViewModel(dataRepository, context), navController)
+                        HomeScreen(HomeViewModel.getInstance(dataRepository, context), navController)
                     }
                     composable(Screen.Login.route) {
                         LoginScreen(LoginParamsViewModel(dataRepository), navController)
