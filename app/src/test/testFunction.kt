@@ -1,4 +1,4 @@
-package com.example.nkustplatformassistant
+package com.narui.nkustplatformassistant
 
 import com.example.nkustplatformassistant.data.CourseTime
 import com.example.nkustplatformassistant.data.CurriculumTime
