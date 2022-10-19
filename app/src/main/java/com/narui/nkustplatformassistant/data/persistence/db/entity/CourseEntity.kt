@@ -1,15 +1,14 @@
 package com.narui.nkustplatformassistant.data.persistence.db.entity
 
-import androidx.annotation.NonNull
 import androidx.room.*
 import com.narui.nkustplatformassistant.data.CourseTime
 
 @Entity(tableName = "course_table")
 data class CourseEntity(
-    @NonNull @PrimaryKey @ColumnInfo val courseId: Int,
-    @NonNull @ColumnInfo val year: Int,
-    @NonNull @ColumnInfo val semester: Int,
-    @NonNull @ColumnInfo val semDescription: String,
+    @PrimaryKey @ColumnInfo val courseId: Int,
+    @ColumnInfo val year: Int,
+    @ColumnInfo val semester: Int,
+    @ColumnInfo val semDescription: String,
     @ColumnInfo val professor: String,
     @ColumnInfo val courseName: String,
     @ColumnInfo val className: String,

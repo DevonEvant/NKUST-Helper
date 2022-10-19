@@ -1,8 +1,5 @@
 package com.narui.nkustplatformassistant.ui.curriculum
 
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -20,13 +17,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.narui.nkustplatformassistant.R
@@ -212,11 +208,11 @@ fun CurriculumTable(
     val itemToPlace: MutableMap<Weeks, List<CourseEntity>> = mutableMapOf()
 
     // int multiply this and add .dp will transfer to dp
-    val localDensity = LocalDensity.current
+//    val localDensity = LocalDensity.current
 
-    var weekCardMinHeight by remember {
-        mutableStateOf(50)
-    }
+//    var weekCardMinHeight by remember {
+//        mutableStateOf(50)
+//    }
 
     for (week in Weeks.values()) {
         val thisWeekCourseList = mutableListOf<CourseEntity>()
@@ -251,20 +247,12 @@ fun CurriculumTable(
         endTimeVisibility: Boolean = true,
     ) {
         Card(
-            modifier = Modifier
-                .fillMaxSize()
-                .animateContentSize(
-                    animationSpec = tween(durationMillis = 300,
-                        easing = LinearOutSlowInEasing)),
+            modifier = Modifier.size(65.dp)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(vertical = 5.dp, horizontal = 2.dp)
-                    .heightIn(min = localDensity.run { weekCardMinHeight.toDp() })
-                    .onGloballyPositioned {
-                        weekCardMinHeight = it.size.height
-                    },
+                    .padding(vertical = 5.dp, horizontal = 2.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -321,24 +309,23 @@ fun CurriculumTable(
         }
     }
 
+//    val cardSize = localDensity.run { weekCardMinHeight.toDp() }
+
     @Composable
     fun CourseCard(course: CourseEntity) {
         var showCourseDetail by remember { mutableStateOf(false) }
 
-        Card {
+        Card(modifier = Modifier.size(65.dp)) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .heightIn(
-                        min = localDensity.run { weekCardMinHeight.toDp() },
-                        max = localDensity.run { weekCardMinHeight.toDp() })
-                    .animateContentSize(animationSpec = tween(durationMillis = 300,
-                        easing = LinearOutSlowInEasing))
+                    .padding(4.dp)
                     .clickable { showCourseDetail = true },
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                AutosizeText(text = course.courseName, maxLines = 3)
+//                AutosizeText(text = course.courseName, maxLines = 3)
+                Text(course.courseName, fontSize = 10.sp, overflow = TextOverflow.Ellipsis)
             }
         }
 
@@ -350,7 +337,6 @@ fun CurriculumTable(
     }
 
     LazyVerticalGrid(
-        modifier = Modifier.animateContentSize(),
         columns = GridCells.Fixed(7),
         contentPadding = PaddingValues(vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),

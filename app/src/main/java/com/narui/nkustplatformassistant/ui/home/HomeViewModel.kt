@@ -20,18 +20,6 @@ import com.narui.nkustplatformassistant.data.persistence.db.entity.ScoreOtherEnt
 
 class HomeViewModel(private val dataRepository: DataRepository, context: Context) : ViewModel() {
     // https://stackoverflow.com/questions/71709590/how-to-initialize-a-field-in-viewmodel-with-suspend-method
-    companion object {
-        @Volatile
-        var INSTANCE: HomeViewModel? = null
-
-        fun getInstance(dataRepository: DataRepository, context: Context): HomeViewModel {
-            if (INSTANCE === null) {
-                INSTANCE = HomeViewModel(dataRepository, context)
-            }
-            return INSTANCE as HomeViewModel
-        }
-    }
-
     private val _fetchingDetails = MutableLiveData("")
     val fetchingDetails: LiveData<String> get() = _fetchingDetails
 
