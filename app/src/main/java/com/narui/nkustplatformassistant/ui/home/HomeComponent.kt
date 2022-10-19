@@ -513,7 +513,7 @@ fun BeforeTimeSelector(
         Button(onClick = {
             navController.navigate(Screen.Curriculum.route)
         }) {
-            AutosizeText(stringResource(R.string.home_coursecard_see_all), 2)
+            AutosizeText(stringResource(R.string.home_coursecard_see_all), 1)
         }
     }
 }
@@ -550,9 +550,10 @@ fun ScoreCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (scoreDropDownList.isNotEmpty()) {
-                    SemesterSelector(scoreDropDownList) {
-                        onScoreOtherDropDownChange(it)
-                    }
+                    onScoreOtherDropDownChange(scoreDropDownList[0])
+//                    SemesterSelector(scoreDropDownList) {
+//                        onScoreOtherDropDownChange(it)
+//                    }
                 }
 
                 Button(onClick = { navController.navigate(Screen.Score.route) }) {
