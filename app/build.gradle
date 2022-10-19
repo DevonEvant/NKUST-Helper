@@ -13,7 +13,7 @@ android {
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.example.nkust_platform_assistant"
+        applicationId "com.narui.nkust_platform_assistant"
         minSdk 26 // Network Security Configuration file(24), LocalDate.now()
         targetSdk 33
         versionCode 1
@@ -68,7 +68,7 @@ android {
     testOptions {
         unitTests.returnDefaultValues = true
     }
-    namespace 'com.example.nkustplatformassistant'
+    namespace 'com.narui.nkustplatformassistant'
 }
 
 dependencies {
