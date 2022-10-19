@@ -1,11 +1,15 @@
 package com.narui.nkustplatformassistant
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -55,20 +59,66 @@ class NkustActivity : ComponentActivity() {
                     startDestination = Screen.Login.route
                 ) {
 
+                    // koin, hilt, ViewModelFactory
+//                    val viewModel = viewModel()
+
                     composable(Screen.Home.route) {
-                        HomeScreen(HomeViewModel.getInstance(dataRepository, context), navController)
+                        HomeScreen(
+                            viewModel(factory = HomeViewModelFactory(dataRepository, context)),
+                            navController)
                     }
                     composable(Screen.Login.route) {
-                        LoginScreen(LoginParamsViewModel(dataRepository), navController)
+                        LoginScreen(
+                            viewModel(factory = LoginParamsViewModelFactory(dataRepository)),
+                            navController)
                     }
                     composable(Screen.Curriculum.route) {
-                        CurriculumScreen(CurriculumViewModel(dataRepository), navController)
+                        CurriculumScreen(
+                            viewModel(factory = CurriculumViewModelFactory(dataRepository)),
+                            navController)
                     }
                     composable(Screen.Score.route) {
-                        ScoreScreen(ScoreViewModel(dataRepository), navController)
+                        ScoreScreen(
+                            viewModel(factory = ScoreViewModelFactory(dataRepository)),
+                            navController)
                     }
                 }
             }
         }
+    }
+}
+
+// https://developer.android.com/jetpack/compose/interop/compose-in-existing-arch
+// https://developer.android.com/training/dependency-injection/hilt-android
+
+class HomeViewModelFactory(private val repository: DataRepository, val context: Context) :
+    ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return HomeViewModel(repository, context) as T
+    }
+}
+
+class LoginParamsViewModelFactory(private val repository: DataRepository) :
+    ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return LoginParamsViewModel(repository) as T
+    }
+}
+
+class CurriculumViewModelFactory(private val repository: DataRepository) :
+    ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return CurriculumViewModel(repository) as T
+    }
+}
+
+class ScoreViewModelFactory(private val repository: DataRepository) :
+    ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return ScoreViewModel(repository) as T
     }
 }

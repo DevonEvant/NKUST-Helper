@@ -123,9 +123,9 @@ fun ScoreOtherWidget(scoreOther: ScoreOtherEntity) {
         }
 
         Column(
-            modifier = Modifier.weight(0.5F),
+            modifier = Modifier.weight(0.5F).padding(start = 3.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.Start
         ) {
             if (scoreOther.deptRanking != null && scoreOther.deptPeople != null &&
                 scoreOther.classRanking != null && scoreOther.classPeople != null

@@ -39,10 +39,15 @@ class CurriculumViewModel(private val dataRepository: DataRepository) : ViewMode
         }
     }
 
+    // Reactive programming
+    // Flow
 
     suspend fun getCourse(year: Int, semester: Int) {
         viewModelScope.launch(Dispatchers.IO) {
-            _courses.postValue(dataRepository.getSpecCurriculumCourse(year, semester))
+            val newCourses = dataRepository.getSpecCurriculumCourse(year, semester)
+            if (newCourses != _courses.value) {
+                _courses.postValue(newCourses)
+            }
         }
     }
 
