@@ -13,7 +13,7 @@ android {
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.example.nkust_platform_assistant"
+        applicationId "com.narui.nkust_platform_assistant"
         minSdk 26 // Network Security Configuration file(24), LocalDate.now()
         targetSdk 33
         versionCode 1
@@ -68,7 +68,7 @@ android {
     testOptions {
         unitTests.returnDefaultValues = true
     }
-    namespace 'com.example.nkustplatformassistant'
+    namespace 'com.narui.nkustplatformassistant'
 }
 
 dependencies {
@@ -128,7 +128,7 @@ dependencies {
 
 
     // jsoup HTML parser library @ https://jsoup.org/
-    implementation 'org.jsoup:jsoup:1.15.2'
+    implementation 'org.jsoup:jsoup:1.15.3'
     implementation 'org.apache.pdfbox:pdfbox:2.0.17'
     implementation 'org.apache.pdfbox:pdfbox:2.0.17'
 
@@ -141,11 +141,11 @@ dependencies {
 
     implementation "androidx.compose.material:material:1.2.1"
     implementation "androidx.compose.ui:ui-tooling-preview:1.2.1"
-    implementation "org.jetbrains.kotlin:kotlin-reflect:1.7.10"
+    implementation 'org.jetbrains.kotlin:kotlin-reflect:1.7.20'
 
     // https://devlibrary.withgoogle.com/products/android/repos/hi-manshu-kalendar
     // https://github.com/hi-manshu/Kalendar
-    implementation "com.himanshoe:kalendar:1.1.1"
+    implementation 'com.himanshoe:kalendar:1.2.0'
 
     // BouncyCastle
     implementation 'org.bouncycastle:bcpkix-jdk18on:1.72'

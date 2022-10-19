@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">nkust_platform_assistant</string>
+    <string name="app_name">NKUST Helper</string>
     <string name="title_activity_web_view">WebViewActivity</string>
     <string name="title_activity_nkust">Nkust Helper</string>
     <string name="home_coursecard_course_name">Course name</string>
@@ -56,5 +56,7 @@
     <string name="login_textfield_etxtfailed">Check validate code and enter again!</string>
     <string name="login_textfield_etxtnoinput">Enter validate code and try again.</string>
     <string name="login_textfield_etxtchecking">Checking…</string>
-    <string name="home_viewmodel_waitingresource">Waiting resources...</string>
+    <string name="home_viewmodel_waitingresource">Waiting resources…</string>
+    <string name="login_network_failed">Please connect to internet.</string>
+    <string name="login_toast_loginstate">Login state: %1$s</string>
 </resources>
