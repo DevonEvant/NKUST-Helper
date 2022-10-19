@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">高科喵喵喵</string>
+    <string name="app_name">高科小幫手</string>
     <string name="home_coursecard_course_name">課程</string>
     <string name="title_activity_nkust">高科小幫手</string>
     <string name="title_activity_web_view">網頁瀏覽</string>

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">nkust_platform_assistant</string>
+    <string name="app_name">NKUST Helper</string>
     <string name="title_activity_web_view">WebViewActivity</string>
     <string name="title_activity_nkust">Nkust Helper</string>
     <string name="home_coursecard_course_name">Course name</string>
