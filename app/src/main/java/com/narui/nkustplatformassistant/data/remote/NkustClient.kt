@@ -19,6 +19,7 @@ class NkustClient {
     companion object {
         fun getInstance(applicationContext: Context): HttpClient {
             val client = HttpClient(CIO) {
+                BrowserUserAgent()
                 install(HttpCookies) {
                     storage = AcceptAllCookiesStorage()
                 }
@@ -40,6 +41,7 @@ class NkustClient {
 
         fun getInstance(): HttpClient {
             val client = HttpClient(CIO) {
+                BrowserUserAgent()
                 install(HttpCookies) {
                     storage = AcceptAllCookiesStorage()
                 }
