@@ -1,6 +1,7 @@
 package com.narui.nkustplatformassistant.data.persistence
 
 import android.content.Context
+import android.os.Environment
 import androidx.compose.ui.graphics.ImageBitmap
 import com.narui.nkustplatformassistant.data.DropDownParams
 import com.narui.nkustplatformassistant.data.NkustEvent
@@ -9,10 +10,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.narui.nkustplatformassistant.data.persistence.db.NkustDatabase
 import com.narui.nkustplatformassistant.data.persistence.db.entity.CourseEntity
+import com.narui.nkustplatformassistant.data.persistence.db.entity.ScheduleEntity
 import com.narui.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
 import com.narui.nkustplatformassistant.data.persistence.db.entity.ScoreOtherEntity
 import com.narui.nkustplatformassistant.data.remote.NkustAccessor
 import com.narui.nkustplatformassistant.data.remote.NkustClient
+import io.ktor.util.cio.*
+import io.ktor.utils.io.*
+import java.io.BufferedWriter
+import java.io.File
+import java.io.FileOutputStream
+import java.io.FileWriter
+import java.io.Writer
 import java.time.LocalDate
 
 class DataRepository(context: Context) {
@@ -34,18 +43,19 @@ class DataRepository(context: Context) {
     private val nkustAccessor = NkustAccessor(nkustClient)
     private val db = NkustDatabase.getInstance(context)
 
-    // TODO: Check if calender_table is null and add it to companion object (if can)
+    // TODO: Check if schedule_table is null and add it to companion object (if can)
     suspend fun checkDataIsReady(): Boolean {
         val isDataReady = mutableListOf<Boolean>()
         withContext(Dispatchers.IO) {
             isDataReady.addAll(
-                listOf(isScoreExist(), isScoreOtherExist(), isCourseExist())
+//                listOf(isScoreExist(), isScoreOtherExist(), isCourseExist(), isScheduleExist())
+                listOf(isScheduleExist())
             )
         }
         return !isDataReady.contains(false)
     }
 
-    // TODO: Calendar Dao
+    // TODO: Schedule Dao
     suspend fun clearAllDB() {
         db.scoreDao().emptyScoreTable()
         db.courseDao().emptyCourseTable()
@@ -170,6 +180,14 @@ class DataRepository(context: Context) {
         return exist
     }
 
+    private suspend fun isScheduleExist(): Boolean {
+        var exist: Boolean
+        withContext(Dispatchers.IO) {
+            exist = db.scheduleDao().isExist()
+        }
+        return exist
+    }
+
     // Course
     suspend fun fetchCourseDataToDB() {
         db.courseDao().emptyCourseTable()
@@ -189,7 +207,8 @@ class DataRepository(context: Context) {
     suspend fun getTodayCourse(): List<CourseEntity> {
         val latestCourseList = getLatestCourseParams()
         val courseList = db.courseDao().getSpecCourseList(
-            latestCourseList.year, latestCourseList.semester)
+            latestCourseList.year, latestCourseList.semester
+        )
 
         val todayWeek = LocalDate.now().dayOfWeek.value
 
@@ -211,13 +230,8 @@ class DataRepository(context: Context) {
     }
 
     // Schedule
-    suspend fun getScheduleToDB(
-        year: String,
-        semester: String,
-    ): List<NkustEvent> {
-        throw Error("not complete")
-        withContext(Dispatchers.IO) {
-        }
+    suspend fun getAllScheduleToDB(context: Context) {
+        db.scheduleDao().insertMultiSchedule(getCurrentYearSchedule(nkustAccessor, context))
     }
 
 }
@@ -225,9 +239,9 @@ class DataRepository(context: Context) {
 // TODO: Reuse allListToGet
 // var listToGet: List<List<String>> = listOf()
 
-private suspend fun allListToGet(nkustAccessor: NkustAccessor): List<List<String>> {
+private suspend fun allListToGet(nkustAccessor: NkustAccessor, dst: String): List<List<String>> {
     val listToGet: MutableList<List<String>> = mutableListOf()
-    nkustAccessor.getYearsOfDropDownListByMap()
+    nkustAccessor.getYearsOfDropDownListByMap(dst)
         .forEach { (yearSemester, Description) ->
             yearSemester.split(",").let {
                 listToGet.add(listOf(it[0], it[1], Description))
@@ -243,7 +257,7 @@ private suspend fun allListToGet(nkustAccessor: NkustAccessor): List<List<String
  */
 private suspend fun getAllScoreToTypedScoreEntity(nkustAccessor: NkustAccessor): List<ScoreEntity> {
 
-    val listToGet = allListToGet(nkustAccessor)
+    val listToGet = allListToGet(nkustAccessor, "AG008")
 
     val scoreEntityList = mutableListOf<ScoreEntity>()
 
@@ -282,7 +296,7 @@ private suspend fun getAllScoreToTypedScoreEntity(nkustAccessor: NkustAccessor):
 }
 
 private suspend fun getAllScoreOtherToTypedScoreOtherEntity(nkustAccessor: NkustAccessor): List<ScoreOtherEntity> {
-    val listToGet = allListToGet(nkustAccessor)
+    val listToGet = allListToGet(nkustAccessor, "AG008")
 
     val scoreOtherList = mutableListOf<ScoreOtherEntity>()
 
@@ -293,7 +307,7 @@ private suspend fun getAllScoreOtherToTypedScoreOtherEntity(nkustAccessor: Nkust
 }
 
 private suspend fun getAllCourseToTypedCourseEntity(nkustAccessor: NkustAccessor): List<CourseEntity> {
-    val listToGet = allListToGet(nkustAccessor)
+    val listToGet = allListToGet(nkustAccessor, "AG222")
 
     val courseEntityList = mutableListOf<CourseEntity>()
 
@@ -319,4 +333,66 @@ private suspend fun getAllCourseToTypedCourseEntity(nkustAccessor: NkustAccessor
     }
 
     return courseEntityList
+}
+
+private suspend fun getCurrentYearSchedule(
+    nkustAccessor: NkustAccessor,
+    context: Context
+): List<ScheduleEntity> {
+    val semesterToGet = nkustAccessor.scheduleToGet()
+    val schedule = mutableListOf<ScheduleEntity>()
+
+    semesterToGet.forEach { (year, semester) ->
+        TODO("Writer still under testing")
+
+
+
+        val fileDir = File(context.filesDir, "pdf")
+        val makeDirSucc = fileDir.mkdirs()
+
+        val fileOutputStream = FileOutputStream(fileDir + "/" + "$year-$semester"+".pdf")
+
+
+        nkustAccessor.getNkustScheduleCn(
+            year = year,
+            semester = semester,
+            mode = true,
+        ).outputStream()
+
+
+        val bufferedWriter = BufferedWriter(fileWriter)
+        
+
+
+//            TODO("./111-1.pdf: open failed: ENOENT (No such file or directory)")
+
+        val scheduleTemp = mutableListOf<NkustEvent>()
+
+        scheduleTemp.addAll(
+            nkustAccessor.parseNkustSchedule(
+                File("$year,$semester.pdf").inputStream()
+            )
+        )
+
+        scheduleTemp.forEach { eachSchedule: NkustEvent ->
+            val dateSet = eachSchedule.time.split("，")[0].split("-", "～")
+            schedule.add(
+                ScheduleEntity(
+                    agency = eachSchedule.agency,
+                    startDate = Regex("(\\d*/\\d*)").find(dateSet[0])!!.value,
+                    endDate = if (dateSet.size > 1) dateSet[1] else null,
+                    description = eachSchedule.time + " " + eachSchedule.description
+                )
+            )
+        }
+    }
+
+    schedule.forEach { eachSchedule: ScheduleEntity ->
+        println(
+            "${eachSchedule.agency}, ${eachSchedule.startDate}, " +
+                    "${eachSchedule.endDate}, ${eachSchedule.description}"
+        )
+    }
+
+    return schedule
 }

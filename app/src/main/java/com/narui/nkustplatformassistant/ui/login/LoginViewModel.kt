@@ -77,16 +77,12 @@ class LoginParamsViewModel(private val dataRepository: DataRepository) : ViewMod
     }
 
     // TODO: rewrite it to other method of Coroutine scope
-    fun loginForResult() {
-        viewModelScope.launch(Dispatchers.IO) {
-            val state = dataRepository.userLogin(
-                uid.value!!,
-                pwd.value!!,
-                etxtCode.value!!
-            )
-
-            println("Login state: $state")
-            _loginState.postValue(state)
-        }
+    fun loginForResult() = liveData<Boolean> {
+        emit(dataRepository.userLogin(uid.value!!, pwd.value!!, etxtCode.value!!)
+            .let {
+                println("Login state: $it")
+                it
+            }
+        )
     }
 }

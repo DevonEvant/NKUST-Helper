@@ -26,13 +26,16 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.*
+import androidx.lifecycle.Observer
 import androidx.navigation.NavController
 import com.narui.nkustplatformassistant.R
+import com.narui.nkustplatformassistant.data.persistence.DataRepository.Companion.loginState
 import com.narui.nkustplatformassistant.navigation.Screen
 import kotlinx.coroutines.delay
 import java.util.*
@@ -46,43 +49,28 @@ fun LoginScreenBase(loginParamsViewModel: LoginParamsViewModel, navController: N
     val context = LocalContext.current
 
     // https://proandroiddev.com/how-to-collect-flows-lifecycle-aware-in-jetpack-compose-babd53582d0b
-    val loginState by loginParamsViewModel.loginState.observeAsState(false)
-
-    LaunchedEffect(loginState) {
-        fun showToast(value: String) {
-            Toast.makeText(context,
-                context.getString(R.string.login_toast_loginstate, value),
-                Toast.LENGTH_SHORT)
-                .show()
-        }
-        when (loginState) {
-            true -> {
-                showToast(context.getString(R.string.login_toast_loginsucceed))
-                navController.navigate(Screen.Home.route)
-            }
-            false -> {
-                delay(3500L)
-                showToast(context.getString(R.string.login_toast_loginfail))
-            }
-        }
-    }
-
-
-    // To pass viewModel between composable, we use viewModelStoreOwner and
-    // add a loginParamsViewModel4 to showDialogBase
-    LoginForm(
-        uid = uid, pwd = pwd, pwdVisibility = pwdVisibility,
-        onUidChanged = { loginParamsViewModel.onUidChange(it) },
-        onPwdChanged = { loginParamsViewModel.onPwdChange(it) },
-        onPwdVisibilityReversed = { loginParamsViewModel.onPwdVisibilityReversed() },
-        loginParamsViewModel = loginParamsViewModel,
-    )
 
     LaunchedEffect(Unit) {
+        if (loginState) {
+            navController.navigate(Screen.Home.route)
+        }
         delay(3500L)
-        Toast.makeText(context,
+        Toast.makeText(
+            context,
             context.getString(R.string.login_toast_database),
-            Toast.LENGTH_LONG).show()
+            Toast.LENGTH_LONG
+        ).show()
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        LoginForm(
+            uid = uid, pwd = pwd, pwdVisibility = pwdVisibility,
+            onUidChanged = { loginParamsViewModel.onUidChange(it) },
+            onPwdChanged = { loginParamsViewModel.onPwdChange(it) },
+            onPwdVisibilityReversed = { loginParamsViewModel.onPwdVisibilityReversed() },
+            loginParamsViewModel = loginParamsViewModel,
+            navController = navController
+        )
     }
 }
 
@@ -96,6 +84,7 @@ fun LoginForm(
     onPwdChanged: (String) -> Unit,
     onPwdVisibilityReversed: () -> Unit,
     loginParamsViewModel: LoginParamsViewModel,
+    navController: NavController
 ) {
     val focusManager = LocalFocusManager.current
     val context = LocalContext.current
@@ -104,6 +93,7 @@ fun LoginForm(
     ShowDialogBase(
         showDialog = showDialog,
         loginParamsViewModel = loginParamsViewModel,
+        loginSuccess = { navController.navigate(Screen.Home.route) }
     )
 
     Column(
@@ -115,8 +105,10 @@ fun LoginForm(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(stringResource(R.string.login_welcome),
-            style = MaterialTheme.typography.titleLarge)
+        Text(
+            stringResource(R.string.login_welcome),
+            style = MaterialTheme.typography.titleLarge
+        )
         Spacer(modifier = Modifier.padding(bottom = 10.dp))
         OutlinedTextField(
             value = uid.uppercase(),
@@ -124,15 +116,19 @@ fun LoginForm(
             label = { Text(stringResource(R.string.login_student_id)) },
             singleLine = true,
             leadingIcon = {
-                Icon(imageVector = Icons.TwoTone.Person,
-                    "")
+                Icon(
+                    imageVector = Icons.TwoTone.Person,
+                    ""
+                )
             },
             shape = RoundedCornerShape(50),
             modifier = Modifier
                 .focusTarget()
                 .fillMaxWidth(0.85F),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go,
-                capitalization = KeyboardCapitalization.Characters),
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Go,
+                capitalization = KeyboardCapitalization.Characters
+            ),
             keyboardActions = KeyboardActions(
                 onGo = {
                     focusManager.moveFocus(FocusDirection.Down)
@@ -148,8 +144,10 @@ fun LoginForm(
             label = { Text(stringResource(R.string.login_student_password)) },
             singleLine = true,
             leadingIcon = {
-                Icon(imageVector = Icons.TwoTone.Password,
-                    "")
+                Icon(
+                    imageVector = Icons.TwoTone.Password,
+                    ""
+                )
             },
             shape = RoundedCornerShape(50),
             visualTransformation = if (pwdVisibility) {
@@ -159,7 +157,8 @@ fun LoginForm(
             },
             keyboardOptions = KeyboardOptions(
                 imeAction = ImeAction.Done,
-                keyboardType = KeyboardType.Password),
+                keyboardType = KeyboardType.Password
+            ),
             keyboardActions = KeyboardActions(
                 onDone = {
                     focusManager.clearFocus()
@@ -184,25 +183,31 @@ fun LoginForm(
                 onClick = {
                     // TODO: Check if the user entered uid and pwd using better way
                     if (pwd.isEmpty() || uid.isEmpty()) {
-                        Toast.makeText(context,
+                        Toast.makeText(
+                            context,
                             context.getString(R.string.login_textfield_noinput),
-                            Toast.LENGTH_LONG).show()
+                            Toast.LENGTH_LONG
+                        ).show()
                     } else {
                         if (loginParamsViewModel.currentConnectState(context)) {
                             showDialog.value = true
                         } else {
-                            Toast.makeText(context,
+                            Toast.makeText(
+                                context,
                                 context.getString(R.string.login_network_failed),
-                                Toast.LENGTH_LONG).show()
+                                Toast.LENGTH_LONG
+                            ).show()
                         }
                     }
                 },
                 shape = RoundedCornerShape(50),
             ) {
                 Text(stringResource(R.string.login_login))
-                Icon(imageVector = Icons.TwoTone.Login,
+                Icon(
+                    imageVector = Icons.TwoTone.Login,
                     contentDescription = null,
-                    Modifier.padding(start = 10.dp))
+                    Modifier.padding(start = 10.dp)
+                )
             }
         }
     }
@@ -213,7 +218,9 @@ fun ShowDialogBase(
     showDialog: MutableState<Boolean>,
     context: Context = LocalContext.current,
     loginParamsViewModel: LoginParamsViewModel,
+    loginSuccess: () -> Unit
 ) {
+    val lifeCycleOwner = LocalLifecycleOwner.current
 
     val etxtCode: String by loginParamsViewModel.etxtCode.observeAsState("")
     val etxtImageBitmap: ImageBitmap by loginParamsViewModel.etxtImageBitmap
@@ -227,28 +234,47 @@ fun ShowDialogBase(
     fun onPositiveCallback() {
         when {
             etxtCode.length < 4 -> {
-                Toast.makeText(context,
+                Toast.makeText(
+                    context,
                     context.getString(R.string.login_textfield_etxtfailed),
-                    Toast.LENGTH_LONG)
-                    .show()
+                    Toast.LENGTH_LONG
+                ).show()
             }
             etxtCode.isEmpty() -> {
-                Toast.makeText(context,
+                Toast.makeText(
+                    context,
                     context.getString(R.string.login_textfield_etxtnoinput),
-                    Toast.LENGTH_LONG)
-                    .show()
+                    Toast.LENGTH_LONG
+                ).show()
             }
             etxtCode.length == 4 -> {
-                Toast.makeText(context,
+                Toast.makeText(
+                    context,
                     context.getString(R.string.login_textfield_etxtchecking),
-                    Toast.LENGTH_SHORT)
-                    .show()
+                    Toast.LENGTH_SHORT
+                ).show()
 
                 // TODO: Login! and start new intent
                 // Redirect to Home Page and Start fetching data to
                 // DB in HomeScreen
 
-                loginParamsViewModel.loginForResult()
+
+                loginParamsViewModel.loginForResult().observe(lifeCycleOwner, Observer {
+                    if (it) {
+                        loginSuccess.invoke()
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.login_toast_loginsucceed),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.login_toast_loginfail),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                })
 
                 showDialog.value = false
             }
@@ -303,15 +329,18 @@ fun AlertDialogForEtxtCode(
                     .padding(8.dp)
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center) {
+                verticalArrangement = Arrangement.Center
+            ) {
                 Text(
                     stringResource(R.string.login_validate_code_message),
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Spacer(modifier = Modifier.padding(10.dp))
 
-                Box(modifier = Modifier.size(width = 200.dp, height = 100.dp),
-                    contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier.size(width = 200.dp, height = 100.dp),
+                    contentAlignment = Alignment.Center
+                ) {
                     if (etxtIsLoadingValue)
                         CircularProgressIndicator()
                     else
@@ -333,8 +362,10 @@ fun AlertDialogForEtxtCode(
                     label = { Text(stringResource(R.string.login_validate_code)) },
                     singleLine = true,
                     leadingIcon = {
-                        Icon(imageVector = Icons.TwoTone.HowToReg,
-                            "")
+                        Icon(
+                            imageVector = Icons.TwoTone.HowToReg,
+                            ""
+                        )
                     },
                     shape = RoundedCornerShape(50),
                     modifier = Modifier
@@ -343,7 +374,8 @@ fun AlertDialogForEtxtCode(
                     keyboardOptions = KeyboardOptions(
                         imeAction = ImeAction.Done,
                         keyboardType = KeyboardType.Password,
-                        capitalization = KeyboardCapitalization.Characters),
+                        capitalization = KeyboardCapitalization.Characters
+                    ),
                     keyboardActions = KeyboardActions(onDone = {
                         focusManager.clearFocus()
                         onPositiveClick.invoke()
@@ -359,9 +391,11 @@ fun AlertDialogForEtxtCode(
                         onNegativeClick.invoke()
                         focusManager.clearFocus()
                     }) {
-                        Icon(imageVector = Icons.TwoTone.Cancel,
+                        Icon(
+                            imageVector = Icons.TwoTone.Cancel,
                             modifier = Modifier.padding(end = 4.dp),
-                            contentDescription = null)
+                            contentDescription = null
+                        )
                         Text(stringResource(R.string.login_cancel))
                     }
                     Spacer(modifier = Modifier.width(4.dp))
@@ -370,10 +404,13 @@ fun AlertDialogForEtxtCode(
                             onPositiveClick.invoke()
                             focusManager.clearFocus()
                         },
-                        modifier = Modifier.padding(end = 4.dp)) {
-                        Icon(imageVector = Icons.TwoTone.Verified,
+                        modifier = Modifier.padding(end = 4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.TwoTone.Verified,
                             contentDescription = null,
-                            modifier = Modifier.padding(end = 4.dp))
+                            modifier = Modifier.padding(end = 4.dp)
+                        )
                         Text(stringResource(R.string.login_proceed))
                     }
                 }

@@ -60,4 +60,5 @@
     <string name="home_viewmodel_waitingresource">等待下載…</string>
     <string name="login_network_failed">請連接網路</string>
     <string name="login_toast_loginstate">登入狀態: %1$s</string>
+    <string name="home_viewmodel_getschedule">取得行事曆…</string>
 </resources>
