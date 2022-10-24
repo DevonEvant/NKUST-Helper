@@ -33,18 +33,3 @@ fun LoginScreenPreview() {
         )
     }
 }
-
-@Preview(showBackground = true)
-@Composable
-fun LoginWhateverPreview() {
-    Nkust_platform_assistantTheme {
-        val context = LocalContext.current
-
-        Column {
-            ShowDialogBase(
-                showDialog = remember { mutableStateOf(true) },
-                loginParamsViewModel = LoginParamsViewModel(DataRepository(context)),
-            )
-        }
-    }
-}

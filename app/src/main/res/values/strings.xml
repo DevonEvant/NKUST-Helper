@@ -59,4 +59,5 @@
     <string name="home_viewmodel_waitingresource">Waiting resources…</string>
     <string name="login_network_failed">Please connect to internet.</string>
     <string name="login_toast_loginstate">Login state: %1$s</string>
+    <string name="home_viewmodel_getschedule">Getting schedule…</string>
 </resources>

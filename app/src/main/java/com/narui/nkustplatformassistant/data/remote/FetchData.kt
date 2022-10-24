@@ -11,6 +11,7 @@ import com.narui.nkustplatformassistant.data.persistence.db.entity.ScoreOtherEnt
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.*
 import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -22,6 +23,7 @@ import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.text.PDFTextStripper
 import org.jsoup.parser.*
 import java.io.File
+import java.io.FileInputStream
 
 // TODO Timeout handling
 
@@ -79,13 +81,14 @@ class NkustAccessor(client: HttpClient) : NkustUser(client) {
     }
 
     /**
-     * Get payload of destination (Must be uppercase),
+     * Get payload of destination,
+     * @param dst must be uppercase
      * it'll return Map<String,String>.
      * Notice: first value of map is action, which the value
      * the website will auto submitted for, second value is spath,
      *  按鈕按下後表單submit用
      */
-    suspend fun getDstJspBase(dst: String): Map<String, String> {
+    private suspend fun getDstJspBase(dst: String): Map<String, String> {
 //        val dstPre = dst.slice(IntRange(start = 0, endInclusive = 1))
 //        val dstPost = dst.slice(IntRange(start = 2, endInclusive = 4))
 //        val urlDst = NKUST_ROUTES.WEBAP_PERCHK + "/${dstPre}_pro/${dstPost}.jsp?"
@@ -182,22 +185,22 @@ class NkustAccessor(client: HttpClient) : NkustUser(client) {
 
     /**
      * Get Dropdown list as Map<String, String>.
+     * @param dst must be uppercase
      * E.g "111,1", "111學年度第一學期"
      * but we can't guarantee that all value is useful,
      * because the designer put some useless value in it.
      */
-    suspend fun getYearsOfDropDownListByMap(): Map<String, String> {
+    suspend fun getYearsOfDropDownListByMap(dst: String): Map<String, String> {
         // init...
         val startOfCurr = yearOfEnrollment()
-        val dstBase: Map<String, String> = getDstJspBase("AG008")
+        val dstBase: Map<String, String> = getDstJspBase(dst)
 
-        println(startOfCurr)
+        println("startOfCurr: $startOfCurr")
 
         val urlDst = dstBase.values.elementAt(0)
 
         client.post(url = Url(urlDst)) {
             url {
-                // TODO: action added
                 dstBase.forEach { (k, v) ->
                     if (k != "action" && k != "spath") {
                         parameters.append(k, v)
@@ -250,9 +253,9 @@ class NkustAccessor(client: HttpClient) : NkustUser(client) {
         // temprory usage
         val dropdownList = getDstJspBase("AG008") // score page
 
-        val scoreUrl = Url(NKUST_ROUTES.WEBAP_ENTRY_FRAME + "/../ag_pro/ag008.jsp")
+        val scoreUrl = NKUST_ROUTES.WEBAP_ENTRY_FRAME + "/../ag_pro/ag008.jsp"
 
-        client.post(scoreUrl) {
+        client.post(url = Url(scoreUrl)) {
             url {
                 parameters.append("yms", "$year,$semester")
                 parameters.append("spath", dropdownList["spath"]!!)
@@ -261,18 +264,18 @@ class NkustAccessor(client: HttpClient) : NkustUser(client) {
             }
         }.bodyAsText().let {
             val subject = parser
-                .parseInput(it, scoreUrl.toString())
+                .parseInput(it, scoreUrl)
                 .selectXpath("(//td[@align='left'])")
                 .eachText()
 
             val midScore = parser
-                .parseInput(it, scoreUrl.toString())
+                .parseInput(it, scoreUrl)
                 .selectXpath("//form[@name='thisform']/table[1]/tbody[1]/tr/td[7]")
                 .eachText().drop(1)
 
 
             val finalScore = parser
-                .parseInput(it, scoreUrl.toString())
+                .parseInput(it, scoreUrl)
                 .selectXpath("//form[@name='thisform']/table[1]/tbody[1]/tr/td[8]")
                 .eachText().drop(1)
 
@@ -303,9 +306,8 @@ class NkustAccessor(client: HttpClient) : NkustUser(client) {
     ): ScoreOtherEntity {
         val dropdownList = getDstJspBase("AG008") // score page
 
-        val scoreUrl = Url(NKUST_ROUTES.WEBAP_ENTRY_FRAME + "/../ag_pro/ag008.jsp")
-
-        client.post(scoreUrl) {
+        val scoreUrl = NKUST_ROUTES.WEBAP_ENTRY_FRAME + "/../ag_pro/ag008.jsp"
+        client.post(url = Url(scoreUrl)) {
             url {
                 parameters.append("yms", "$year,$semester")
                 parameters.append("spath", dropdownList["spath"]!!)
@@ -314,7 +316,7 @@ class NkustAccessor(client: HttpClient) : NkustUser(client) {
             }
         }.bodyAsText().let {
             val stringToParse = parser
-                .parseInput(it, scoreUrl.toString())
+                .parseInput(it, scoreUrl)
                 .selectXpath("//form[@action='./ag008_pdf.jsp']//div[1]")
                 .text()
 
@@ -375,7 +377,8 @@ class NkustAccessor(client: HttpClient) : NkustUser(client) {
                     classRanking = classRanking,
                     classPeople = classPeople,
                     deptRanking = deptRanking,
-                    deptPeople = deptPeople)
+                    deptPeople = deptPeople
+                )
             } catch (e: IndexOutOfBoundsException) {
                 println("$e is okay because there's no data yet.")
 
@@ -394,47 +397,40 @@ class NkustAccessor(client: HttpClient) : NkustUser(client) {
         }
     }
 
+    /**
+     * @return a List<Pair<String, String>> (year, semester)
+     */
+    suspend fun scheduleToGet(): List<Pair<String, String>> {
 
-    suspend fun getAvailableSemesterPdf() {
-        val privClient = HttpClient(CIO) {
-            install(HttpCookies) {
-                storage = AcceptAllCookiesStorage()
-            }
-        }
+        val url = NKUST_ROUTES.WEBAP_HEAD
 
+        val response = client.get(url).bodyAsText()
 
-        val url = NKUST_ROUTES.ALL_PDF_ID_PAGE
-        val response = privClient.get(url).bodyAsText().let {
-            it
-            parser.parseInput(it, url)
-        }
+        val currYear = parser.parseInput(response, url)
+            .selectXpath("//div[@class='personal']//span[1]")
+            .text()
+            .substring(IntRange(start = 0, endInclusive = 2))
 
+        return listOf(Pair(currYear, "1"), Pair(currYear, "2"))
     }
 
-
-    //   todo rename Calender to schedule
+//   TODO: rename Calender to schedule
     /**
      * Providing an cache location, and it'll store pdf in there named
      * @param year
      * @param semester
-     * @param file
+     * @param mode when using android system, set this flag to true, and store file using context in another place
+     * @param file providing a location of android cache
      */
     @OptIn(InternalAPI::class)
     suspend fun getNkustScheduleCn(
         year: String,
         semester: String,
+        mode: Boolean = false,
         file: File = File("./", "${year}-${semester}.pdf"),
     ): File {
-
-        // TODO: insecurity trusted all https
         // https://stackoverflow.com/questions/4690228/how-to-save-downloaded-files-in-cache-android
         // https://developer.android.com/training/connectivity/avoid-unoptimized-downloads
-        val client = HttpClient(CIO) {
-            install(HttpCookies) {
-                storage = AcceptAllCookiesStorage()
-            }
-        }
-
         val res = client.get {
             url(NKUST_ROUTES.getCnCalendarUrl(year, semester))
 //            url("https://acad.nkust.edu.tw/var/file/4/1004/img/273/cal110-2.pdf")
@@ -444,7 +440,10 @@ class NkustAccessor(client: HttpClient) : NkustUser(client) {
             throw Error("Fetch URL Error. HttpStateCode is ${res.status} ")
 
 //        val calenderPdf = File(path)
-        res.content.copyAndClose(file.writeChannel())
+        if (!mode) {
+            res.content.copyAndClose(file.writeChannel())
+        }
+
         return file
     }
 
@@ -452,8 +451,8 @@ class NkustAccessor(client: HttpClient) : NkustUser(client) {
     /**
      * paser Nkust schedule. give Nkust schedule pdf file. return all of eventlist in the pdf file
      */
-    fun parseNkustSchedule(pdf: File): MutableList<NkustEvent> {
-        val doc = PDDocument.load(pdf)
+    fun parseNkustSchedule(pdfStream: FileInputStream): MutableList<NkustEvent> {
+        val doc = PDDocument.load(pdfStream)
         val docTextSoup = PDFTextStripper().getText(doc).let {
 //        it.dropLast(5)
             it.dropLast(it.indexOfLast { it == '1' })
@@ -533,18 +532,14 @@ class NkustAccessor(client: HttpClient) : NkustUser(client) {
         semester: String,
         semDescription: String,
     ): List<CourseEntity> {
-
         val url = NKUST_ROUTES.SCHOOL_TABLETIME
-
-        val curriculumRes = client.request(
-            url = Url(url)
-        ) {
+        val curriculumRes = client.post(url = Url(url)) {
             url {
+                parameters.append("yms", "$year,$semester")
                 parameters.append("spath", "ag_pro/ag222.jsp?")
                 parameters.append("arg01", year)
                 parameters.append("arg02", semester)
             }
-            method = HttpMethod.Post
         }
 
         val body = curriculumRes.bodyAsText()
