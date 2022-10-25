@@ -1,5 +1,6 @@
 package com.narui.nkustplatformassistant.data.remote
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.compose.ui.graphics.ImageBitmap
@@ -8,6 +9,9 @@ import com.narui.nkustplatformassistant.data.NkustEvent
 import com.narui.nkustplatformassistant.data.Score
 import com.narui.nkustplatformassistant.data.persistence.db.entity.CourseEntity
 import com.narui.nkustplatformassistant.data.persistence.db.entity.ScoreOtherEntity
+import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
+import com.tom_roush.pdfbox.pdmodel.PDDocument
+import com.tom_roush.pdfbox.text.PDFTextStripper
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
@@ -19,11 +23,8 @@ import io.ktor.http.*
 import io.ktor.util.*
 import io.ktor.util.cio.*
 import io.ktor.utils.io.*
-import org.apache.pdfbox.pdmodel.PDDocument
-import org.apache.pdfbox.text.PDFTextStripper
 import org.jsoup.parser.*
 import java.io.File
-import java.io.FileInputStream
 
 // TODO Timeout handling
 
@@ -43,41 +44,57 @@ class NkustAccessor(client: HttpClient) : NkustUser(client) {
      */
     private val parser: Parser = Parser.htmlParser()
 
-    suspend fun getFncJspBase(): Map<String, String> {
+    /**
+     * FncJsp is reuse multiple times, repeatedly request it will cause system suspension.
+     * so we create a map of formData here.
+     */
+    private val mapOfFncJsp = mutableMapOf<String, String>()
+    private var fncJspContent: String = ""
+    private var yearOfEnrollment: String = ""
+
+    private suspend fun getFncJspBase(): Map<String, String> {
         val url = NKUST_ROUTES.WEBAP_LEFT_PANEL
-        client.get(url = Url(url))
-            .bodyAsText().let { content ->
-                val mapOfInfo = mapOf<String, String>(
+
+        if (mapOfFncJsp.isEmpty()) {
+            if (fncJspContent.isBlank()) {
+                fncJspContent = client.get(url = Url(url)).bodyAsText()
+            }
+
+            mapOfFncJsp.putAll(
+                fncJspContent.let { content ->
+                    mapOf<String, String>(
 //                    "fncid" to parser.parseInput(content, url)
 //                        .selectXpath("//*[@id=\"fncid\"]")
 //                        .attr("value"),
-                    "std_id" to parser.parseInput(content, url)
-                        .selectXpath("//*[@id=\"std_id\"]")
-                        .attr("value"),
-                    "local_ip" to parser.parseInput(content, url)
-                        .selectXpath("//*[@id=\"local_ip\"]")
-                        .attr("value"),
-                    "sysyear" to parser.parseInput(content, url)
-                        .selectXpath("//*[@id=\"sysyear\"]")
-                        .attr("value"),
-                    "syssms" to parser.parseInput(content, url)
-                        .selectXpath("//*[@id=\"syssms\"]")
-                        .attr("value"),
-                    "online" to parser.parseInput(content, url)
-                        .selectXpath("//*[@id=\"online\"]")
-                        .attr("value"),
-                    "loginid" to parser.parseInput(content, url)
-                        .selectXpath("//*[@id=\"loginid\"]")
-                        .attr("value")
-                )
+                        "std_id" to parser.parseInput(content, url)
+                            .selectXpath("//*[@id=\"std_id\"]")
+                            .attr("value"),
+                        "local_ip" to parser.parseInput(content, url)
+                            .selectXpath("//*[@id=\"local_ip\"]")
+                            .attr("value"),
+                        "sysyear" to parser.parseInput(content, url)
+                            .selectXpath("//*[@id=\"sysyear\"]")
+                            .attr("value"),
+                        "syssms" to parser.parseInput(content, url)
+                            .selectXpath("//*[@id=\"syssms\"]")
+                            .attr("value"),
+                        "online" to parser.parseInput(content, url)
+                            .selectXpath("//*[@id=\"online\"]")
+                            .attr("value"),
+                        "loginid" to parser.parseInput(content, url)
+                            .selectXpath("//*[@id=\"loginid\"]")
+                            .attr("value")
+                    )
+                }
+            )
+        }
 
-                // Debug...
-                // mapOfInfo.forEach { (k, v) ->
-                //     println("getFncJspInformationMap: $k:$v")
-                // }
-                // println()
-                return mapOfInfo
-            }
+        // Debug...
+        // mapOfInfo.forEach { (k, v) ->
+        //     println("getFncJspInformationMap: $k:$v")
+        // }
+        // println()
+        return mapOfFncJsp
     }
 
     /**
@@ -176,11 +193,16 @@ class NkustAccessor(client: HttpClient) : NkustUser(client) {
             }
     }
 
-    suspend fun yearOfEnrollment(): String {
-        val mapInput = getFncJspBase()
+    private suspend fun yearOfEnrollment(): String {
 
-        return mapInput["loginid"]!!
-            .slice(IntRange(start = 1, endInclusive = 3))
+        if (yearOfEnrollment.isEmpty()) {
+            val mapInput = getFncJspBase()
+
+            yearOfEnrollment = mapInput["loginid"]!!
+                .slice(IntRange(start = 1, endInclusive = 3))
+        }
+
+        return yearOfEnrollment
     }
 
     /**
@@ -419,14 +441,12 @@ class NkustAccessor(client: HttpClient) : NkustUser(client) {
      * Providing an cache location, and it'll store pdf in there named
      * @param year
      * @param semester
-     * @param mode when using android system, set this flag to true, and store file using context in another place
      * @param file providing a location of android cache
      */
     @OptIn(InternalAPI::class)
     suspend fun getNkustScheduleCn(
         year: String,
         semester: String,
-        mode: Boolean = false,
         file: File = File("./", "${year}-${semester}.pdf"),
     ): File {
         // https://stackoverflow.com/questions/4690228/how-to-save-downloaded-files-in-cache-android
@@ -439,10 +459,7 @@ class NkustAccessor(client: HttpClient) : NkustUser(client) {
         if (!res.status.isSuccess())
             throw Error("Fetch URL Error. HttpStateCode is ${res.status} ")
 
-//        val calenderPdf = File(path)
-        if (!mode) {
-            res.content.copyAndClose(file.writeChannel())
-        }
+        res.content.copyAndClose(file.writeChannel())
 
         return file
     }
@@ -451,8 +468,11 @@ class NkustAccessor(client: HttpClient) : NkustUser(client) {
     /**
      * paser Nkust schedule. give Nkust schedule pdf file. return all of eventlist in the pdf file
      */
-    fun parseNkustSchedule(pdfStream: FileInputStream): MutableList<NkustEvent> {
-        val doc = PDDocument.load(pdfStream)
+    fun parseNkustSchedule(pdf: File, applicationContext: Context): List<NkustEvent> {
+        // PDFBox init
+        PDFBoxResourceLoader.init(applicationContext)
+
+        val doc = PDDocument.load(pdf)
         val docTextSoup = PDFTextStripper().getText(doc).let {
 //        it.dropLast(5)
             it.dropLast(it.indexOfLast { it == '1' })
@@ -495,7 +515,7 @@ class NkustAccessor(client: HttpClient) : NkustUser(client) {
         if (!etxtRes.status.isSuccess())
             throw Error("Fetch URL Error. HttpStateCode is ${etxtRes.status} ")
 
-        val imgFile: File = File("./etxt.jpg")
+        val imgFile = File("./etxt.jpg")
         etxtRes.content.copyAndClose(imgFile.writeChannel())
 
         return imgFile
@@ -525,7 +545,7 @@ class NkustAccessor(client: HttpClient) : NkustUser(client) {
 
     /**
      * Get specific semester curriculum
-     * By providing year and semester, you can get a [listOf]<[Course]>
+     * By providing year and semester, you can get a [listOf]<[CourseEntity]>
      */
     suspend fun getSpecCurriculum(
         year: String,

@@ -92,22 +92,22 @@ private suspend fun getCurrentYearSchedule(nkustAccessor: NkustAccessor) {
     val semesterToGet = nkustAccessor.scheduleToGet()
     val schedule = mutableListOf<ScheduleEntity>()
 
-    semesterToGet.forEach { (year, semester) ->
-        val scheduleTemp = nkustAccessor
-            .parseNkustSchedule(nkustAccessor.getNkustScheduleCn(year, semester).inputStream())
-
-        scheduleTemp.forEach { eachSchedule: NkustEvent ->
-            val dateSet = eachSchedule.time.split("，")[0].split("-", "～")
-            schedule.add(
-                ScheduleEntity(
-                    agency = eachSchedule.agency,
-                    startDate = Regex("(\\d*/\\d*)").find(dateSet[0])!!.value,
-                    endDate = if (dateSet.size > 1) dateSet[1] else null,
-                    description = eachSchedule.time + " " + eachSchedule.description
-                )
-            )
-        }
-    }
+//    semesterToGet.forEach { (year, semester) ->
+//        val scheduleTemp = nkustAccessor
+//            .parseNkustSchedule(nkustAccessor.getNkustScheduleCn(year, semester))
+//
+//        scheduleTemp.forEach { eachSchedule: NkustEvent ->
+//            val dateSet = eachSchedule.time.split("，")[0].split("-", "～")
+//            schedule.add(
+//                ScheduleEntity(
+//                    agency = eachSchedule.agency,
+//                    startDate = Regex("(\\d*/\\d*)").find(dateSet[0])!!.value,
+//                    endDate = if (dateSet.size > 1) dateSet[1] else null,
+//                    description = eachSchedule.time + " " + eachSchedule.description
+//                )
+//            )
+//        }
+//    }
 
     schedule.forEach { eachSchedule: ScheduleEntity ->
         println(

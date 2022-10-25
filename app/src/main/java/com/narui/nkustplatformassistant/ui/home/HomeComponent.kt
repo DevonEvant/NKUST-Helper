@@ -3,6 +3,7 @@ package com.narui.nkustplatformassistant.ui.home
 import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -35,7 +36,6 @@ import com.narui.nkustplatformassistant.data.persistence.db.entity.CourseEntity
 import com.narui.nkustplatformassistant.data.persistence.db.entity.ScoreOtherEntity
 import com.narui.nkustplatformassistant.navigation.Screen
 import com.narui.nkustplatformassistant.ui.curriculum.AutosizeText
-import com.narui.nkustplatformassistant.ui.curriculum.SemesterSelector
 import com.narui.nkustplatformassistant.ui.score.ScoreOtherWidget
 import java.time.Duration
 
@@ -174,6 +174,8 @@ fun HomeBase(
                     scoreOther = scoreOther,
                     onScoreOtherDropDownChange = { homeViewModel.onScoreOtherDropDownChange(it) },
                     navController = navController)
+
+                CalendarCard(navController)
             }
         }
     }
@@ -236,7 +238,9 @@ fun WelcomeCard(navController: NavController, homeViewModel: HomeViewModel) {
             )
             Spacer(modifier = Modifier.padding(8.dp))
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
                 horizontalArrangement = Arrangement.End
             ) {
                 Button(onClick = {
@@ -333,7 +337,17 @@ fun NoCourseCard(
             )
             Spacer(modifier = Modifier.padding(bottom = 20.dp))
 
-            BeforeTimeSelector(minuteBefore, getRecentCourse, navController)
+            Row(modifier = Modifier
+                .fillMaxWidth()
+                .padding(end = 8.dp)
+                .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.End) {
+                BeforeTimeSelector(minuteBefore, getRecentCourse)
+                GoDetailButton(
+                    buttonText = stringResource(R.string.home_coursecard_see_all),
+                    navigateTo = Screen.Curriculum.route,
+                    navController = navController)
+            }
         }
     }
 }
@@ -446,10 +460,22 @@ fun CourseCard(
                     }
                 }
             }
-
-            Divider(modifier = Modifier.padding(top = 20.dp))
-            BeforeTimeSelector(minuteBefore, getRecentCourse, navController)
         }
+        Divider(modifier = Modifier.padding(top = 20.dp))
+
+        Row(modifier = Modifier
+            .fillMaxWidth()
+            .padding(end = 8.dp)
+            .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.End
+        ) {
+            BeforeTimeSelector(minuteBefore, getRecentCourse)
+            GoDetailButton(
+                buttonText = stringResource(R.string.home_coursecard_see_all),
+                navigateTo = Screen.Curriculum.route,
+                navController = navController)
+        }
+
     }
 }
 
@@ -458,7 +484,6 @@ fun CourseCard(
 fun BeforeTimeSelector(
     minuteBefore: Long,
     getRecentCourse: (Long) -> Unit,
-    navController: NavController,
 ) {
     Row(
         modifier = Modifier
@@ -510,11 +535,6 @@ fun BeforeTimeSelector(
         })
 
         Spacer(modifier = Modifier.padding(end = 8.dp))
-        Button(onClick = {
-            navController.navigate(Screen.Curriculum.route)
-        }) {
-            AutosizeText(stringResource(R.string.home_coursecard_see_all), 1)
-        }
     }
 }
 
@@ -542,12 +562,13 @@ fun ScoreCard(
 
             ScoreOtherWidget(scoreOther = scoreOther)
 
-            Divider(modifier = Modifier.padding(top = 3.dp, bottom = 3.dp))
-
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+                    .horizontalScroll(rememberScrollState()),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End
             ) {
                 if (scoreDropDownList.isNotEmpty()) {
                     onScoreOtherDropDownChange(scoreDropDownList[0])
@@ -555,10 +576,58 @@ fun ScoreCard(
 //                        onScoreOtherDropDownChange(it)
 //                    }
                 }
+                GoDetailButton(
+                    buttonText = stringResource(R.string.home_scorecard_button),
+                    navigateTo = Screen.Score.route,
+                    navController = navController)
+            }
+        }
+    }
+}
 
-                Button(onClick = { navController.navigate(Screen.Score.route) }) {
-                    AutosizeText(stringResource(R.string.home_scorecard_button), 2)
-                }
+/**
+ * Button which navigates to
+ * @param buttonText Text which button displays
+ * @param navigateTo [Screen] route
+ * @param navController [NavController]
+ */
+@Composable
+fun GoDetailButton(
+    buttonText: String,
+    navigateTo: String,
+    navController: NavController,
+) {
+    Button(onClick = {
+        navController.navigate(navigateTo)
+    }) {
+        AutosizeText(buttonText, 1)
+    }
+}
+
+@Composable
+fun CalendarCard(navController: NavController) {
+    OutlinedCard {
+        Column(modifier = Modifier
+            .padding(16.dp)
+            .fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Text(
+                stringResource(R.string.home_schedulecard_schedule),
+                fontWeight = FontWeight.Bold,
+                fontSize = 32.sp,
+                lineHeight = 32.sp,
+                modifier = Modifier.padding(bottom = 3.dp)
+            )
+
+            Text(
+                stringResource(R.string.home_schedulecard_button),
+                fontWeight = FontWeight.Bold,
+            )
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                GoDetailButton(
+                    buttonText = stringResource(R.string.home_schedulecard_button),
+                    navigateTo = Screen.Schedule.route,
+                    navController = navController)
             }
         }
     }

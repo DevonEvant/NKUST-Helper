@@ -247,7 +247,7 @@ fun CurriculumTable(
         endTimeVisibility: Boolean = true,
     ) {
         Card(
-            modifier = Modifier.size(65.dp)
+            modifier = Modifier.size(90.dp)
         ) {
             Column(
                 modifier = Modifier
@@ -315,7 +315,7 @@ fun CurriculumTable(
     fun CourseCard(course: CourseEntity) {
         var showCourseDetail by remember { mutableStateOf(false) }
 
-        Card(modifier = Modifier.size(65.dp)) {
+        Card(modifier = Modifier.size(90.dp)) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()

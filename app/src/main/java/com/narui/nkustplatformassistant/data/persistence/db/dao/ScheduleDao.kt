@@ -8,9 +8,6 @@ import com.narui.nkustplatformassistant.data.persistence.db.entity.ScheduleEntit
 
 @Dao
 interface ScheduleDao {
-//        @Query("SELECT * FROM score_table ORDER BY mid_term_exam_score DESC")
-//        fun get
-
     @Query("SELECT * FROM schedule_table")
     suspend fun getAllSchedule(): List<ScheduleEntity>
 
@@ -24,9 +21,6 @@ interface ScheduleDao {
         }
     }
 
-    @Query("DELETE FROM schedule_table")
-    suspend fun emptyCalenderTable()
-
     @Query("SELECT COUNT(*) FROM schedule_table")
     fun sizeOfDB(): Int
 
@@ -35,4 +29,7 @@ interface ScheduleDao {
         val dbSize = sizeOfDB()
         return dbSize > 1
     }
+
+    @Query("DELETE FROM schedule_table")
+    suspend fun emptyCalenderTable()
 }

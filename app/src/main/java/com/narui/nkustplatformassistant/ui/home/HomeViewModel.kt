@@ -16,7 +16,6 @@ import com.narui.nkustplatformassistant.data.persistence.DataRepository
 import com.narui.nkustplatformassistant.data.persistence.DataRepository.Companion.loginState
 import com.narui.nkustplatformassistant.data.persistence.db.entity.CourseEntity
 import com.narui.nkustplatformassistant.data.persistence.db.entity.ScoreOtherEntity
-import java.io.File
 
 
 class HomeViewModel(private val dataRepository: DataRepository, context: Context) : ViewModel() {
@@ -65,7 +64,10 @@ class HomeViewModel(private val dataRepository: DataRepository, context: Context
             eachCourse.courseTime.forEach { courseTime ->
                 if ((courseTime.week!!.ordinal + 1) == todayWeek) {
                     CurriculumTime.getByTime(currentTime)?.time?.let {
-                        if (it.include(currentTime + Duration.ofMinutes(minuteBefore))) {
+                        // |(-minute)~(+minute)|
+                        if (it.include(currentTime + Duration.ofMinutes(minuteBefore)) ||
+                            it.include(currentTime - Duration.ofMinutes(minuteBefore))
+                        ) {
                             _recentCourse.postValue(eachCourse)
                         }
                     }
@@ -78,16 +80,16 @@ class HomeViewModel(private val dataRepository: DataRepository, context: Context
     fun startFetch(force: Boolean, context: Context) {
         if (force && loginState) {
             viewModelScope.launch(Dispatchers.IO) {
-//                _fetchingDetails.postValue(context.getString(R.string.home_viewmodel_getcourse))
-//                dataRepository.fetchCourseDataToDB()
-//                delay(timeMillis = 300)
-//                _fetchingDetails.postValue(context.getString(R.string.home_viewmodel_getscore))
-//                dataRepository.fetchAllScoreToDB()
-//                delay(timeMillis = 300)
-//                _fetchingDetails.postValue(context.getString(R.string.home_viewmodel_getscoreother))
-//                dataRepository.fetchAllScoreOtherToDB()
+                _fetchingDetails.postValue(context.getString(R.string.home_viewmodel_getcourse))
+                dataRepository.fetchCourseDataToDB()
+                delay(timeMillis = 300)
+                _fetchingDetails.postValue(context.getString(R.string.home_viewmodel_getscore))
+                dataRepository.fetchAllScoreToDB()
+                delay(timeMillis = 300)
+                _fetchingDetails.postValue(context.getString(R.string.home_viewmodel_getscoreother))
+                dataRepository.fetchAllScoreOtherToDB()
                 _fetchingDetails.postValue(context.getString(R.string.home_viewmodel_getschedule))
-                dataRepository.getAllScheduleToDB(context)
+                dataRepository.fetchAllScheduleToDB(context)
 
                 // TODO: fetch Schedule to DB, progress didn't change
                 dataRepository.checkDataIsReady().let {

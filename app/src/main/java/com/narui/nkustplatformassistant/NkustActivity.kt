@@ -24,6 +24,8 @@ import com.narui.nkustplatformassistant.ui.home.HomeScreen
 import com.narui.nkustplatformassistant.ui.home.HomeViewModel
 import com.narui.nkustplatformassistant.ui.login.LoginParamsViewModel
 import com.narui.nkustplatformassistant.ui.login.LoginScreen
+import com.narui.nkustplatformassistant.ui.schedule.ScheduleScreen
+import com.narui.nkustplatformassistant.ui.schedule.ScheduleViewModel
 import com.narui.nkustplatformassistant.ui.score.ScoreScreen
 import com.narui.nkustplatformassistant.ui.score.ScoreViewModel
 import com.narui.nkustplatformassistant.ui.theme.Nkust_platform_assistantTheme
@@ -82,6 +84,11 @@ class NkustActivity : ComponentActivity() {
                             viewModel(factory = ScoreViewModelFactory(dataRepository)),
                             navController)
                     }
+                    composable(Screen.Schedule.route) {
+                        ScheduleScreen(
+                            viewModel(factory = ScheduleViewModelFactory(dataRepository)),
+                            navController)
+                    }
                 }
             }
         }
@@ -120,5 +127,13 @@ class ScoreViewModelFactory(private val repository: DataRepository) :
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return ScoreViewModel(repository) as T
+    }
+}
+
+class ScheduleViewModelFactory(private val repository: DataRepository) :
+    ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return ScheduleViewModel(repository) as T
     }
 }

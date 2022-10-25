@@ -60,4 +60,11 @@
     <string name="login_network_failed">Please connect to internet.</string>
     <string name="login_toast_loginstate">Login state: %1$s</string>
     <string name="home_viewmodel_getschedule">Getting schedule…</string>
+    <string name="home_schedulecard_schedule">Schedule</string>
+    <string name="home_schedulecard_button">Show schedule</string>
+    <string name="schedule_noevent">No event</string>
+    <string name="schedule_declaration">Please note that all information in calendar are for reference, though data source is NKUST, we\'ll still get error when parsing PDF, so we still recommend that you can review it online.</string>
+    <string name="schedule_add_to_calendar">Add to device</string>
+    <string name="schedule_title">Schedule</string>
+    <string name="schedule_no_calendar_app">No calendar installed on your device</string>
 </resources>
