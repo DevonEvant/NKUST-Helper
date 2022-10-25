@@ -61,4 +61,11 @@
     <string name="login_network_failed">請連接網路</string>
     <string name="login_toast_loginstate">登入狀態: %1$s</string>
     <string name="home_viewmodel_getschedule">取得行事曆…</string>
+    <string name="home_schedulecard_schedule">行事曆</string>
+    <string name="home_schedulecard_button">查看行事曆</string>
+    <string name="schedule_noevent">沒有活動</string>
+    <string name="schedule_declaration">請注意行事曆顯示為參考用，資料來源均為學校，仍因為解析PDF可能有錯誤，實際情況請以學校發布資訊為準。</string>
+    <string name="schedule_add_to_calendar">加入日曆</string>
+    <string name="schedule_title">行事曆</string>
+    <string name="schedule_no_calendar_app">您的手機上沒有安裝日曆</string>
 </resources>
