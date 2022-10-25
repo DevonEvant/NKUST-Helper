@@ -2,12 +2,9 @@ package com.narui.nkustplatformassistant.data.persistence.db
 
 import android.content.Context
 import androidx.room.*
-import com.narui.nkustplatformassistant.data.persistence.db.dao.CalendarDao
-import com.narui.nkustplatformassistant.data.persistence.db.dao.CourseDao
-import com.narui.nkustplatformassistant.data.persistence.db.dao.ScoreDao
-import com.narui.nkustplatformassistant.data.persistence.db.dao.ScoreOtherDao
-import com.narui.nkustplatformassistant.data.persistence.db.entity.Calender
+import com.narui.nkustplatformassistant.data.persistence.db.dao.*
 import com.narui.nkustplatformassistant.data.persistence.db.entity.CourseEntity
+import com.narui.nkustplatformassistant.data.persistence.db.entity.ScheduleEntity
 import com.narui.nkustplatformassistant.data.persistence.db.entity.ScoreEntity
 import com.narui.nkustplatformassistant.data.persistence.db.entity.ScoreOtherEntity
 
@@ -20,13 +17,13 @@ import com.narui.nkustplatformassistant.data.persistence.db.entity.ScoreOtherEnt
 // https://medium.com/androiddevelopers/7-steps-to-room-27a5fe5f99b2
 
 @Database(
-    entities = arrayOf(Calender::class, ScoreEntity::class, ScoreOtherEntity::class, CourseEntity::class),
+    entities = [ScheduleEntity::class, ScoreEntity::class, ScoreOtherEntity::class, CourseEntity::class],
     version = 1,
     exportSchema = false
 )
 abstract class NkustDatabase : RoomDatabase() {
 
-    abstract fun calenderDao(): CalendarDao
+    abstract fun scheduleDao(): ScheduleDao
     abstract fun scoreDao(): ScoreDao
     abstract fun scoreOtherDao(): ScoreOtherDao
     abstract fun courseDao(): CourseDao

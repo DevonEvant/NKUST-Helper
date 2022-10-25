@@ -1,124 +1,210 @@
 package com.narui.nkustplatformassistant.ui.schedule
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.ExperimentalFoundationApi
+import android.content.Context
+import android.content.Intent
+import android.provider.CalendarContract
+import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.twotone.ArrowBack
+import androidx.compose.material.icons.twotone.EditCalendar
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.himanshoe.kalendar.Kalendar
 import com.himanshoe.kalendar.model.KalendarEvent
 import com.himanshoe.kalendar.model.KalendarType
+import com.narui.nkustplatformassistant.R
 import com.narui.nkustplatformassistant.data.persistence.DataRepository
-import kotlinx.datetime.LocalDate
+import com.narui.nkustplatformassistant.data.persistence.db.entity.ScheduleEntity
+import com.narui.nkustplatformassistant.navigation.Screen
+import kotlinx.datetime.*
+import kotlinx.datetime.TimeZone
+import java.util.*
+
+private val currentTime = Clock.System.now().toLocalDateTime(TimeZone.of("UTC+8"))
+private var strTitle: String = ""
+private var startDate =
+    LocalDateTime(currentTime.year, currentTime.month, currentTime.dayOfMonth, 8, 0)
+
+private var endDate =
+    LocalDateTime(currentTime.year, currentTime.month, currentTime.dayOfMonth, 8, 0)
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@OptIn(
-    ExperimentalMaterial3Api::class,
-    ExperimentalFoundationApi::class,
-    ExperimentalMaterialApi::class,
-)
 @Composable
 fun ScheduleContent(scheduleViewModel: ScheduleViewModel, navController: NavController) {
     val context = LocalContext.current
+
     val schedules by scheduleViewModel.schedules.observeAsState()
+    val events = mutableListOf<KalendarEvent>()
 
-    Column(modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally) {
-        val events = listOf<KalendarEvent>(
-//            KalendarEvent(LocalDate(2022, 9, 29), "1", "1"),
-//            KalendarEvent(LocalDate(2022, 9, 30), "2", "2"),
-            KalendarEvent(LocalDate(2022, 10, 10), "3", "3"),
-//            KalendarEvent(LocalDate(2022, 10, 2), "4", "4"),
-//            KalendarEvent(LocalDate(2022, 10, 3), "5", "5"),
+    schedules?.forEach { eachSchedule: ScheduleEntity ->
+
+        val startSplit = eachSchedule.startDate.split("/")
+        val startDate: Pair<Int, Int> = Pair(startSplit[0].toInt(), startSplit[1].toInt())
+
+        // endDate 用不到...
+        //        val endSplit = eachSchedule.endDate?.split("/")
+
+        //        val endDate: Pair<Int, Int>? = endSplit?.let { nonNullEndSplit: List<String> ->
+        //            Pair(nonNullEndSplit[0].toInt(), nonNullEndSplit[1].toInt())
+        //        }
+
+        events.add(
+            KalendarEvent(
+                date = LocalDate(currentTime.year, startDate.first, startDate.second),
+                eventName = eachSchedule.agency,
+                eventDescription = eachSchedule.description)
         )
+    }
 
-        var eventDescription by remember { mutableStateOf("no event") }
+    var eventDescription by remember { mutableStateOf(context.getString(R.string.schedule_noevent)) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        CalenderHeader(navController, context)
+
         Kalendar(kalendarType = KalendarType.Firey,
             kalendarEvents = events,
             onCurrentDayClick = { kalendarDay, kalendarEvents ->
+                startDate = LocalDateTime(
+                    currentTime.year,
+                    kalendarDay.localDate.month,
+                    kalendarDay.localDate.dayOfMonth, 8, 0)
+                endDate = LocalDateTime(
+                    currentTime.year,
+                    kalendarDay.localDate.month,
+                    kalendarDay.localDate.dayOfMonth, 9, 0)
+
+                strTitle = ""
+                eventDescription = ""
+
                 for (event in kalendarEvents) {
                     if (kalendarDay.localDate != event.date) {
-                        eventDescription = "no event"
+                        strTitle = context.getString(R.string.schedule_noevent)
+                        eventDescription = context.getString(R.string.schedule_noevent)
                     } else if (kalendarDay.localDate == event.date) {
-                        eventDescription =
-                            kalendarDay.localDate.toString() + "\n" + event.eventDescription
+                        strTitle = event.eventDescription.toString()
+                        eventDescription = event.eventDescription.toString()
                         break
                     }
                 }
             })
+        Column(modifier = Modifier
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally) {
 
-        Text(eventDescription)
-
+            Text(text = eventDescription, textAlign = TextAlign.Center)
+            Text(stringResource(R.string.schedule_declaration))
+        }
 
     }
-
-
-//    val bottomSheetScaffoldState = rememberBottomSheetScaffoldState()
-////    GlobalScope.launch {
-////        bottomSheetScaffoldState.bottomSheetState.expand()
-////    }
-//
-//    val lazyListState = rememberLazyListState()
-//
-//    BottomSheetScaffold(
-//        modifier = Modifier.fillMaxSize(),
-//        sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-//        scaffoldState = bottomSheetScaffoldState,
-//        sheetContent = {
-//            Column(
-//                modifier = Modifier
-//                    .padding(start = 16.dp, end = 16.dp, top = 16.dp),
-//            )
-//            {
-//                Text("Today", fontSize = 32.sp)
-//                Text("aaaaa", fontSize = 16.sp)
-//                Text("aaaaa", fontSize = 16.sp)
-//                Text("aaaaa", fontSize = 16.sp)
-//                Text("aaaaa", fontSize = 16.sp)
-//                Text("aaaaa", fontSize = 16.sp)
-//            }
-//        },
-//    ) {
-//        LazyColumn(
-//            state = lazyListState,
-//            modifier = Modifier
-//                .fillMaxSize()
-////                .padding(16.dp),
-//        ) {
-//            schedules?.forEach { index ->
-//                stickyHeader(
-//                ) {
-//                    Text(text = "manufacturer")
-//                }
-//                item {
-//                    ListItem(
-//                        headlineText = { Text("123") },
-//                        leadingContent = {
-//                            Icon(
-//                                Icons.Filled.Palette,
-//                                modifier = Modifier.size(36.dp),
-//                                contentDescription = null,
-//                            )
-//                        }
-//                    )
-//                }
-//            }
-//        }
-//    }
 }
+
+@Composable
+fun CalenderHeader(navController: NavController, context: Context) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            modifier = Modifier.weight(1F),
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                onClick = { navController.navigate(Screen.Home.route) }) {
+                Icon(imageVector = Icons.TwoTone.ArrowBack, contentDescription = null)
+            }
+        }
+
+        Text(
+            modifier = Modifier.weight(1F),
+            text = stringResource(R.string.schedule_title),
+            textAlign = TextAlign.Center,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Row(
+            modifier = Modifier.weight(1F),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // https://developer.android.com/guide/topics/providers/calendar-provider#intent-insert
+            fun calculateCalendarMillis(dateTime: LocalDateTime): Long {
+                return Calendar.getInstance().run {
+                    set(dateTime.year,
+                        dateTime.month.number,
+                        dateTime.dayOfMonth,
+                        dateTime.hour,
+                        dateTime.minute)
+                    timeInMillis
+                }
+            }
+
+            val intent = Intent(Intent.ACTION_INSERT)
+                .setData(CalendarContract.Events.CONTENT_URI)
+                .putExtra(CalendarContract.Events.TITLE, strTitle)
+                .putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME,
+                    calculateCalendarMillis(startDate))
+                .putExtra(CalendarContract.EXTRA_EVENT_END_TIME, calculateCalendarMillis(endDate))
+                .putExtra(CalendarContract.Events.AVAILABILITY,
+                    CalendarContract.Events.AVAILABILITY_BUSY)
+
+
+            fun checkAndStartIntent(intent: Intent) {
+                if (intent.resolveActivity(context.packageManager) != null) {
+                    context.startActivity(intent)
+                } else {
+                    Toast.makeText(context, context.getString(R.string.schedule_no_calendar_app), Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            Row(modifier = Modifier.clickable { checkAndStartIntent(intent) },
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically) {
+
+                Text(stringResource(R.string.schedule_add_to_calendar))
+                Icon(imageVector = Icons.TwoTone.EditCalendar, contentDescription = null)
+            }
+        }
+    }
+}
+
+@Composable
+fun FileCard() {
+    OutlinedCard(modifier = Modifier.padding(16.dp)) {
+
+    }
+}
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -140,7 +226,6 @@ fun ScheduleItem() {
 @Preview(showBackground = true)
 fun ScheduleItemPreview() {
     ScheduleItem()
-
 }
 
 @Composable
@@ -149,8 +234,10 @@ fun SchedulePreview() {
     val viewModelStoreOwner = checkNotNull(LocalViewModelStoreOwner.current) {
         throw Error("No ViewModelStoreOwner was provided via LocalViewModelStoreOwner")
     }
-    ScheduleContent(ScheduleViewModel(DataRepository(LocalContext.current)),
-        rememberNavController())
+    ScheduleContent(
+        ScheduleViewModel(DataRepository(LocalContext.current)),
+        rememberNavController()
+    )
 
 }
 
