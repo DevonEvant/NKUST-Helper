@@ -37,18 +37,20 @@ class DataConverter {
             }
         }
 
-        weekTimeList.forEach {
+        weekTimeList.forEach each@ {
+            val startTime = CurriculumTime.getById(it[1].single())
+            val endIncludeTime = CurriculumTime.getById(it[2].single())
+
+            if (startTime == null || endIncludeTime == null)
+                return@each
+
             finalData.add(
                 CourseTime(
                     week = Weeks.getByShortCnCode(it[0].single()),
-                    curriculumTimeRange = CurriculumTime.getById(it[1].single())!!
-                            ..CurriculumTime.getById(it[2].single())!!
+                    curriculumTimeRange = startTime..endIncludeTime
                 )
             )
         }
-
         return finalData
     }
-
-
 }
