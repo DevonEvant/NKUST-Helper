@@ -4,15 +4,15 @@
  - [serval-task-flow/NKUST-Helper （nkust 校務系統 APP）](https://github.com/serval-task-flow/NKUST-Helper)
 
 # nkust 校務系統 API 介紹 
-* [lib介紹](#lib)
-  * [account](#account)
-  * [bus](#bus)
-  * [classInfo](#classinfo)
-  * [client](#client)
-  * [請假](#)
-  * [officialInfo](#officialinfo)
-  * [studentInfo](#studentinfo)
-  * [websiteLibrary](#websitelibrary)
+ * [account](#account)
+ * [bus](#bus)
+ * [classInfo](#classinfo)
+ * [client](#client)
+ * [請假](#)
+ * [officialInfo](#officialinfo)
+ * [studentInfo](#studentinfo)
+ * [websiteLibrary](#websitelibrary)
+
 （2023/1/18更新）
 
 ## account
